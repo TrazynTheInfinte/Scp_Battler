@@ -550,3 +550,61 @@ button.preview-card {
   letter-spacing: 0.3em;
   margin: 4px 0;
 }
+
+/* ---------- battle playback ---------- */
+.skippable {
+  cursor: pointer;
+}
+.field-art.hit {
+  animation: hit-shake 0.4s ease;
+}
+.field-art.hit .card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  animation: hit-flash 0.35s ease forwards;
+  z-index: 2;
+}
+.field-art.down {
+  opacity: 0.35;
+  filter: grayscale(1);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+@keyframes hit-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes hit-flash {
+  from { opacity: 0.7; }
+  to { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field-art.hit { animation: none; }
+  .hp-track > span { transition: none; }
+}
+
+/* ---------- result ---------- */
+.result-title {
+  padding-left: 0.3em; /* balance the trailing letter-spacing */
+  font-size: 36px;
+  letter-spacing: 0.3em;
+  text-align: center;
+  margin: 8px 0 0;
+}
+.result-title.win { color: var(--ok); }
+.result-title.loss { color: var(--keter); }
+.roster-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+.roster-line:last-child {
+  border-bottom: none;
+}

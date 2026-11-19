@@ -15,12 +15,21 @@ import {
   playerMustReplace,
   playerReplace,
   playerTurn,
+  type Advance,
   type Session,
 } from '../battleController'
 import { ClassBadge, ContainmentCard, TypeBadge } from '../components'
+import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
 
 const LONG_PRESS_MS = 450
+/** Delay between battle messages during playback. */
+const FRAME_MS = 600
+
+interface Shown {
+  view: BattleState
+  log: string[]
+}
 
 function hpClass(hp: number, max: number): string {
   const r = hp / max
@@ -64,16 +73,47 @@ function SideInfo({ state, side }: { state: BattleState; side: SideIndex }) {
   )
 }
 
+/** The player's team, for switching or replacing; only legal targets are enabled. */
+function BenchList({ state, onPick }: { state: BattleState; onPick: (teamIndex: number) => void }) {
+  const options = switchTargets(state, PLAYER)
+  return (
+    <div className="bench">
+      {state.sides[PLAYER].team.map((c, i) => {
+        const sp = ROSTER.species[c.speciesId]
+        return (
+          <button key={i} className="bench-item" disabled={!options.includes(i)} onClick={() => onPick(i)}>
+            <span>
+              <strong>{sp.name}</strong>
+              {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
+              {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+            </span>
+            <span className={c.hp > 0 ? 'small' : 'small muted'}>
+              {c.hp > 0 ? `${c.hp}/${c.stats.hp}` : 'NEUTRALIZED'}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export function BattleScreen({
   initial,
-  onRematch,
-  onExit,
+  onFinished,
 }: {
   initial: Session
-  onRematch: () => void
-  onExit: () => void
+  onFinished: (final: BattleState) => void
 }) {
+  // `session` is the true battle; `display` is what's on screen, which lags
+  // behind while a turn's events play back one frame at a time.
   const [session, setSession] = useState(initial)
+  const [display, setDisplay] = useState<Shown>({ view: initial.state, log: initial.log })
+  const [playing, setPlaying] = useState(false)
+  const [tick, setTick] = useState(0)
+  const [hit, setHit] = useState<{ side: SideIndex; n: number } | null>(null)
+  const queue = useRef<Frame[]>([])
+  const final = useRef<Shown>(display)
+
   const [switching, setSwitching] = useState(false)
   const [confirmForfeit, setConfirmForfeit] = useState(false)
   const [info, setInfo] = useState<string | null>(null)
@@ -81,29 +121,74 @@ export function BattleScreen({
   const pressTimer = useRef<number | null>(null)
   const longPressed = useRef(false)
 
-  const state = session.state
+  const state = display.view
   const me = activeOf(state, PLAYER)
   const foe = activeOf(state, HOSTILE)
   const mySpecies = ROSTER.species[me.speciesId]
   const foeTypes = ROSTER.species[foe.speciesId].types
-  const ended = state.phase === 'ended'
-  const mustReplace = playerMustReplace(state)
-  const contained = me.status?.name === 'Contained'
-  const benchOptions = switchTargets(state, PLAYER)
+  // Controls act on the real state, and only once playback has caught up.
+  const real = session.state
+  const ended = real.phase === 'ended'
+  const mustReplace = playerMustReplace(real)
+  const contained = activeOf(real, PLAYER).status?.name === 'Contained'
+  const benchOptions = switchTargets(real, PLAYER)
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
-  }, [session.log.length])
+  }, [display.log.length])
+
+  // Play queued frames: one every FRAME_MS (instantly for frames with no message).
+  useEffect(() => {
+    if (!playing) return
+    const frame = queue.current.shift()
+    if (!frame) {
+      setDisplay(final.current)
+      setPlaying(false)
+      return
+    }
+    setDisplay((d) => ({ view: frame.view, log: [...d.log, ...frame.lines] }))
+    if (frame.hit !== null) {
+      const side = frame.hit
+      setHit((h) => ({ side, n: (h?.n ?? 0) + 1 }))
+    }
+    const t = window.setTimeout(() => setTick((n) => n + 1), frame.lines.length > 0 ? FRAME_MS : 0)
+    return () => window.clearTimeout(t)
+  }, [playing, tick])
+
+  const play = (adv: Advance) => {
+    setSession(adv.session)
+    final.current = { view: adv.session.state, log: adv.session.log }
+    queue.current = framesFor(adv.steps, ROSTER)
+    setPlaying(true)
+    setTick((n) => n + 1)
+  }
+  const skip = () => {
+    if (!playing) return
+    queue.current = []
+    setDisplay(final.current)
+    setPlaying(false)
+  }
 
   const act = (choice: Choice) => {
     setSwitching(false)
     setInfo(null)
-    setSession(playerTurn(session, choice).session)
+    play(playerTurn(session, choice))
   }
-  const replace = (i: number) => setSession(playerReplace(session, i).session)
+  const replace = (i: number) => play(playerReplace(session, i))
+
+  // Dev-only: ?demo=1 uses the first move automatically, to check playback in
+  // headless screenshots. Stripped from production builds.
+  // (React dev mode mounts twice; the cleanup cancels the first timer.)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    if (!new URLSearchParams(window.location.search).get('demo')) return
+    const t = window.setTimeout(() => play(playerTurn(initial, { kind: 'move', moveIndex: 0 })), 300)
+    return () => window.clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, [])
   const doForfeit = () => {
     setConfirmForfeit(false)
-    setSession(playerForfeit(session).session)
+    play(playerForfeit(session))
   }
 
   const startPress = (text: string) => {
@@ -118,32 +203,12 @@ export function BattleScreen({
     pressTimer.current = null
   }
 
-  const benchList = (onPick: (i: number) => void) => (
-    <div className="bench">
-      {state.sides[PLAYER].team.map((c, i) => {
-        const sp = ROSTER.species[c.speciesId]
-        const available = benchOptions.includes(i)
-        return (
-          <button key={i} className="bench-item" disabled={!available} onClick={() => onPick(i)}>
-            <span>
-              <strong>{sp.name}</strong>
-              {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
-              {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
-            </span>
-            <span className={c.hp > 0 ? 'small' : 'small muted'}>
-              {c.hp > 0 ? `${c.hp}/${c.stats.hp}` : 'NEUTRALIZED'}
-            </span>
-          </button>
-        )
-      })}
-    </div>
-  )
-
   return (
     <main className="screen battle">
       <div className="screen-head">
         <span className="muted small">TURN {state.turn}</span>
         {!ended &&
+          !playing &&
           (confirmForfeit ? (
             <span className="row" style={{ flexWrap: 'nowrap' }}>
               <span className="small">Forfeit?</span>
@@ -161,49 +226,56 @@ export function BattleScreen({
           ))}
       </div>
 
-      <section className="field">
+      <section className={`field${playing ? ' skippable' : ''}`} onClick={skip}>
         <div className="field-row hostile">
           <SideInfo state={state} side={HOSTILE} />
-          <div className="field-art">
+          <div
+            key={`h${hit?.side === HOSTILE ? hit.n : 0}`}
+            className={`field-art${hit?.side === HOSTILE ? ' hit' : ''}${foe.hp <= 0 ? ' down' : ''}`}
+          >
             <ContainmentCard speciesId={foe.speciesId} />
           </div>
         </div>
         <div className="field-row own">
-          <div className="field-art">
+          <div
+            key={`p${hit?.side === PLAYER ? hit.n : 0}`}
+            className={`field-art${hit?.side === PLAYER ? ' hit' : ''}${me.hp <= 0 ? ' down' : ''}`}
+          >
             <ContainmentCard speciesId={me.speciesId} />
           </div>
           <SideInfo state={state} side={PLAYER} />
         </div>
       </section>
 
-      <div className="log" ref={logRef} aria-live="polite">
-        {session.log.slice(-40).map((line, i) => (
-          <p key={session.log.length - 40 + i}>&gt; {line}</p>
+      <div className={`log${playing ? ' skippable' : ''}`} ref={logRef} aria-live="polite" onClick={skip}>
+        {display.log.slice(-40).map((line, i) => (
+          <p key={display.log.length - 40 + i}>&gt; {line}</p>
         ))}
       </div>
 
       <section className="controls">
-        {ended ? (
+        {playing ? (
+          <button className="btn" onClick={skip}>
+            ▸▸ Tap to skip
+          </button>
+        ) : ended ? (
           <div className="stack">
             <p className="result-banner">
-              {state.winner === 'draw' ? 'DRAW' : state.winner === PLAYER ? 'VICTORY' : 'DEFEAT'}
+              {real.winner === 'draw' ? 'DRAW' : real.winner === PLAYER ? 'VICTORY' : 'DEFEAT'}
             </p>
-            <button className="btn btn-primary" onClick={onRematch}>
-              Rematch
-            </button>
-            <button className="btn" onClick={onExit}>
-              Back to Team Builder
+            <button className="btn btn-primary" onClick={() => onFinished(real)}>
+              View incident report
             </button>
           </div>
         ) : mustReplace ? (
           <div className="stack">
             <p className="section-label">DEPLOY A REPLACEMENT</p>
-            {benchList(replace)}
+            <BenchList state={real} onPick={replace} />
           </div>
         ) : switching ? (
           <div className="stack">
             <p className="section-label">SWITCH TO</p>
-            {benchList((i) => act({ kind: 'switch', teamIndex: i }))}
+            <BenchList state={real} onPick={(i) => act({ kind: 'switch', teamIndex: i })} />
             <button className="btn" onClick={() => setSwitching(false)}>
               Cancel
             </button>
