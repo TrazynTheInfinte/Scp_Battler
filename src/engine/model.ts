@@ -83,6 +83,11 @@ export interface Volatiles {
   adaptedType: TypeName | null
   /** True if the opposing active used a Status move last turn ("watched"). */
   watched: boolean
+  /**
+   * The turn this SCP entered the field: the turn number during which it
+   * switched in, or the upcoming turn for a replacement. 0 for a lead.
+   */
+  enteredTurn: number
 }
 
 export interface Combatant {

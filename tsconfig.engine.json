@@ -1,7 +1,7 @@
 {
-  // The battle engine must stay free of DOM/browser APIs (docs/adr/0001).
-  // This project type-checks src/engine with no DOM lib, so any accidental
-  // use of window/document/etc. fails `tsc -b`.
+  // The battle engine and the AI must stay free of DOM/browser APIs
+  // (docs/adr/0001). This project type-checks them with no DOM lib, so any
+  // accidental use of window/document/etc. fails `tsc -b`.
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.engine.tsbuildinfo",
     "target": "es2023",
@@ -19,6 +19,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/engine"],
-  "exclude": ["src/engine/**/*.test.ts"]
+  "include": ["src/engine", "src/ai"],
+  "exclude": ["src/**/*.test.ts"]
 }

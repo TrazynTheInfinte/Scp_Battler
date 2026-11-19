@@ -48,7 +48,10 @@ export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
-const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false }
+const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0 }
+
+/** Mid-point of the damage roll, used for expected-damage estimates. */
+export const AVERAGE_ROLL = (MIN_ROLL + MAX_ROLL) / 2
 
 // ---------------------------------------------------------------------------
 // Setup
@@ -107,6 +110,11 @@ export function startBattle(
   for (const side of orderBySpeed(s, SIDES, rng)) runSwitchIn(s, dex, side, rng, events)
   s.rngState = rng.state
   return { state: s, events }
+}
+
+/** A fresh, full-HP level-50 combatant (e.g. for AI matchup estimates). */
+export function createCombatant(dex: Dex, speciesId: string): Combatant {
+  return newCombatant(species(dex, speciesId))
 }
 
 function newCombatant(sp: SpeciesData): Combatant {
@@ -217,7 +225,7 @@ export function resolveTurn(
   for (const side of orderBySpeed(s, switchers, rng)) {
     const choice = choices[side] as Extract<Choice, { kind: 'switch' }>
     const from = s.sides[side].active
-    switchIn(s, side, choice.teamIndex)
+    switchIn(s, side, choice.teamIndex, s.turn)
     events.push({ type: 'switch', side, from, to: choice.teamIndex })
     runSwitchIn(s, dex, side, rng, events)
   }
@@ -283,7 +291,7 @@ export function resolveReplacements(
 
   for (const side of ordered as SideIndex[]) {
     const pick = picks[side] as number
-    switchIn(s, side, pick)
+    switchIn(s, side, pick, s.turn + 1)
     events.push({ type: 'replace', side, to: pick })
     runSwitchIn(s, dex, side, rng, events)
   }
@@ -379,7 +387,12 @@ function orderMovers(
   return orderBySpeed(s, sides, rng)
 }
 
-function switchIn(s: BattleState, side: SideIndex, teamIndex: number): void {
+function switchIn(
+  s: BattleState,
+  side: SideIndex,
+  teamIndex: number,
+  enteredTurn: number,
+): void {
   const sideState = s.sides[side]
   // Stat stages and volatiles are cleared when an SCP leaves the field.
   // Status conditions persist.
@@ -387,6 +400,7 @@ function switchIn(s: BattleState, side: SideIndex, teamIndex: number): void {
     c.stages = { ...ZERO_STAGES }
     c.volatiles = { ...FRESH_VOLATILES }
   }
+  sideState.team[teamIndex].volatiles.enteredTurn = enteredTurn
   sideState.active = teamIndex
 }
 
@@ -449,27 +463,10 @@ function executeMove(
   }
 
   const target = activeOf(s, targetSide)
-  const targetSpecies = species(dex, target.speciesId)
-  const targetAbility = getAbility(targetSpecies.ability)
-  const userAbility = getAbility(userSpecies.ability)
+  const targetAbility = abilityOf(dex, target)
 
   const crit = rng.chance(CRIT_CHANCE)
-  const { attack, defense } = attackAndDefense(user, target, move, crit)
-  const effectiveness = typeEffectiveness(move.type, targetSpecies.types)
-  const abilityMultiplier =
-    (targetAbility?.incomingDamageMultiplier?.(target, move) ?? 1) *
-    (userAbility?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
-  const damage = computeDamage({
-    level: s.level,
-    power: move.power,
-    attack,
-    defense,
-    sameType: (userSpecies.types as readonly string[]).includes(move.type),
-    effectiveness,
-    abilityMultiplier,
-    crit,
-    roll: rng.int(MIN_ROLL, MAX_ROLL),
-  })
+  const { damage, effectiveness } = damageFor(dex, s.level, user, target, move, crit, rng.int(MIN_ROLL, MAX_ROLL))
 
   const dealt = Math.min(damage, target.hp)
   target.hp -= dealt
@@ -585,12 +582,62 @@ function heal(s: BattleState, side: SideIndex, fraction: number, events: BattleE
   return true
 }
 
-function canInflict(s: BattleState, dex: Dex, side: SideIndex, status: StatusName): boolean {
-  const target = activeOf(s, side)
-  if (isNeutralized(target) || target.status) return false
-  const sp = species(dex, target.speciesId)
+/** Damage one hit would do, with every modifier the engine applies. */
+function damageFor(
+  dex: Dex,
+  level: number,
+  user: Combatant,
+  target: Combatant,
+  move: MoveData,
+  crit: boolean,
+  roll: number,
+): { damage: number; effectiveness: number } {
+  const userSpecies = species(dex, user.speciesId)
+  const targetSpecies = species(dex, target.speciesId)
+  const { attack, defense } = attackAndDefense(user, target, move, crit)
+  const effectiveness = typeEffectiveness(move.type, targetSpecies.types)
+  const abilityMultiplier =
+    (getAbility(targetSpecies.ability)?.incomingDamageMultiplier?.(target, move) ?? 1) *
+    (getAbility(userSpecies.ability)?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
+  const damage = computeDamage({
+    level,
+    power: move.power,
+    attack,
+    defense,
+    sameType: (userSpecies.types as readonly string[]).includes(move.type),
+    effectiveness,
+    abilityMultiplier,
+    crit,
+    roll,
+  })
+  return { damage, effectiveness }
+}
+
+/**
+ * Average damage of one hit (no crit, mid roll, ignoring accuracy), with all
+ * type, stage, and ability modifiers. 0 for Status moves. For AI estimates.
+ */
+export function expectedDamage(
+  dex: Dex,
+  user: Combatant,
+  target: Combatant,
+  move: MoveData,
+  level: number = LEVEL,
+): number {
+  if (move.category === 'Status') return 0
+  return damageFor(dex, level, user, target, move, false, AVERAGE_ROLL).damage
+}
+
+/** Whether `c` could receive `status` right now (no current status, not immune). */
+export function canReceiveStatus(dex: Dex, c: Combatant, status: StatusName): boolean {
+  if (isNeutralized(c) || c.status) return false
+  const sp = species(dex, c.speciesId)
   if (isImmuneToStatus(sp.types, status)) return false
   return !getAbility(sp.ability)?.statusImmunities?.includes(status)
+}
+
+function canInflict(s: BattleState, dex: Dex, side: SideIndex, status: StatusName): boolean {
+  return canReceiveStatus(dex, activeOf(s, side), status)
 }
 
 /** Fails (returns false) if the target already has a status or is immune. */
