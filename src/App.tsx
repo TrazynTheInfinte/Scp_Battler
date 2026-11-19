@@ -1,33 +1,68 @@
 import { useState } from 'react'
+import { chooseAction, randomTeam } from './ai'
+import { ROSTER, ROSTER_ORDER } from './data/roster'
+import { createRng } from './engine'
 import './ui/ui.css'
+import { playerTurn, startSession, type Session } from './ui/battleController'
+import { BattleScreen } from './ui/screens/BattleScreen'
 import { CreditsScreen } from './ui/screens/CreditsScreen'
 import { TeamBuilderScreen } from './ui/screens/TeamBuilderScreen'
+import { TeamPreviewScreen } from './ui/screens/TeamPreviewScreen'
 import { TitleScreen } from './ui/screens/TitleScreen'
 
-type Screen = 'title' | 'builder' | 'credits' | 'preview'
+type Screen = 'title' | 'builder' | 'credits' | 'preview' | 'battle'
+
+/** A fresh battle seed; battles only need to differ, not be secret. */
+const newSeed = () => (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
+
+interface Match {
+  aiTeam: string[]
+  seed: number
+}
+
+function newMatch(): Match {
+  const seed = newSeed()
+  return { aiTeam: randomTeam(ROSTER, createRng(seed ^ 0xa1), ROSTER_ORDER), seed }
+}
 
 /**
- * Dev-only deep links for screenshot checks, e.g. ?screen=builder&team=scp-173,scp-999.
+ * Dev-only deep links for screenshot checks, e.g.
+ * ?screen=battle&team=scp-173,scp-999,scp-914,scp-131&ai=scp-682,...
  * `import.meta.env.DEV` is false in production builds, so this is stripped there.
  */
-function devParams(): { screen?: Screen; team?: string[] } {
-  if (!import.meta.env.DEV) return {}
+function devStart(): { screen: Screen; team: string[]; match: Match | null; session: Session | null } {
+  const none = { screen: 'title' as Screen, team: [], match: null, session: null }
+  if (!import.meta.env.DEV) return none
   const q = new URLSearchParams(window.location.search)
-  return {
-    screen: (q.get('screen') as Screen | null) ?? undefined,
-    team: q.get('team')?.split(',').filter(Boolean),
+  const screen = (q.get('screen') as Screen | null) ?? 'title'
+  const team = q.get('team')?.split(',').filter(Boolean) ?? []
+  const ai = q.get('ai')?.split(',').filter(Boolean)
+  const match = ai ? { aiTeam: ai, seed: 1 } : team.length === 4 ? { ...newMatch(), seed: 1 } : null
+  let session =
+    screen === 'battle' && match ? startSession(ROSTER, team, match.aiTeam, 0, match.seed).session : null
+  // ?turns=N auto-plays N turns with the AI on both sides, to show a battle in progress.
+  const devRng = createRng(7)
+  for (let i = Number(q.get('turns') ?? 0); session && i > 0 && session.state.phase === 'choose'; i--) {
+    session = playerTurn(session, chooseAction(session.state, ROSTER, 0, devRng)).session
   }
+  return { screen, team, match, session }
 }
 
 export default function App() {
-  const [dev] = useState(devParams)
-  const [screen, setScreen] = useState<Screen>(dev.screen ?? 'title')
+  const [dev] = useState(devStart)
+  const [screen, setScreen] = useState<Screen>(dev.screen)
   // Kept here so the team survives going back to the title and returning.
-  const [team, setTeam] = useState<string[]>(dev.team ?? [])
+  const [team, setTeam] = useState<string[]>(dev.team)
+  const [match, setMatch] = useState<Match | null>(dev.match)
+  const [session, setSession] = useState<Session | null>(dev.session)
 
   const go = (next: Screen) => {
     setScreen(next)
     window.scrollTo(0, 0)
+  }
+  const toPreview = (m: Match) => {
+    setMatch(m)
+    go('preview')
   }
 
   switch (screen) {
@@ -41,20 +76,32 @@ export default function App() {
           team={team}
           setTeam={setTeam}
           onBack={() => go('title')}
-          onBattle={() => go('preview')}
+          onBattle={() => toPreview(newMatch())}
         />
       )
     case 'preview':
-      // Team Preview and the Battle screen arrive in the next update.
+      if (!match) return null
       return (
-        <main className="screen">
-          <p className="eyebrow">CLEARANCE PENDING</p>
-          <h2>Team Preview</h2>
-          <p className="muted">Battles are coming in the next update. Your team is ready.</p>
-          <button className="btn" onClick={() => go('builder')}>
-            ← Back to Team Builder
-          </button>
-        </main>
+        <TeamPreviewScreen
+          playerTeam={team}
+          aiTeam={match.aiTeam}
+          onBack={() => go('builder')}
+          onBegin={(lead) => {
+            setSession(startSession(ROSTER, team, match.aiTeam, lead, match.seed).session)
+            go('battle')
+          }}
+        />
+      )
+    case 'battle':
+      if (!session || !match) return null
+      return (
+        <BattleScreen
+          key={match.seed}
+          initial={session}
+          // Same opposing team, new seed, choose leads again.
+          onRematch={() => toPreview({ aiTeam: match.aiTeam, seed: newSeed() })}
+          onExit={() => go('builder')}
+        />
       )
   }
 }
