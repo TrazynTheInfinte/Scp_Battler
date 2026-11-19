@@ -53,6 +53,7 @@ export function TeamBuilderScreen({
 
   const cost = teamCost(ROSTER, team)
   const legal = validateTeam(ROSTER, team).length === 0
+  const overBudget = cost > TEAM_BUDGET
 
   const add = (id: string) => {
     const blocker = addBlocker(team, id)
@@ -78,7 +79,12 @@ export function TeamBuilderScreen({
     setTeam([...t.speciesIds])
     setName(t.name)
     setShowSaved(false)
-    setNotice(`Loaded "${t.name}".`)
+    const tCost = teamCost(ROSTER, t.speciesIds)
+    setNotice(
+      tCost > TEAM_BUDGET
+        ? `Loaded "${t.name}", but it's over budget (${tCost}/${TEAM_BUDGET}) since costs changed. Swap an SCP out.`
+        : `Loaded "${t.name}".`,
+    )
   }
   const del = (t: SavedTeam) => {
     const result = deleteTeam(storage, ROSTER, t.name)
@@ -124,14 +130,19 @@ export function TeamBuilderScreen({
         <div className="budget">
           <span>BUDGET</span>
           <div className="meter" aria-hidden>
-            <span style={{ width: `${(cost / TEAM_BUDGET) * 100}%` }} />
+            <span style={{ width: `${Math.min(100, (cost / TEAM_BUDGET) * 100)}%` }} />
           </div>
           <span>
             {cost}/{TEAM_BUDGET}
           </span>
         </div>
         <p className="notice" role="status">
-          {notice ?? (legal ? 'Team ready.' : `Pick ${TEAM_SIZE - team.length} more. Safe 1 · Euclid 2 · Keter 4.`)}
+          {notice ??
+            (legal
+              ? 'Team ready.'
+              : overBudget
+                ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
+                : `Pick ${TEAM_SIZE - team.length} more. Safe ${OBJECT_CLASS_COST.Safe} · Euclid ${OBJECT_CLASS_COST.Euclid} · Keter ${OBJECT_CLASS_COST.Keter}.`)}
         </p>
         <div className="row">
           <button className="btn btn-primary" style={{ flex: 1 }} disabled={!legal} onClick={onBattle}>
@@ -161,6 +172,9 @@ export function TeamBuilderScreen({
               <div className="saved-row" key={t.name}>
                 <div>
                   <strong>{t.name}</strong>
+                  {teamCost(ROSTER, t.speciesIds) > TEAM_BUDGET && (
+                    <span className="badge status-badge">OVER BUDGET</span>
+                  )}
                   <div className="muted small">
                     {t.speciesIds.map((id) => ROSTER.species[id].name.replace('SCP-', '')).join(' · ')}
                   </div>

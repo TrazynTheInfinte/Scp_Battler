@@ -60,15 +60,17 @@ describe('saved teams', () => {
     expect(saveTeam(throwing, ROSTER, 'X', TEAM)).toEqual({ ok: false, reason: 'storage' })
   })
 
-  it('drops saved teams that are no longer legal', () => {
+  it('drops malformed saved teams but keeps ones that are only over budget', () => {
     const st = fakeStorage({
       'scp-battler:teams:v1': JSON.stringify([
         { name: 'ok', speciesIds: TEAM },
         { name: 'gone', speciesIds: ['scp-9999', 'scp-999', 'scp-914', 'scp-131'] },
         { name: 'junk' },
+        // Four Euclids: legal before the cost change, over budget now.
+        { name: 'pricey', speciesIds: ['scp-173', 'scp-096', 'scp-049', 'scp-079'] },
       ]),
     })
-    expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok'])
+    expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok', 'pricey'])
   })
 })
 

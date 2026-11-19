@@ -26,7 +26,10 @@ export function browserStorage(): TeamStorage | null {
   }
 }
 
-/** Load saved teams, silently dropping anything malformed or no longer legal. */
+/**
+ * Load saved teams, silently dropping anything malformed. Teams that are only
+ * over budget (e.g. after a cost change) are kept so the player can see and fix them.
+ */
 export function loadTeams(storage: TeamStorage | null, dex: Dex): SavedTeam[] {
   if (!storage) return []
   try {
@@ -40,7 +43,7 @@ export function loadTeams(storage: TeamStorage | null, dex: Dex): SavedTeam[] {
           typeof t.name === 'string' &&
           Array.isArray(t.speciesIds) &&
           t.speciesIds.every((id: unknown) => typeof id === 'string') &&
-          validateTeam(dex, t.speciesIds).length === 0,
+          validateTeam(dex, t.speciesIds).every((p) => p.kind === 'overBudget'),
       )
       .slice(0, MAX_SAVED_TEAMS)
   } catch {

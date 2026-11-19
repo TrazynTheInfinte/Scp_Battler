@@ -88,6 +88,8 @@ export interface Volatiles {
    * switched in, or the upcoming turn for a replacement. 0 for a lead.
    */
   enteredTurn: number
+  /** Enraged: Attack raises gained since entering (capped, so it can't snowball forever). */
+  enragedBoosts: number
 }
 
 export interface Combatant {

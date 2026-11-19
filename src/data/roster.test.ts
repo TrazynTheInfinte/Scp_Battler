@@ -30,7 +30,7 @@ describe('roster integrity', () => {
   })
 
   it('scales base stat totals with object class', () => {
-    const expected = { Safe: 430, Euclid: 500, Keter: 580 }
+    const expected = { Safe: 450, Euclid: 475, Keter: 600 }
     for (const sp of species) {
       const total = Object.values(sp.baseStats).reduce((a, b) => a + b, 0)
       expect(total, sp.id).toBe(expected[sp.objectClass])

@@ -2,6 +2,9 @@ import type { Combatant, MoveData, StatStages, StatusName } from './model'
 import type { Rng } from './rng'
 import type { TypeName } from './typeChart'
 
+/** Enraged stops raising Attack after this many boosts, until the SCP leaves the field. */
+export const ENRAGED_MAX_BOOSTS = 2
+
 /**
  * What an ability hook may do. The engine builds one bound to the ability
  * owner's side; "self" is the owner's active SCP and "opponent" is the other
@@ -114,9 +117,11 @@ export const ABILITIES: Readonly<Record<string, Ability>> = {
   enraged: {
     id: 'enraged',
     name: 'Enraged',
-    description: 'Raises its Attack by 1 every time it takes damage from a move.',
+    description:
+      'Raises its Attack by 1 when it takes damage from a move, up to twice each time it enters the field.',
     afterDamagedByMove(ctx) {
-      if (ctx.self.stages.atk >= 6) return
+      if (ctx.self.stages.atk >= 6 || ctx.self.volatiles.enragedBoosts >= ENRAGED_MAX_BOOSTS) return
+      ctx.self.volatiles.enragedBoosts++
       ctx.announce()
       ctx.changeStages('self', { atk: 1 })
     },

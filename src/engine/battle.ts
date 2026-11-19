@@ -48,7 +48,7 @@ export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
-const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0 }
+const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, enragedBoosts: 0 }
 
 /** Mid-point of the damage roll, used for expected-damage estimates. */
 export const AVERAGE_ROLL = (MIN_ROLL + MAX_ROLL) / 2

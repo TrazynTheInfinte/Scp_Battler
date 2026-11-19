@@ -4,7 +4,7 @@ import type {
 
 /**
  * The launch roster: 12 SCPs (4 Safe, 5 Euclid, 3 Keter).
- * Base stat totals: Safe 430, Euclid 500, Keter 580.
+ * Base stat totals: Safe 450, Euclid 475, Keter 600.
  *
  * SCP names and concepts are from the SCP Wiki (CC BY-SA 3.0); see
  * dossiers.ts for per-article credits. Move and ability names are original.
@@ -77,7 +77,7 @@ const MOVE_LIST: MoveData[] = [
   spec('data-surge', 'Data Surge', 'Mechanical', 85, 100),
   spec('corrupt-file', 'Corrupt File', 'Memetic', 75, 100, [foe({ spd: -1 }, 30)]),
   status('lockdown', 'Lockdown', 'Mechanical', 90, [inflict('Contained')]),
-  status('overclock', 'Overclock', 'Mechanical', null, [self({ spa: 1, spe: 1 })]),
+  status('overclock', 'Overclock', 'Mechanical', null, [self({ spe: 1 })]),
   // SCP-012
   spec('dissonant-chord', 'Dissonant Chord', 'Memetic', 90, 100),
   spec('blood-ink', 'Blood Ink', 'Thaumic', 80, 100, [inflict('Bleeding', 30)]),
@@ -106,64 +106,64 @@ const SPECIES_LIST: SpeciesData[] = [
   // Safe
   {
     id: 'scp-999', name: 'SCP-999', objectClass: 'Safe', types: ['Biological'],
-    baseStats: { hp: 110, atk: 50, def: 70, spa: 70, spd: 90, spe: 40 },
+    baseStats: { hp: 110, atk: 60, def: 80, spa: 70, spd: 90, spe: 40 },
     moves: ['embrace', 'tickle', 'bounce', 'calming-ooze'], ability: 'jovial',
   },
   {
     id: 'scp-914', name: 'SCP-914', objectClass: 'Safe', types: ['Mechanical'],
-    baseStats: { hp: 80, atk: 60, def: 100, spa: 90, spd: 70, spe: 30 },
+    baseStats: { hp: 90, atk: 60, def: 100, spa: 100, spd: 70, spe: 30 },
     moves: ['gear-grind', 'refine', 'coarse', 'very-fine'], ability: 'precisionEngineering',
   },
   {
     id: 'scp-343', name: 'SCP-343', objectClass: 'Safe', types: ['Reality'],
-    baseStats: { hp: 90, atk: 60, def: 70, spa: 100, spd: 80, spe: 30 },
+    baseStats: { hp: 100, atk: 60, def: 70, spa: 110, spd: 80, spe: 30 },
     moves: ['rewrite', 'smite', 'turn-back-time', 'divine-calm'], ability: 'willingDetainee',
   },
   {
     id: 'scp-131', name: 'SCP-131', objectClass: 'Safe', types: ['Kinetic'],
-    baseStats: { hp: 60, atk: 75, def: 55, spa: 50, spd: 55, spe: 135 },
+    baseStats: { hp: 70, atk: 85, def: 55, spa: 50, spd: 55, spe: 135 },
     moves: ['roll-out', 'ram', 'flank', 'keep-watch'], ability: 'everWatchful',
   },
   // Euclid
   {
     id: 'scp-173', name: 'SCP-173', objectClass: 'Euclid', types: ['Kinetic'],
-    baseStats: { hp: 75, atk: 135, def: 115, spa: 20, spd: 55, spe: 100 },
+    baseStats: { hp: 75, atk: 115, def: 110, spa: 20, spd: 55, spe: 100 },
     moves: ['neck-snap', 'blink', 'crimson-residue', 'stalk'], ability: 'unobserved',
   },
   {
     id: 'scp-096', name: 'SCP-096', objectClass: 'Euclid', types: ['Memetic', 'Kinetic'],
-    baseStats: { hp: 90, atk: 130, def: 70, spa: 40, spd: 70, spe: 100 },
+    baseStats: { hp: 85, atk: 85, def: 70, spa: 65, spd: 70, spe: 100 },
     moves: ['rend', 'relentless-pursuit', 'unveiled-face', 'weep'], ability: 'enraged',
   },
   {
     id: 'scp-049', name: 'SCP-049', objectClass: 'Euclid', types: ['Biological', 'Thaumic'],
-    baseStats: { hp: 95, atk: 85, def: 85, spa: 95, spd: 95, spe: 45 },
+    baseStats: { hp: 90, atk: 95, def: 80, spa: 75, spd: 90, spe: 45 },
     moves: ['diagnose-pestilence', 'the-cure', 'bone-saw', 'sedative'], ability: 'theCure',
   },
   {
     id: 'scp-079', name: 'SCP-079', objectClass: 'Euclid', types: ['Mechanical', 'Memetic'],
-    baseStats: { hp: 80, atk: 40, def: 90, spa: 120, spd: 90, spe: 80 },
+    baseStats: { hp: 95, atk: 30, def: 85, spa: 95, spd: 90, spe: 80 },
     moves: ['data-surge', 'corrupt-file', 'lockdown', 'overclock'], ability: 'bootSequence',
   },
   {
     id: 'scp-012', name: 'SCP-012', objectClass: 'Euclid', types: ['Memetic', 'Thaumic'],
-    baseStats: { hp: 75, atk: 40, def: 70, spa: 135, spd: 100, spe: 80 },
+    baseStats: { hp: 70, atk: 50, def: 70, spa: 105, spd: 100, spe: 80 },
     moves: ['dissonant-chord', 'blood-ink', 'unfinished-score', 'crescendo'], ability: 'morbidAllure',
   },
   // Keter
   {
     id: 'scp-682', name: 'SCP-682', objectClass: 'Keter', types: ['Kinetic', 'Biological'],
-    baseStats: { hp: 125, atk: 115, def: 115, spa: 60, spd: 100, spe: 65 },
+    baseStats: { hp: 100, atk: 115, def: 100, spa: 110, spd: 100, spe: 75 },
     moves: ['crushing-jaws', 'acidic-bile', 'rampage', 'regenerate'], ability: 'adaptive',
   },
   {
     id: 'scp-106', name: 'SCP-106', objectClass: 'Keter', types: ['Temporal', 'Thaumic'],
-    baseStats: { hp: 100, atk: 110, def: 100, spa: 100, spd: 100, spe: 70 },
+    baseStats: { hp: 110, atk: 110, def: 100, spa: 100, spd: 100, spe: 80 },
     moves: ['corrosive-touch', 'decay', 'ambush', 'into-the-pocket'], ability: 'phasing',
   },
   {
     id: 'scp-055', name: 'SCP-055', objectClass: 'Keter', types: ['Antimemetic'],
-    baseStats: { hp: 100, atk: 90, def: 110, spa: 110, spd: 110, spe: 60 },
+    baseStats: { hp: 110, atk: 75, def: 110, spa: 120, spd: 110, spe: 75 },
     moves: ['memory-hole', 'negative-space', 'erasure', 'what-isnt'], ability: 'selfKeepingSecret',
   },
 ]

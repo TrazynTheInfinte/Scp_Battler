@@ -4,8 +4,8 @@ import { dex } from './testing/fixtures'
 
 describe('validateTeam', () => {
   it('accepts a legal team of four within budget', () => {
-    // Keter 4 + Euclid 2 + Euclid 2 + Safe 1 = 9
-    expect(validateTeam(dex, ['keterA', 'fast', 'twin', 'slow'])).toEqual([])
+    // Keter 4 + Euclid 3 + Safe 1 + Safe 1 = 9
+    expect(validateTeam(dex, ['keterA', 'fast', 'slow', 'gear'])).toEqual([])
   })
 
   it('accepts a team exactly at the budget of 10', () => {
@@ -15,9 +15,9 @@ describe('validateTeam', () => {
   })
 
   it('rejects teams over budget', () => {
-    // Keter 4 + Keter 4 + Euclid 2 + Euclid 2 = 12
+    // Keter 4 + Keter 4 + Euclid 3 + Euclid 3 = 14
     expect(validateTeam(dex, ['keterA', 'keterB', 'fast', 'twin'])).toEqual([
-      { kind: 'overBudget', cost: 12 },
+      { kind: 'overBudget', cost: 14 },
     ])
   })
 

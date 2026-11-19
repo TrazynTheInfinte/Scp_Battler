@@ -4,7 +4,7 @@ export const TEAM_SIZE = 4
 export const TEAM_BUDGET = 10
 export const OBJECT_CLASS_COST: Readonly<Record<ObjectClass, number>> = {
   Safe: 1,
-  Euclid: 2,
+  Euclid: 3,
   Keter: 4,
 }
 

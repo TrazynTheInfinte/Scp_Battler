@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeOf,
+  ENRAGED_MAX_BOOSTS,
   createBattle,
   resolveReplacements,
   resolveTurn,
@@ -104,6 +105,31 @@ describe('Enraged (096)', () => {
     expect(events).toContainEqual({ type: 'ability', side: 1, abilityId: 'enraged' })
     // +1 from Enraged, +1 from Weep.
     expect(activeOf(state, 1).stages.atk).toBe(2)
+  })
+
+  it('stops after two raises, and the count resets when it re-enters', () => {
+    // 131 Roll Out into 096 four times, 096 hitting back; every SCP is made too bulky to fall.
+    let s = battle(team('scp-131'), team('scp-096'))
+    for (const c of [...s.sides[0].team, ...s.sides[1].team]) {
+      c.stats = { ...c.stats, hp: 9999 }
+      c.hp = 9999
+    }
+    let raises = 0
+    for (let i = 0; i < 4; i++) {
+      const r = resolveTurn(s, ROSTER, [move(0), move(1)])
+      raises += r.events.filter((e) => e.type === 'ability' && e.abilityId === 'enraged').length
+      s = r.state
+    }
+    expect(raises).toBe(ENRAGED_MAX_BOOSTS)
+    expect(activeOf(s, 1).stages.atk).toBe(ENRAGED_MAX_BOOSTS)
+
+    // Out and back in: boosts and the count are cleared, so it can rise again.
+    // (Roll Out hits 096 as it switches back in: that's its first new raise.)
+    s = resolveTurn(s, ROSTER, [move(0), sw(1)]).state
+    s = resolveTurn(s, ROSTER, [move(0), sw(0)]).state
+    expect(activeOf(s, 1).stages.atk).toBe(1)
+    const r = resolveTurn(s, ROSTER, [move(0), move(1)])
+    expect(activeOf(r.state, 1).stages.atk).toBe(2)
   })
 })
 
