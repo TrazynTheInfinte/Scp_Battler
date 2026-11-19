@@ -39,7 +39,17 @@ names and all game mechanics are original to this project.
 | SCP-106 | https://scp-wiki.wikidot.com/scp-106 | Dr Gears |
 | SCP-055 | https://scp-wiki.wikidot.com/scp-055 | qntm and CptBellman |
 
-Images are credited here individually once they are added to the game
-(see `src/data/dossiers.ts` for the licensed candidates).
+### Images
 
-The same credits will appear in-game on the Credits screen (milestone 6).
+Each is taken from the SCP's article, resized to 480px, and saved as
+`public/scp/<scp>.jpg`. SCPs not listed use an original placeholder card.
+
+| File | Original | Author | License |
+|---|---|---|---|
+| `scp-914.jpg` | gears.jpg | Thomas Claveirole | CC BY-SA 2.0 |
+| `scp-131.jpg` | 131volgun.png | VolgunStrife | CC BY-SA 3.0 |
+| `scp-049.jpg` | 049_1_ntsc.png | VolgunStrife | CC BY-SA 3.0 |
+| `scp-682.jpg` | monster8editub9-new.jpg | OccultistMave (derivative of "Beached humpback whale at Kincaid Park. Anchorage, Alaska" by Paxson Woelber, CC BY 2.0) | CC BY-SA 3.0 |
+| `scp-106.jpg` | 106emergenceklay.jpg | Klay Abele (MrKlay) | CC BY-SA 3.0 |
+
+The same credits appear in-game on the Credits screen.

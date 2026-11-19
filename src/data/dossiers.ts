@@ -4,7 +4,8 @@
  * article's "Licensing / Citation" box, verified 2026-11-19.
  *
  * Images are only listed when the article's licensing box gives a license
- * compatible with reuse. They are not bundled yet (milestone 6).
+ * compatible with reuse. `ART_SOURCE` says which one the game shows; that
+ * file is resized into public/scp/<speciesId>.jpg.
  */
 
 export interface ImageCredit {
@@ -76,3 +77,22 @@ export const DOSSIERS: Readonly<Record<string, Dossier>> = Object.fromEntries(
     ] satisfies Dossier[]
   ).map((d) => [d.speciesId, d]),
 )
+
+/**
+ * Which licensed image (by its wiki filename) each SCP's art uses. SCPs not
+ * listed have no licensed image and show a placeholder card.
+ */
+export const ART_SOURCE: Readonly<Record<string, string>> = {
+  'scp-914': 'gears.jpg',
+  'scp-131': '131volgun.png',
+  'scp-049': '049_1_ntsc.png',
+  'scp-682': 'monster8editub9-new.jpg',
+  'scp-106': '106emergenceklay.jpg',
+}
+
+/** The credit for the image an SCP's art shows, if any. */
+export function artCredit(speciesId: string): ImageCredit | null {
+  const file = ART_SOURCE[speciesId]
+  if (!file) return null
+  return DOSSIERS[speciesId]?.images.find((img) => img.file === file) ?? null
+}

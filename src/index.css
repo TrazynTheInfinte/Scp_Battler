@@ -1,12 +1,36 @@
 :root {
   --bg: #0b0e12;
+  --panel: #121820;
+  --panel-2: #18202a;
+  --line: #273241;
   --fg: #d7dde4;
   --muted: #7d8794;
   --accent: #c8102e;
-  --redact: #d7dde4;
+  --ok: #4fbf6a;
+  --warn: #e0a526;
+  --safe: #4fbf6a;
+  --euclid: #e0a526;
+  --keter: #e0473d;
+  --hp-high: #4fbf6a;
+  --hp-mid: #e0a526;
+  --hp-low: #e0473d;
+
+  --t-kinetic: #c9774a;
+  --t-biological: #6cbf4f;
+  --t-mechanical: #8c9aab;
+  --t-memetic: #d65db1;
+  --t-antimemetic: #9a8cff;
+  --t-reality: #4fb8d6;
+  --t-temporal: #d6c34f;
+  --t-thaumic: #b24fd6;
+
+  --radius: 6px;
   font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+  font-size: 15px;
+  line-height: 1.4;
   color: var(--fg);
   background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
@@ -19,8 +43,17 @@ body {
   background: var(--bg);
 }
 
+button {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--t-reality);
+}
+
 .redacted {
-  background: var(--redact);
-  color: var(--redact);
+  background: var(--fg);
+  color: var(--fg);
   user-select: none;
 }
