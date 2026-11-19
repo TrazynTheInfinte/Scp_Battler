@@ -28,6 +28,10 @@ _Avoid_: Lead, on-field, out
 The state of an SCP whose HP has reached 0; it can no longer fight or be switched in.
 _Avoid_: Fainted, KO'd, dead, breached
 
+**Turn Limit**:
+The last turn a battle can last; a battle still undecided after it is won by the side with the larger share of its team's total HP remaining, or drawn if equal.
+_Avoid_: Timeout, time limit, overtime
+
 **Switch**:
 Replacing your active SCP with a benched team member.
 _Avoid_: Swap, recall

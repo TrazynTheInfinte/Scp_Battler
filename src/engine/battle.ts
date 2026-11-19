@@ -1,4 +1,4 @@
-import { getAbility } from './abilities'
+import { getAbility, type Ability, type AbilityContext } from './abilities'
 import { CRIT_CHANCE, MAX_ROLL, MIN_ROLL, computeDamage } from './damage'
 import type {
   BattleEvent,
@@ -29,6 +29,7 @@ import {
   isImmuneToStatus,
 } from './status'
 import { validateTeam } from './team'
+import type { TypeName } from './typeChart'
 import { typeEffectiveness } from './typeChart'
 
 export interface StepResult {
@@ -37,6 +38,13 @@ export interface StepResult {
 }
 
 const SIDES: readonly SideIndex[] = [0, 1]
+
+/**
+ * A battle still going after this turn ends by remaining HP: the side with
+ * the higher share of its team's total max HP left wins; equal is a draw.
+ * Guarantees termination (e.g. two healers that out-heal each other).
+ */
+export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
@@ -47,8 +55,12 @@ const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false }
 // ---------------------------------------------------------------------------
 
 /**
- * Start a battle after Team Preview: both teams (species ids, in team order),
- * each side's chosen starting SCP, and the RNG seed.
+ * Build the initial battle state after Team Preview: both teams (species ids,
+ * in team order), each side's chosen starting SCP, and the RNG seed.
+ *
+ * This does NOT run the leads' switch-in abilities; use `startBattle` for a
+ * real battle. `createBattle` exists for tests and tooling that need the raw
+ * state.
  */
 export function createBattle(
   dex: Dex,
@@ -80,6 +92,21 @@ export function createBattle(
     winner: null,
     rngState: seed >>> 0,
   }
+}
+
+/** Start a battle: create it, then run both leads' switch-in abilities (faster first). */
+export function startBattle(
+  dex: Dex,
+  teams: readonly [readonly string[], readonly string[]],
+  leads: readonly [number, number],
+  seed: number,
+): StepResult {
+  const s = createBattle(dex, teams, leads, seed)
+  const rng = createRng(s.rngState)
+  const events: BattleEvent[] = []
+  for (const side of orderBySpeed(s, SIDES, rng)) runSwitchIn(s, dex, side, rng, events)
+  s.rngState = rng.state
+  return { state: s, events }
 }
 
 function newCombatant(sp: SpeciesData): Combatant {
@@ -164,9 +191,10 @@ export function checkOutcome(state: BattleState): SideIndex | 'draw' | null {
 /**
  * Resolve one turn from both sides' choices. Pure: returns a new state.
  *
- * Order: switches (faster outgoing SCP first) -> moves (ability priority,
- * then faster active first; an SCP Neutralized before acting does nothing)
- * -> end of turn (faster first) -> outcome. Speed ties are a coin flip.
+ * Order: switches (faster outgoing SCP first, each followed by its switch-in
+ * ability) -> moves (ability priority, then faster active first; an SCP
+ * Neutralized before acting does nothing) -> end of turn (faster first) ->
+ * outcome. Speed ties are a coin flip.
  */
 export function resolveTurn(
   state: BattleState,
@@ -191,6 +219,7 @@ export function resolveTurn(
     const from = s.sides[side].active
     switchIn(s, side, choice.teamIndex)
     events.push({ type: 'switch', side, from, to: choice.teamIndex })
+    runSwitchIn(s, dex, side, rng, events)
   }
 
   // 2. Moves, ordered by whoever is active now (after switches).
@@ -208,7 +237,7 @@ export function resolveTurn(
     usedStatusMove[1] && !switchers.includes(0),
     usedStatusMove[0] && !switchers.includes(1),
   ]
-  endOfTurn(s, rng, events, watchedNext)
+  endOfTurn(s, dex, rng, events, watchedNext)
 
   s.rngState = rng.state
   finishStep(s, events)
@@ -217,10 +246,12 @@ export function resolveTurn(
 
 /**
  * During the 'replace' phase: each side that needs one sends in a new active
- * (a team index); sides that don't must pass null.
+ * (a team index); sides that don't must pass null. Replacements enter in
+ * order of the incoming SCPs' Speed, each followed by its switch-in ability.
  */
 export function resolveReplacements(
   state: BattleState,
+  dex: Dex,
   picks: readonly [number | null, number | null],
 ): StepResult {
   if (state.phase !== 'replace') {
@@ -238,16 +269,28 @@ export function resolveReplacements(
   }
 
   const s = cloneState(state)
+  const rng = createRng(s.rngState)
   const events: BattleEvent[] = []
-  for (const side of SIDES) {
-    const pick = picks[side]
-    if (pick === null) continue
+
+  const replacing = SIDES.filter((side) => picks[side] !== null)
+  const incomingSpeed = (side: SideIndex) => speedOf(s.sides[side].team[picks[side] as number])
+  const ordered =
+    replacing.length < 2 || incomingSpeed(0) !== incomingSpeed(1)
+      ? [...replacing].sort((a, b) => incomingSpeed(b) - incomingSpeed(a))
+      : rng.chance(0.5)
+        ? [0, 1]
+        : [1, 0]
+
+  for (const side of ordered as SideIndex[]) {
+    const pick = picks[side] as number
     switchIn(s, side, pick)
     events.push({ type: 'replace', side, to: pick })
+    runSwitchIn(s, dex, side, rng, events)
   }
   s.needsReplacement = [false, false]
   s.phase = 'choose'
   s.turn += 1
+  s.rngState = rng.state
   return { state: s, events }
 }
 
@@ -284,6 +327,10 @@ function moveData(dex: Dex, id: string): MoveData {
   return m
 }
 
+function abilityOf(dex: Dex, c: Combatant): Ability | null {
+  return getAbility(species(dex, c.speciesId).ability)
+}
+
 function other(side: SideIndex): SideIndex {
   return side === 0 ? 1 : 0
 }
@@ -298,7 +345,10 @@ function orderBySpeed(s: BattleState, sides: readonly SideIndex[], rng: Rng): Si
   return sa > sb ? [a, b] : [b, a]
 }
 
-/** Move order: an ability granting priority beats Speed; otherwise by Speed. */
+/**
+ * Move order: an ability granting priority beats Speed (unless the opponent's
+ * ability suppresses it); otherwise by Speed.
+ */
 function orderMovers(
   s: BattleState,
   dex: Dex,
@@ -307,14 +357,20 @@ function orderMovers(
   events: BattleEvent[],
 ): SideIndex[] {
   if (sides.length < 2) return [...sides]
-  const priorityAbility = (side: SideIndex): string | null => {
+  const priority = (side: SideIndex): string | null => {
     const c = activeOf(s, side)
-    const ability = getAbility(species(dex, c.speciesId).ability)
-    return ability?.movesFirst?.(c) ? ability.id : null
+    const ability = abilityOf(dex, c)
+    if (!ability?.movesFirst?.(c)) return null
+    const opposing = abilityOf(dex, activeOf(s, other(side)))
+    if (opposing?.suppressesOpponentPriority) {
+      events.push({ type: 'ability', side: other(side), abilityId: opposing.id })
+      return null
+    }
+    return ability.id
   }
   const [a, b] = sides
-  const pa = priorityAbility(a)
-  const pb = priorityAbility(b)
+  const pa = priority(a)
+  const pb = priority(b)
   if ((pa === null) !== (pb === null)) {
     const first = pa !== null ? a : b
     events.push({ type: 'ability', side: first, abilityId: (pa ?? pb) as string })
@@ -334,11 +390,16 @@ function switchIn(s: BattleState, side: SideIndex, teamIndex: number): void {
   sideState.active = teamIndex
 }
 
+function runSwitchIn(s: BattleState, dex: Dex, side: SideIndex, rng: Rng, events: BattleEvent[]) {
+  const ability = abilityOf(dex, activeOf(s, side))
+  ability?.onSwitchIn?.(abilityContext(s, dex, side, ability, rng, events))
+}
+
 /**
  * One side's action. Returns true if the move actually used was a Status move
  * (for SCP-173's Unobserved). RNG is consumed in a fixed order so lockstep
  * clients stay in sync: stun check, amnesia check(s), accuracy, crit, roll,
- * then effect chances in listed order.
+ * ability reactions, then effect chances in listed order.
  */
 function executeMove(
   s: BattleState,
@@ -390,10 +451,14 @@ function executeMove(
   const target = activeOf(s, targetSide)
   const targetSpecies = species(dex, target.speciesId)
   const targetAbility = getAbility(targetSpecies.ability)
+  const userAbility = getAbility(userSpecies.ability)
 
   const crit = rng.chance(CRIT_CHANCE)
   const { attack, defense } = attackAndDefense(user, target, move, crit)
   const effectiveness = typeEffectiveness(move.type, targetSpecies.types)
+  const abilityMultiplier =
+    (targetAbility?.incomingDamageMultiplier?.(target, move) ?? 1) *
+    (userAbility?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
   const damage = computeDamage({
     level: s.level,
     power: move.power,
@@ -401,7 +466,7 @@ function executeMove(
     defense,
     sameType: (userSpecies.types as readonly string[]).includes(move.type),
     effectiveness,
-    abilityMultiplier: targetAbility?.incomingDamageMultiplier?.(target, move.type) ?? 1,
+    abilityMultiplier,
     crit,
     roll: rng.int(MIN_ROLL, MAX_ROLL),
   })
@@ -421,8 +486,11 @@ function executeMove(
     return false
   }
 
-  if (targetAbility?.afterDamagedByMove?.(target, move.type)) {
-    events.push({ type: 'ability', side: targetSide, abilityId: targetAbility.id, typeName: move.type })
+  if (targetAbility?.afterDamagedByMove) {
+    targetAbility.afterDamagedByMove(
+      abilityContext(s, dex, targetSide, targetAbility, rng, events),
+      move,
+    )
   }
 
   applyEffects(s, dex, side, move, rng, events)
@@ -438,7 +506,6 @@ function applyEffects(
   rng: Rng,
   events: BattleEvent[],
 ): boolean {
-  const user = activeOf(s, side)
   const targetSide = other(side)
   let changed = false
   const rolls = (chance: number) => chance >= 100 || rng.chance(chance / 100)
@@ -453,29 +520,15 @@ function applyEffects(
       case 'stages': {
         if (!rolls(effect.chance)) break
         const who = effect.who === 'user' ? side : targetSide
-        const c = activeOf(s, who)
-        for (const stat of STAGEABLE) {
-          const requested = effect.changes[stat]
-          if (!requested) continue
-          const next = Math.max(MIN_STAGE, Math.min(MAX_STAGE, c.stages[stat] + requested))
-          const delta = next - c.stages[stat]
-          if (delta === 0) continue
-          c.stages[stat] = next
-          events.push({ type: 'stage', side: who, stat, delta })
-          changed = true
-        }
+        if (changeStages(s, dex, who, effect.changes, effect.who === 'target', events)) changed = true
         break
       }
       case 'heal': {
-        const missing = user.stats.hp - user.hp
-        if (missing <= 0) break
-        const amount = Math.min(missing, Math.max(1, Math.floor((user.stats.hp * effect.percent) / 100)))
-        user.hp += amount
-        events.push({ type: 'heal', side, amount, hpAfter: user.hp })
-        changed = true
+        if (heal(s, side, effect.percent / 100, events)) changed = true
         break
       }
       case 'cure': {
+        const user = activeOf(s, side)
         if (!user.status) break
         events.push({ type: 'statusEnded', side, status: user.status.name })
         user.status = null
@@ -487,6 +540,59 @@ function applyEffects(
   return changed
 }
 
+/**
+ * Apply stage changes to `side`'s active, clamped to +-6. `byOpponent` marks
+ * changes caused by the other side, which some abilities block (drops only).
+ */
+function changeStages(
+  s: BattleState,
+  dex: Dex,
+  side: SideIndex,
+  changes: Partial<StatStages>,
+  byOpponent: boolean,
+  events: BattleEvent[],
+): boolean {
+  const c = activeOf(s, side)
+  if (isNeutralized(c)) return false
+  const ability = abilityOf(dex, c)
+  let changed = false
+  let blocked = false
+  for (const stat of STAGEABLE) {
+    const requested = changes[stat]
+    if (!requested) continue
+    if (requested < 0 && byOpponent && ability?.blocksOpponentStatDrops) {
+      blocked = true
+      continue
+    }
+    const next = Math.max(MIN_STAGE, Math.min(MAX_STAGE, c.stages[stat] + requested))
+    const delta = next - c.stages[stat]
+    if (delta === 0) continue
+    c.stages[stat] = next
+    events.push({ type: 'stage', side, stat, delta })
+    changed = true
+  }
+  if (blocked && ability) events.push({ type: 'ability', side, abilityId: ability.id })
+  return changed
+}
+
+function heal(s: BattleState, side: SideIndex, fraction: number, events: BattleEvent[]): boolean {
+  const c = activeOf(s, side)
+  const missing = c.stats.hp - c.hp
+  if (isNeutralized(c) || missing <= 0) return false
+  const amount = Math.min(missing, Math.max(1, Math.floor(c.stats.hp * fraction)))
+  c.hp += amount
+  events.push({ type: 'heal', side, amount, hpAfter: c.hp })
+  return true
+}
+
+function canInflict(s: BattleState, dex: Dex, side: SideIndex, status: StatusName): boolean {
+  const target = activeOf(s, side)
+  if (isNeutralized(target) || target.status) return false
+  const sp = species(dex, target.speciesId)
+  if (isImmuneToStatus(sp.types, status)) return false
+  return !getAbility(sp.ability)?.statusImmunities?.includes(status)
+}
+
 /** Fails (returns false) if the target already has a status or is immune. */
 function inflictStatus(
   s: BattleState,
@@ -496,27 +602,63 @@ function inflictStatus(
   rng: Rng,
   events: BattleEvent[],
 ): boolean {
-  const target = activeOf(s, side)
-  if (target.status) return false
-  if (isImmuneToStatus(species(dex, target.speciesId).types, status)) return false
+  if (!canInflict(s, dex, side, status)) return false
   const turnsLeft =
     status === 'Amnesiac'
       ? rng.int(AMNESIAC_MIN_TURNS, AMNESIAC_MAX_TURNS)
       : status === 'Contained'
         ? CONTAINED_TURNS
         : null
-  target.status = { name: status, turnsLeft }
+  activeOf(s, side).status = { name: status, turnsLeft }
   events.push({ type: 'status', side, status })
   return true
 }
 
+function abilityContext(
+  s: BattleState,
+  dex: Dex,
+  side: SideIndex,
+  ability: Ability,
+  rng: Rng,
+  events: BattleEvent[],
+): AbilityContext {
+  const sideOf = (who: 'self' | 'opponent'): SideIndex => (who === 'self' ? side : other(side))
+  return {
+    self: activeOf(s, side),
+    opponent: activeOf(s, other(side)),
+    rng,
+    announce(typeName?: TypeName) {
+      events.push({ type: 'ability', side, abilityId: ability.id, ...(typeName ? { typeName } : {}) })
+    },
+    changeStages: (who, changes) =>
+      changeStages(s, dex, sideOf(who), changes, who === 'opponent', events),
+    clearBoosts(who) {
+      const target = sideOf(who)
+      const c = activeOf(s, target)
+      if (isNeutralized(c)) return false
+      let changed = false
+      for (const stat of STAGEABLE) {
+        if (c.stages[stat] <= 0) continue
+        events.push({ type: 'stage', side: target, stat, delta: -c.stages[stat] })
+        c.stages[stat] = 0
+        changed = true
+      }
+      return changed
+    },
+    canInflict: (who, status) => canInflict(s, dex, sideOf(who), status),
+    inflictStatus: (who, status) => inflictStatus(s, dex, sideOf(who), status, rng, events),
+    heal: (who, fraction) => heal(s, sideOf(who), fraction, events),
+  }
+}
+
 /**
- * End of turn, faster active first: status damage (Bleeding 1/8, Contained
- * 1/16, min 1), then Contained counts down. Finally record which actives are
- * "watched" next turn.
+ * End of turn, faster active first. For each: status damage (Bleeding 1/8,
+ * Contained 1/16, min 1), then Contained counts down, then its end-of-turn
+ * ability. Finally record which actives are "watched" next turn.
  */
 function endOfTurn(
   s: BattleState,
+  dex: Dex,
   rng: Rng,
   events: BattleEvent[],
   watchedNext: readonly [boolean, boolean],
@@ -525,8 +667,7 @@ function endOfTurn(
   for (const side of orderBySpeed(s, alive, rng)) {
     const c = activeOf(s, side)
     const status = c.status
-    if (!status) continue
-    if (status.name === 'Bleeding' || status.name === 'Contained') {
+    if (status && (status.name === 'Bleeding' || status.name === 'Contained')) {
       const fraction = status.name === 'Bleeding' ? BLEED_FRACTION : CONTAINED_FRACTION
       const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
       c.hp -= amount
@@ -536,7 +677,7 @@ function endOfTurn(
         continue
       }
     }
-    if (status.name === 'Contained') {
+    if (status?.name === 'Contained') {
       const left = (status.turnsLeft ?? 1) - 1
       if (left <= 0) {
         c.status = null
@@ -545,6 +686,8 @@ function endOfTurn(
         status.turnsLeft = left
       }
     }
+    const ability = abilityOf(dex, c)
+    ability?.onEndOfTurn?.(abilityContext(s, dex, side, ability, rng, events))
   }
 
   for (const side of SIDES) {
@@ -573,9 +716,27 @@ export function attackAndDefense(
   }
 }
 
+/** Turn-limit result: higher share of total team HP remaining wins; equal is a draw. */
+export function timeoutWinner(state: BattleState): SideIndex | 'draw' {
+  const totals = SIDES.map((side) =>
+    state.sides[side].team.reduce(
+      (t, c) => ({ hp: t.hp + Math.max(0, c.hp), max: t.max + c.stats.hp }),
+      { hp: 0, max: 0 },
+    ),
+  )
+  // Compare hp0/max0 vs hp1/max1 without floating point.
+  const a = totals[0].hp * totals[1].max
+  const b = totals[1].hp * totals[0].max
+  return a === b ? 'draw' : a > b ? 0 : 1
+}
+
 /** After a turn: end the battle, ask for replacements, or open the next turn. */
 function finishStep(s: BattleState, events: BattleEvent[]): void {
-  const outcome = checkOutcome(s)
+  let outcome = checkOutcome(s)
+  if (outcome === null && s.turn >= TURN_LIMIT) {
+    events.push({ type: 'timeout' })
+    outcome = timeoutWinner(s)
+  }
   if (outcome !== null) {
     s.phase = 'ended'
     s.winner = outcome

@@ -20,5 +20,26 @@ Any adaptation of that content must carry the same license.
 
 ## Attributions
 
-Per-SCP attributions are listed in-game on the Credits screen and will be
-mirrored here as content is added.
+SCP names and concepts used in the roster, credited as on each article's
+licensing box (verified 2026-11-19). All are CC BY-SA 3.0. Move and ability
+names and all game mechanics are original to this project.
+
+| SCP | Article | Author(s) |
+|---|---|---|
+| SCP-999 | https://scp-wiki.wikidot.com/scp-999 | ProfSnider |
+| SCP-914 | https://scp-wiki.wikidot.com/scp-914 | Dr Gears |
+| SCP-343 | https://scp-wiki.wikidot.com/scp-343 | Unknown Author |
+| SCP-131 | https://scp-wiki.wikidot.com/scp-131 | Unknown Author |
+| SCP-173 | https://scp-wiki.wikidot.com/scp-173 | Moto42 |
+| SCP-096 | https://scp-wiki.wikidot.com/scp-096 | Dr Dan |
+| SCP-049 | https://scp-wiki.wikidot.com/scp-049 | Gabriel Jade, rewritten by djkaktus & Gabriel Jade |
+| SCP-079 | https://scp-wiki.wikidot.com/scp-079 | Unknown Author |
+| SCP-012 | https://scp-wiki.wikidot.com/scp-012 | ITIFAMCO |
+| SCP-682 | https://scp-wiki.wikidot.com/scp-682 | Dr Gears and Epic Phail Spy |
+| SCP-106 | https://scp-wiki.wikidot.com/scp-106 | Dr Gears |
+| SCP-055 | https://scp-wiki.wikidot.com/scp-055 | qntm and CptBellman |
+
+Images are credited here individually once they are added to the game
+(see `src/data/dossiers.ts` for the licensed candidates).
+
+The same credits will appear in-game on the Credits screen (milestone 6).

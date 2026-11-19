@@ -7,6 +7,7 @@ import {
   legalChoices,
   resolveReplacements,
   resolveTurn,
+  TURN_LIMIT,
 } from './battle'
 import type { BattleEvent, BattleState, Choice } from './model'
 import { FOCUS, JAB, SMASH, WHIFF, dex } from './testing/fixtures'
@@ -108,7 +109,7 @@ describe('Neutralized', () => {
 
   it('the replacement comes in between turns and did not act on the turn it arrived', () => {
     const t1 = resolveTurn(battle(), dex, [move(SMASH), move(SMASH)])
-    const t2 = resolveReplacements(t1.state, [null, 1])
+    const t2 = resolveReplacements(t1.state, dex, [null, 1])
     expect(t2.events).toEqual([{ type: 'replace', side: 1, to: 1 }])
     expect(t2.state.sides[1].active).toBe(1)
     expect(t2.state.phase).toBe('choose')
@@ -119,10 +120,10 @@ describe('Neutralized', () => {
 
   it('validates replacement picks', () => {
     const { state } = resolveTurn(battle(), dex, [move(SMASH), move(SMASH)])
-    expect(() => resolveReplacements(state, [null, null])).toThrow()
-    expect(() => resolveReplacements(state, [null, 0])).toThrow() // Neutralized
-    expect(() => resolveReplacements(state, [1, 1])).toThrow() // side 0 needs none
-    expect(() => resolveReplacements(battle(), [null, 1])).toThrow(/phase/)
+    expect(() => resolveReplacements(state, dex, [null, null])).toThrow()
+    expect(() => resolveReplacements(state, dex, [null, 0])).toThrow() // Neutralized
+    expect(() => resolveReplacements(state, dex, [1, 1])).toThrow() // side 0 needs none
+    expect(() => resolveReplacements(battle(), dex, [null, 1])).toThrow(/phase/)
   })
 
   it('cannot switch to a Neutralized SCP', () => {
@@ -165,6 +166,61 @@ describe('battle end', () => {
   it('no further turns can be resolved once ended', () => {
     const { state } = forfeit(battle(), 0)
     expect(() => resolveTurn(state, dex, [move(JAB), move(JAB)])).toThrow(/phase/)
+  })
+})
+
+describe('turn limit', () => {
+  it('is 100 turns', () => {
+    expect(TURN_LIMIT).toBe(100)
+  })
+
+  it('a battle still going after turn 99 continues', () => {
+    const s = battle()
+    s.turn = TURN_LIMIT - 1
+    const { state, events } = resolveTurn(s, dex, [move(FOCUS), move(FOCUS)])
+    expect(state.phase).toBe('choose')
+    expect(events.some((e) => e.type === 'timeout')).toBe(false)
+  })
+
+  it('after the last turn, the higher share of team HP remaining wins', () => {
+    const s = battle()
+    s.turn = TURN_LIMIT
+    // Side 1 loses half its lead's HP; side 0 is untouched.
+    activeOf(s, 1).hp = Math.floor(activeOf(s, 1).stats.hp / 2)
+    const { state, events } = resolveTurn(s, dex, [move(FOCUS), move(FOCUS)])
+    expect(events.slice(-2)).toEqual([{ type: 'timeout' }, { type: 'end', winner: 0 }])
+    expect(state.phase).toBe('ended')
+    expect(state.winner).toBe(0)
+  })
+
+  it('compares shares, not raw HP', () => {
+    // Side 0: max 160+160+120+130 = 570, left 290 (50.88%).
+    // Side 1: max 120+130+160+140 = 550, left 280 (50.91%).
+    // Side 0 has more raw HP, but side 1 has the larger share.
+    const s = battle([0, 0], 1, [
+      ['keterA', 'keterB', 'slow', 'gear'],
+      ['slow', 'gear', 'warder', 'fast'],
+    ])
+    s.turn = TURN_LIMIT
+    const setHp = (side: 0 | 1, hps: number[]) => hps.forEach((hp, i) => (s.sides[side].team[i].hp = hp))
+    setHp(0, [160, 130, 0, 0])
+    setHp(1, [120, 130, 30, 0])
+    expect(resolveTurn(s, dex, [move(FOCUS), move(FOCUS)]).state.winner).toBe(1)
+  })
+
+  it('equal shares are a draw', () => {
+    const s = battle()
+    s.turn = TURN_LIMIT
+    expect(resolveTurn(s, dex, [move(FOCUS), move(FOCUS)]).state.winner).toBe('draw')
+  })
+
+  it('a knockout on the last turn still wins outright', () => {
+    const s = battle()
+    s.turn = TURN_LIMIT
+    for (const i of [1, 2, 3]) s.sides[1].team[i].hp = 0
+    const { events } = resolveTurn(s, dex, [move(SMASH), move(JAB)])
+    expect(events.some((e) => e.type === 'timeout')).toBe(false)
+    expect(events.at(-1)).toEqual({ type: 'end', winner: 0 })
   })
 })
 

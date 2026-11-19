@@ -157,4 +157,6 @@ export type BattleEvent =
   | { type: 'ability'; side: SideIndex; abilityId: string; typeName?: TypeName }
   | { type: 'neutralized'; side: SideIndex; teamIndex: number }
   | { type: 'forfeit'; side: SideIndex }
+  /** The turn limit was reached; the following 'end' is decided by remaining HP. */
+  | { type: 'timeout' }
   | { type: 'end'; winner: SideIndex | 'draw' }
