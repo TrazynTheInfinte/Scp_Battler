@@ -15,6 +15,27 @@ export type StatStages = Record<StageableStat, number>
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status'
 
+export type StatusName = 'Bleeding' | 'Stunned' | 'Amnesiac' | 'Contained'
+
+/**
+ * Extra effects a move can carry. On a damaging move they apply only if it
+ * hits and the target is not Neutralized. `chance` is a percent (0-100).
+ */
+export type MoveEffect =
+  /** Inflict a status condition on the target. */
+  | { kind: 'status'; status: StatusName; chance: number }
+  /** Raise/lower stat stages on the user or the target. */
+  | {
+      kind: 'stages'
+      who: 'user' | 'target'
+      changes: Partial<StatStages>
+      chance: number
+    }
+  /** The user recovers a percent of its max HP. */
+  | { kind: 'heal'; percent: number }
+  /** Remove the user's status condition. */
+  | { kind: 'cure' }
+
 export interface MoveData {
   id: string
   name: string
@@ -24,6 +45,7 @@ export interface MoveData {
   power: number
   /** Percent chance to hit (0-100); null means the move never misses. */
   accuracy: number | null
+  effects?: readonly MoveEffect[]
 }
 
 export interface SpeciesData {
@@ -34,6 +56,8 @@ export interface SpeciesData {
   baseStats: Stats
   /** Exactly four move ids. */
   moves: readonly [string, string, string, string]
+  /** Id of an ability in the engine's ability registry. */
+  ability?: string
 }
 
 export interface Dex {
@@ -47,6 +71,20 @@ export interface Dex {
 
 export type SideIndex = 0 | 1
 
+export interface StatusState {
+  name: StatusName
+  /** Remaining count for timed statuses (Amnesiac, Contained); null = until cured. */
+  turnsLeft: number | null
+}
+
+/** Short-term battle memory, wiped whenever the SCP switches in or out. */
+export interface Volatiles {
+  /** Adaptive: the move type this SCP currently takes half damage from. */
+  adaptedType: TypeName | null
+  /** True if the opposing active used a Status move last turn ("watched"). */
+  watched: boolean
+}
+
 export interface Combatant {
   speciesId: string
   /** Current HP; 0 means Neutralized. */
@@ -54,6 +92,9 @@ export interface Combatant {
   /** Calculated (level-applied) stats. */
   stats: Stats
   stages: StatStages
+  /** At most one status condition. Persists through switching. */
+  status: StatusState | null
+  volatiles: Volatiles
 }
 
 export interface SideState {
@@ -83,23 +124,37 @@ export type Choice =
 
 // ---------------------------------------------------------------------------
 // Events: what happened during a resolution step, in order, for the UI log.
+// `side` is always the side the event happened to.
 // ---------------------------------------------------------------------------
 
 export type BattleEvent =
   | { type: 'switch'; side: SideIndex; from: number; to: number }
   | { type: 'replace'; side: SideIndex; to: number }
+  /** Stunned: lost the turn. */
+  | { type: 'stunned'; side: SideIndex }
+  /** Amnesiac: the move about to be used was picked at random. */
+  | { type: 'amnesia'; side: SideIndex }
   | { type: 'move'; side: SideIndex; moveId: string }
   | { type: 'miss'; side: SideIndex }
+  /** A Status move that changed nothing. */
   | { type: 'noEffect'; side: SideIndex }
   | {
       type: 'damage'
-      /** The side that took the damage. */
       side: SideIndex
       amount: number
       hpAfter: number
       effectiveness: number
       crit: boolean
     }
+  /** End-of-turn status damage (Bleeding / Contained). */
+  | { type: 'residual'; side: SideIndex; status: StatusName; amount: number; hpAfter: number }
+  | { type: 'heal'; side: SideIndex; amount: number; hpAfter: number }
+  | { type: 'stage'; side: SideIndex; stat: StageableStat; delta: number }
+  | { type: 'status'; side: SideIndex; status: StatusName }
+  /** A status was cured or wore off. */
+  | { type: 'statusEnded'; side: SideIndex; status: StatusName }
+  /** An ability visibly triggered. */
+  | { type: 'ability'; side: SideIndex; abilityId: string; typeName?: TypeName }
   | { type: 'neutralized'; side: SideIndex; teamIndex: number }
   | { type: 'forfeit'; side: SideIndex }
   | { type: 'end'; winner: SideIndex | 'draw' }
