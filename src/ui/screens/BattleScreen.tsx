@@ -18,7 +18,7 @@ import {
   type Advance,
   type Session,
 } from '../battleController'
-import { ClassBadge, ContainmentCard, TypeBadge } from '../components'
+import { ClassBadge, ContainmentCard, TypeBadge, TypeChartButton } from '../components'
 import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
 
@@ -207,23 +207,26 @@ export function BattleScreen({
     <main className="screen battle">
       <div className="screen-head">
         <span className="muted small">TURN {state.turn}</span>
-        {!ended &&
-          !playing &&
-          (confirmForfeit ? (
-            <span className="row" style={{ flexWrap: 'nowrap' }}>
-              <span className="small">Forfeit?</span>
-              <button className="btn btn-small btn-primary" onClick={doForfeit}>
-                Yes
+        <span className="row" style={{ flexWrap: 'nowrap', gap: 6 }}>
+          {!playing && <TypeChartButton />}
+          {!ended &&
+            !playing &&
+            (confirmForfeit ? (
+              <span className="row" style={{ flexWrap: 'nowrap' }}>
+                <span className="small">Forfeit?</span>
+                <button className="btn btn-small btn-primary" onClick={doForfeit}>
+                  Yes
+                </button>
+                <button className="btn btn-small" onClick={() => setConfirmForfeit(false)}>
+                  No
+                </button>
+              </span>
+            ) : (
+              <button className="btn btn-small" onClick={() => setConfirmForfeit(true)}>
+                Forfeit
               </button>
-              <button className="btn btn-small" onClick={() => setConfirmForfeit(false)}>
-                No
-              </button>
-            </span>
-          ) : (
-            <button className="btn btn-small" onClick={() => setConfirmForfeit(true)}>
-              Forfeit
-            </button>
-          ))}
+            ))}
+        </span>
       </div>
 
       <section className={`field${playing ? ' skippable' : ''}`} onClick={skip}>

@@ -1,4 +1,5 @@
-import { ABILITIES, OBJECT_CLASS_COST, type ObjectClass, type TypeName } from '../engine'
+import { useEffect, useState } from 'react'
+import { ABILITIES, OBJECT_CLASS_COST, TYPE_RING, matchup, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { ROSTER } from '../data/roster'
 import { STAT_LABEL, TYPE_ABBR, describeMove } from './text'
@@ -122,5 +123,76 @@ export function DossierCard({
         </div>
       )}
     </article>
+  )
+}
+
+/** "Type Chart" button that opens the attacker-vs-defender grid in a popup. */
+export function TypeChartButton() {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+  return (
+    <>
+      <button className="btn btn-small" onClick={() => setOpen(true)}>
+        Type Chart
+      </button>
+      {open && (
+        <div className="overlay" onClick={() => setOpen(false)}>
+          <div
+            className="overlay-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Type chart"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="screen-head">
+              <h2>TYPE CHART</h2>
+              <button className="btn btn-small" onClick={() => setOpen(false)} aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <table className="type-chart">
+              <thead>
+                <tr>
+                  <th className="corner">ATK ↓ DEF →</th>
+                  {TYPE_RING.map((d) => (
+                    <th key={d} className={`type-${d}`} scope="col" title={d}>
+                      {TYPE_ABBR[d]}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {TYPE_RING.map((a) => (
+                  <tr key={a}>
+                    <th className={`type-${a}`} scope="row">
+                      {a}
+                    </th>
+                    {TYPE_RING.map((d) => {
+                      const m = matchup(a, d)
+                      return (
+                        <td key={d} className={m === 2 ? 'super' : m === 0.5 ? 'resist' : undefined}>
+                          {m === 2 ? '2' : m === 0.5 ? '½' : ''}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="small muted">
+              Row = the move's type, column = the defender's type. Blank is ×1. Against an SCP with two types, both
+              numbers multiply (up to ×4 or ×¼).
+            </p>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

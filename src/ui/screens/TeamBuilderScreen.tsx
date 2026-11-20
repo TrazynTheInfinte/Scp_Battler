@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { randomTeam } from '../../ai'
 import { OBJECT_CLASS_COST, TEAM_BUDGET, TEAM_SIZE, createRng, teamCost, validateTeam } from '../../engine'
 import { ROSTER, ROSTER_ORDER } from '../../data/roster'
-import { DossierCard } from '../components'
+import { DossierCard, TypeChartButton } from '../components'
 import { useToggle } from '../hooks'
 import {
   MAX_NAME_LENGTH,
@@ -93,14 +93,17 @@ export function TeamBuilderScreen({
 
   return (
     <main className="screen">
-      <div className="screen-head">
+      <div className="screen-head wrap">
         <button className="btn btn-small" onClick={onBack}>
           ← Back
         </button>
         <h2>TEAM BUILDER</h2>
-        <button className="btn btn-small" onClick={randomize}>
-          Random
-        </button>
+        <span className="row" style={{ flexWrap: 'nowrap', gap: 6 }}>
+          <TypeChartButton />
+          <button className="btn btn-small" onClick={randomize}>
+            Random
+          </button>
+        </span>
       </div>
 
       <div className="builder-pinned">

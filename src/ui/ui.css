@@ -14,6 +14,10 @@
   justify-content: space-between;
   gap: 8px;
 }
+/* Headers with three controls: let the buttons drop to a second row on narrow phones. */
+.screen-head.wrap {
+  flex-wrap: wrap;
+}
 .screen-head h2 {
   margin: 0;
   font-size: 18px;
@@ -103,6 +107,68 @@
 .type-Reality { color: var(--t-reality); }
 .type-Temporal { color: var(--t-temporal); }
 .type-Thaumic { color: var(--t-thaumic); }
+
+/* ---------- type chart popup ---------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.overlay-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.type-chart {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  font-size: 11px;
+}
+.type-chart th,
+.type-chart td {
+  border: 1px solid var(--line);
+  padding: 5px 0;
+  text-align: center;
+}
+.type-chart th[scope='row'] {
+  text-align: left;
+  padding-left: 4px;
+  width: 26%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.type-chart .corner {
+  font-weight: normal;
+  font-size: 9px;
+  color: var(--muted);
+}
+.type-chart td {
+  font-weight: bold;
+  font-size: 13px;
+}
+.type-chart td.super {
+  background: var(--ok);
+  color: var(--bg);
+}
+.type-chart td.resist {
+  background: var(--hp-low);
+  color: #fff;
+}
 
 /* ---------- containment card (art) ---------- */
 .card-art {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ROSTER } from '../../data/roster'
-import { ClassBadge, ContainmentCard, TypeBadge } from '../components'
+import { ClassBadge, ContainmentCard, TypeBadge, TypeChartButton } from '../components'
 
 function TeamGrid({
   team,
@@ -65,7 +65,7 @@ export function TeamPreviewScreen({
           ← Back
         </button>
         <h2>TEAM PREVIEW</h2>
-        <span />
+        <TypeChartButton />
       </div>
       <section className="stack">
         <p className="section-label">HOSTILE SITE</p>
