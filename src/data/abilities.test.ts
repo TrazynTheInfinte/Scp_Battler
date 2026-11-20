@@ -38,11 +38,11 @@ const withoutAbility = (id: string): Dex => ({
 describe('Jovial (999)', () => {
   it('heals 1/16 max HP at end of turn when hurt', () => {
     const s = battle(team('scp-999'), team('scp-914'))
-    activeOf(s, 0).hp = 100 // max 170
+    activeOf(s, 0).hp = 100 // max 255
     // 999 uses Calming Ooze, 914 uses Coarse: no damage either way.
     const { events } = resolveTurn(s, ROSTER, [move(3), move(2)])
     expect(events).toContainEqual({ type: 'ability', side: 0, abilityId: 'jovial' })
-    expect(events).toContainEqual({ type: 'heal', side: 0, amount: 10, hpAfter: 110 })
+    expect(events).toContainEqual({ type: 'heal', side: 0, amount: 15, hpAfter: 115 })
   })
 
   it('does nothing at full HP', () => {

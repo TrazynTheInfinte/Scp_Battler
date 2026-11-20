@@ -5,6 +5,9 @@ import type { TypeName } from './typeChart'
 /** Enraged stops raising Attack after this many boosts, until the SCP leaves the field. */
 export const ENRAGED_MAX_BOOSTS = 2
 
+/** Adaptive: damage taken from the adapted type is multiplied by this. */
+export const ADAPTIVE_MULTIPLIER = 0.75
+
 /**
  * What an ability hook may do. The engine builds one bound to the ability
  * owner's side; "self" is the owner's active SCP and "opponent" is the other
@@ -65,16 +68,16 @@ export const ABILITIES: Readonly<Record<string, Ability>> = {
     id: 'unobserved',
     name: 'Unobserved',
     description:
-      'Always moves first, unless the opponent used a Status move last turn and is watching it.',
-    movesFirst: (self) => !self.volatiles.watched,
+      'Always moves first, unless it has a status condition, or the opponent used a Status move last turn and is watching it.',
+    movesFirst: (self) => !self.volatiles.watched && !self.status,
   },
 
   adaptive: {
     id: 'adaptive',
     name: 'Adaptive',
     description:
-      'After taking damage from a move, takes half damage from that type until it switches out. Remembers only the latest type.',
-    incomingDamageMultiplier: (self, move) => (self.volatiles.adaptedType === move.type ? 0.5 : 1),
+      'After taking damage from a move, takes 25% less damage from that type until it switches out. Remembers only the latest type.',
+    incomingDamageMultiplier: (self, move) => (self.volatiles.adaptedType === move.type ? ADAPTIVE_MULTIPLIER : 1),
     afterDamagedByMove(ctx, move) {
       if (ctx.self.volatiles.adaptedType === move.type) return
       ctx.self.volatiles.adaptedType = move.type

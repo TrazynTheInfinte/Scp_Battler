@@ -24,9 +24,9 @@ describe('formatEvents', () => {
     expect(
       fmt([{ type: 'damage', side: 0, amount: 30, hpAfter: 105, effectiveness: 1, crit: false }]),
     ).toEqual(['SCP-173 lost 30 HP.'])
-    // 682 has 160 max HP: 32 is 20%.
+    // 682 has 225 max HP: 45 is 20%.
     expect(
-      fmt([{ type: 'damage', side: 1, amount: 32, hpAfter: 128, effectiveness: 2, crit: true }]),
+      fmt([{ type: 'damage', side: 1, amount: 45, hpAfter: 180, effectiveness: 2, crit: true }]),
     ).toEqual(['Critical breach!', 'Highly effective.', 'Hostile SCP-682 lost 20% HP.'])
   })
 

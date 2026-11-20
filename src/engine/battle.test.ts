@@ -39,8 +39,8 @@ describe('createBattle', () => {
     expect(s.sides[0].active).toBe(2)
     expect(s.sides[1].active).toBe(3)
     const fast = s.sides[0].team[0]
-    expect(fast.stats).toEqual({ hp: 140, atk: 125, def: 85, spa: 85, spd: 85, spe: 135 })
-    expect(fast.hp).toBe(140)
+    expect(fast.stats).toEqual({ hp: 210, atk: 125, def: 85, spa: 85, spd: 85, spe: 135 })
+    expect(fast.hp).toBe(210)
   })
 
   it('rejects illegal teams and out-of-range leads', () => {

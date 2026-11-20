@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { calcStat, stageMultiplier } from './stats'
 
 describe('calcStat (level 50, base stats only)', () => {
-  it('computes HP as base + 60', () => {
-    expect(calcStat('hp', 100)).toBe(160)
-    expect(calcStat('hp', 1)).toBe(61)
+  it('computes HP as (base + 60) x 1.5, rounded down', () => {
+    expect(calcStat('hp', 100)).toBe(240)
+    expect(calcStat('hp', 1)).toBe(91)
   })
 
   it('computes other stats as base + 5', () => {

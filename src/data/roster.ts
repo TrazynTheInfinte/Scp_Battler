@@ -86,8 +86,8 @@ const MOVE_LIST: MoveData[] = [
   // SCP-682
   phys('crushing-jaws', 'Crushing Jaws', 'Kinetic', 95, 100),
   spec('acidic-bile', 'Acidic Bile', 'Biological', 80, 100, [foe({ def: -1 }, 20)]),
-  phys('rampage', 'Rampage', 'Kinetic', 120, 80),
-  status('regenerate', 'Regenerate', 'Biological', null, [healHalf]),
+  phys('rampage', 'Rampage', 'Kinetic', 110, 80),
+  status('regenerate', 'Regenerate', 'Biological', null, [{ kind: 'heal', percent: 33 }]),
   // SCP-106
   phys('corrosive-touch', 'Corrosive Touch', 'Temporal', 85, 100, [foe({ def: -1 }, 30)]),
   spec('decay', 'Decay', 'Temporal', 80, 100),
@@ -153,7 +153,7 @@ const SPECIES_LIST: SpeciesData[] = [
   // Keter
   {
     id: 'scp-682', name: 'SCP-682', objectClass: 'Keter', types: ['Kinetic', 'Biological'],
-    baseStats: { hp: 100, atk: 115, def: 100, spa: 110, spd: 100, spe: 75 },
+    baseStats: { hp: 90, atk: 115, def: 100, spa: 120, spd: 100, spe: 75 },
     moves: ['crushing-jaws', 'acidic-bile', 'rampage', 'regenerate'], ability: 'adaptive',
   },
   {

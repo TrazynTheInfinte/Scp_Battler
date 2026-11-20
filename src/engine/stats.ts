@@ -6,10 +6,16 @@ export const LEVEL = 50
 export const MIN_STAGE = -6
 export const MAX_STAGE = 6
 
-/** Level-applied stat from a base stat (Pokémon formula with 0 IV / 0 EV / neutral nature). */
+/**
+ * Max HP is scaled up from the Pokémon formula so most hits take 3+ to knock
+ * out, leaving room for healing and status moves to be worth a turn.
+ */
+export const HP_MULTIPLIER = 1.5
+
+/** Level-applied stat from a base stat (Pokémon formula with 0 IV / 0 EV / neutral nature; HP x HP_MULTIPLIER). */
 export function calcStat(stat: StatName, base: number, level: number = LEVEL): number {
   const core = Math.floor((2 * base * level) / 100)
-  return stat === 'hp' ? core + level + 10 : core + 5
+  return stat === 'hp' ? Math.floor((core + level + 10) * HP_MULTIPLIER) : core + 5
 }
 
 /** +n => (2+n)/2, -n => 2/(2+n). Clamped to [-6, +6]. */

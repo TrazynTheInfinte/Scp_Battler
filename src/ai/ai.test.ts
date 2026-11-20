@@ -64,9 +64,9 @@ describe('chooseAction', () => {
 
   it('heals at or below 40% HP', () => {
     const s = battle(['scp-999', 'scp-914', 'scp-343', 'scp-131'], ['scp-914', 'scp-999', 'scp-343', 'scp-131'])
-    activeOf(s, 0).hp = 68 // 40% of 170
+    activeOf(s, 0).hp = 102 // 40% of 255
     expect(chooseAction(s, ROSTER, 0, rng())).toEqual({ kind: 'move', moveIndex: 0 }) // Embrace
-    activeOf(s, 0).hp = 69
+    activeOf(s, 0).hp = 103
     expect(chooseAction(s, ROSTER, 0, rng())).not.toEqual({ kind: 'move', moveIndex: 0 })
   })
 

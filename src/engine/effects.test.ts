@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ADAPTIVE_MULTIPLIER } from './abilities'
 import { activeOf, createBattle, legalChoices, resolveTurn, speedOf } from './battle'
 import type { BattleEvent, BattleState, Choice, StatusName } from './model'
 import { ERASER, FOCUS, HEX, JAB, MEDIC, dex } from './testing/fixtures'
@@ -21,7 +22,7 @@ const setStatus = (c: { status: unknown }, name: StatusName, turnsLeft: number |
 
 const seeds = (n: number) => Array.from({ length: n }, (_, i) => i + 1)
 
-// slow: Biological, 120 max HP, Spe 35. fast: Kinetic, Spe 135. hexer: Spe 205.
+// slow: Biological, 180 max HP, Spe 35. fast: Kinetic, Spe 135. hexer: Spe 205.
 const HEXER_TEAM = ['hexer', 'slow', 'warder', 'gear'] as const
 const SLOW_TEAM = ['slow', 'warder', 'gear', 'fast'] as const
 
@@ -31,7 +32,7 @@ describe('Bleeding', () => {
     let r = resolveTurn(s, dex, [move(HEX.bleed), move(FOCUS)])
     expect(ofType(r.events, 'status')).toEqual([{ type: 'status', side: 1, status: 'Bleeding' }])
     expect(ofType(r.events, 'residual')).toEqual([
-      { type: 'residual', side: 1, status: 'Bleeding', amount: 15, hpAfter: 105 },
+      { type: 'residual', side: 1, status: 'Bleeding', amount: 22, hpAfter: 158 },
     ])
 
     // Both switch out: benched slow takes no residual but keeps the status.
@@ -39,12 +40,12 @@ describe('Bleeding', () => {
     s = r.state
     expect(ofType(r.events, 'residual')).toEqual([])
     expect(s.sides[1].team[0].status?.name).toBe('Bleeding')
-    expect(s.sides[1].team[0].hp).toBe(105)
+    expect(s.sides[1].team[0].hp).toBe(158)
 
     // Back in: bleeds again.
     r = resolveTurn(s, dex, [sw(0), sw(0)])
     expect(ofType(r.events, 'residual')).toEqual([
-      { type: 'residual', side: 1, status: 'Bleeding', amount: 15, hpAfter: 90 },
+      { type: 'residual', side: 1, status: 'Bleeding', amount: 22, hpAfter: 136 },
     ])
   })
 })
@@ -155,7 +156,7 @@ describe('Contained', () => {
       else expect(legalChoices(r.state, 1).some((c) => c.kind === 'switch')).toBe(false)
       s = r.state
     }
-    expect(residuals).toEqual([7, 7, 7, 7])
+    expect(residuals).toEqual([11, 11, 11, 11])
     expect(endedOnTurn).toBe(4)
     expect(activeOf(s, 1).status).toBeNull()
     expect(legalChoices(s, 1).some((c) => c.kind === 'switch')).toBe(true)
@@ -207,10 +208,10 @@ describe('move effects', () => {
     activeOf(s, 0).hp = 10
     setStatus(activeOf(s, 0), 'Bleeding')
     const { state, events } = resolveTurn(s, dex, [move(MEDIC.mend), move(FOCUS)])
-    expect(events).toContainEqual({ type: 'heal', side: 0, amount: 80, hpAfter: 90 })
+    expect(events).toContainEqual({ type: 'heal', side: 0, amount: 120, hpAfter: 130 })
     expect(events).toContainEqual({ type: 'statusEnded', side: 0, status: 'Bleeding' })
     expect(ofType(events, 'residual')).toEqual([])
-    expect(activeOf(state, 0).hp).toBe(90)
+    expect(activeOf(state, 0).hp).toBe(130)
   })
 
   it('healing at full HP with no status has no effect', () => {
@@ -284,6 +285,15 @@ describe('ability: Unobserved (statue, Spe 10)', () => {
     const r2 = resolveTurn(r1.state, dex, [move(JAB), move(JAB)])
     expect(firstMover(r2.events)).toBe(0)
   })
+
+  it('is switched off while it has a status condition', () => {
+    // Bleeding doesn't touch Speed, so only Unobserved decides the order here.
+    const s = battle([STATUE_TEAM, FAST_TEAM])
+    setStatus(activeOf(s, 0), 'Bleeding')
+    const r = resolveTurn(s, dex, [move(JAB), move(JAB)])
+    expect(firstMover(r.events)).toBe(1)
+    expect(ofType(r.events, 'ability')).toEqual([])
+  })
 })
 
 describe('ability: Adaptive (lizard)', () => {
@@ -303,14 +313,14 @@ describe('ability: Adaptive (lizard)', () => {
     expect(ofType(r2.events, 'ability')).toEqual([])
   })
 
-  it('takes half damage from the adapted type', () => {
+  it('takes reduced damage from the adapted type', () => {
     const hit = (adapted: boolean) => {
       const s = battle([FAST_TEAM, LIZARD_TEAM], [0, 0], 99)
       if (adapted) activeOf(s, 1).volatiles.adaptedType = 'Kinetic'
       return ofType(resolveTurn(s, dex, [move(JAB), move(FOCUS)]).events, 'damage')[0].amount
     }
     const full = hit(false)
-    expect(Math.abs(hit(true) - full / 2)).toBeLessThanOrEqual(1)
+    expect(Math.abs(hit(true) - full * ADAPTIVE_MULTIPLIER)).toBeLessThanOrEqual(1.5)
   })
 
   it('remembers only the latest type, and forgets on switching out', () => {
