@@ -42,8 +42,16 @@ _Avoid_: Swap, recall
 A numbered anomaly from the SCP Foundation wiki, as a battling unit on the roster. Only numbered SCPs appear; un-numbered entities (Groups of Interest, Tale characters) do not.
 _Avoid_: Anomaly, monster, creature, unit
 
+**Eligibility**:
+The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible.
+_Avoid_: Canon, whitelist
+
+**Wave**:
+A batch of about twelve new SCPs added to the roster together and balanced as a group, most popular eligible SCPs first.
+_Avoid_: Expansion, DLC, set, generation
+
 **Object Class**:
-An SCP's containment tier — Safe, Euclid, or Keter — which sets its cost against the team budget.
+An SCP's containment tier — Safe, Euclid, Keter, Thaumiel, or Apollyon — which sets its cost against the team budget. An SCP whose wiki class is something else is assigned the game class that fits its power.
 _Avoid_: Rarity, tier, rank
 
 **Team Budget**:
@@ -62,12 +70,24 @@ _Avoid_: Type wheel, type triangle
 One of an SCP's four fixed actions in battle, with a type, power, accuracy, and category.
 _Avoid_: Attack, skill, ability
 
+**Move Pool**:
+The shared set of moves that any SCP may be given; a move in the pool is designed and balanced once and reused across SCPs.
+_Avoid_: Learnset, move list, move library
+
+**Signature Move**:
+A move unique to one SCP, outside the move pool. An SCP has at most one.
+_Avoid_: Exclusive move, special move (collides with Move Category)
+
+**Stat Template**:
+A named starting spread of base stats (e.g. Fast Attacker, Wall) scaled to an object class's stat total, from which an SCP's stats may shift only slightly.
+_Avoid_: Archetype, build, role
+
 **Move Category**:
 Whether a move is Physical (Attack vs Defense), Special (Sp. Attack vs Sp. Defense), or Status (deals no direct damage).
 _Avoid_: Move kind, damage class
 
 **Ability**:
-An SCP's single passive trait that modifies battle rules for it, reflecting its anomalous nature.
+An SCP's single passive trait that modifies battle rules for it, reflecting its anomalous nature. Several SCPs may share the same ability.
 _Avoid_: Passive, trait, perk, power
 
 **Status Condition**:
