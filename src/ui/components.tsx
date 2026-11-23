@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { OBJECT_CLASS_COST, TYPE_RING, matchup, type ObjectClass, type TypeName } from '../engine'
+import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
-import { ROSTER } from '../data/roster'
+import { ROSTER, isOperative } from '../data/roster'
 import { STAT_LABEL, TYPE_ABBR, describeMove } from './text'
 
 export function ClassBadge({ objectClass }: { objectClass: ObjectClass }) {
@@ -31,14 +31,15 @@ export function EquipmentTag({ id }: { id: string | null }) {
 export function ContainmentCard({ speciesId }: { speciesId: string }) {
   const sp = ROSTER.species[speciesId]
   const hasArt = Boolean(ART_SOURCE[speciesId])
+  const operative = isOperative(speciesId)
   return (
     <div className="card-art" role="img" aria-label={`${sp.name} image`}>
       {hasArt && <img src={`${import.meta.env.BASE_URL}scp/${speciesId}.jpg`} alt="" loading="lazy" />}
       <div className={`card-band class-${sp.objectClass}`}>{sp.objectClass.toUpperCase()}</div>
       {!hasArt && (
         <div className="card-body">
-          <div className="card-label">SCP</div>
-          <div className="card-number">{sp.name.replace('SCP-', '')}</div>
+          <div className="card-label">{operative ? 'OPERATIVE' : 'SCP'}</div>
+          <div className={`card-number${operative ? ' card-name' : ''}`}>{sp.name.replace('SCP-', '')}</div>
           <div className="card-types">{sp.types.map((t) => TYPE_ABBR[t]).join(' · ')}</div>
         </div>
       )}
@@ -175,23 +176,24 @@ export function TypeChartButton() {
               <thead>
                 <tr>
                   <th className="corner">ATK ↓ DEF →</th>
-                  {TYPE_RING.map((d) => (
-                    <th key={d} className={`type-${d}`} scope="col" title={d}>
+                  {ALL_TYPES.map((d) => (
+                    <th key={d} className={`type-${d}${d === MUNDANE ? ' off-ring' : ''}`} scope="col" title={d}>
                       {TYPE_ABBR[d]}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {TYPE_RING.map((a) => (
-                  <tr key={a}>
+                {ALL_TYPES.map((a) => (
+                  <tr key={a} className={a === MUNDANE ? 'off-ring' : undefined}>
                     <th className={`type-${a}`} scope="row">
                       {a}
                     </th>
-                    {TYPE_RING.map((d) => {
+                    {ALL_TYPES.map((d) => {
                       const m = matchup(a, d)
+                      const cls = [m === 2 ? 'super' : m === 0.5 ? 'resist' : '', d === MUNDANE ? 'off-ring' : '']
                       return (
-                        <td key={d} className={m === 2 ? 'super' : m === 0.5 ? 'resist' : undefined}>
+                        <td key={d} className={cls.filter(Boolean).join(' ') || undefined}>
                           {m === 2 ? '2' : m === 0.5 ? '½' : ''}
                         </td>
                       )
@@ -202,7 +204,7 @@ export function TypeChartButton() {
             </table>
             <p className="small muted">
               Row = the move's type, column = the defender's type. Blank is ×1. Against an SCP with two types, both
-              numbers multiply (up to ×4 or ×¼).
+              numbers multiply (up to ×4 or ×¼). Mundane is outside the ring: always ×1.
             </p>
           </div>
         </div>

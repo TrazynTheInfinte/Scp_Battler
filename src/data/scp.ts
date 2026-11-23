@@ -14,9 +14,9 @@ export interface StatSpec {
  * each one.
  */
 export interface ScpDefinition {
-  /** e.g. 'scp-173'; the file must be named `<id>.ts`. */
+  /** e.g. 'scp-173', or 'op-<name>' for an Operative; the file must be named `<id>.ts`. */
   id: string
-  /** e.g. 'SCP-173'. */
+  /** e.g. 'SCP-173', or an Operative's own name (e.g. 'MTF Operative'). */
   name: string
   objectClass: ObjectClass
   /** The Wave (see GLOSSARY.md) it joined in; the balance test focuses on the newest. */
@@ -29,7 +29,7 @@ export interface ScpDefinition {
   signatureMove?: MoveData
   /** Id of an ability in abilities.ts. */
   ability: string
-  /** Why it meets the Eligibility rule (see GLOSSARY.md): how it would fight. */
+  /** Why it meets the Eligibility rule (see GLOSSARY.md), or for an Operative why it was chosen: how it would fight. */
   eligibility: string
   dossier: {
     /** Community nickname, shown as a subtitle. Not from the article text. */

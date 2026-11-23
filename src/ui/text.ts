@@ -18,6 +18,7 @@ export const TYPE_ABBR: Readonly<Record<TypeName, string>> = {
   Reality: 'REA',
   Temporal: 'TMP',
   Thaumic: 'THA',
+  Mundane: 'MUN',
 }
 
 /** Effectiveness tag for move buttons; empty for neutral. */

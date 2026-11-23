@@ -43,8 +43,12 @@ A numbered anomaly from the SCP Foundation wiki, as a battling unit on the roste
 _Avoid_: Anomaly, monster, creature, unit
 
 **Eligibility**:
-The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible.
+The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible. The one exception is Operatives, added only when explicitly chosen.
 _Avoid_: Canon, whitelist
+
+**Operative**:
+A named or generic human (Foundation staff, an MTF operative, or a Group of Interest member) on the roster as a rare, hand-picked exception to Eligibility. Battles exactly like an SCP, with a game object class chosen by power.
+_Avoid_: Character, hero, personnel, agent
 
 **Wave**:
 A batch of about twelve new SCPs added to the roster together and balanced as a group, most popular eligible SCPs first.
@@ -75,12 +79,16 @@ A battle in which one SCP Neutralizes half or more of the opposing team by itsel
 _Avoid_: Wipe, carry
 
 **Type**:
-One of eight anomaly categories (Kinetic, Biological, Mechanical, Memetic, Antimemetic, Reality, Temporal, Thaumic) that determines matchup effectiveness. An SCP has one or two types; a move has exactly one.
+One of the eight anomaly categories in the type ring (Kinetic, Biological, Mechanical, Memetic, Antimemetic, Reality, Temporal, Thaumic), or Mundane, that determines matchup effectiveness. An SCP has one or two types; a move has exactly one.
 _Avoid_: Element, class (collides with Object Class)
 
 **Type Ring**:
 The fixed circular order of the eight types; each type is super effective against the next two in the ring and resisted by them in return.
 _Avoid_: Type wheel, type triangle
+
+**Mundane**:
+The one type outside the type ring: non-anomalous force. Mundane moves are never super effective or resisted, and Mundane SCPs are never weak to or resistant against anything. Only Mundane SCPs may use Mundane moves.
+_Avoid_: Normal, neutral type, typeless
 
 **Move**:
 One of an SCP's four fixed actions in battle, with a type, power, accuracy, and category.

@@ -1,4 +1,4 @@
-import { TEAM_BUDGET, TYPE_RING, type Dex, type TypeName } from '../engine'
+import { MUNDANE, TEAM_BUDGET, TYPE_RING, type Dex, type RingType } from '../engine'
 import type { BalanceResult } from './simulate'
 
 /**
@@ -61,8 +61,9 @@ export function balanceProblems(result: BalanceResult, focus: readonly string[])
   return problems
 }
 
+/** Ring types only: Mundane is left out of the spread check (it has no cap). */
 export interface TypeCount {
-  type: TypeName
+  type: RingType
   /** SCPs that have this type. */
   scps: number
   /** Attacking-move slots of this type across every SCP's moveset. */
@@ -84,13 +85,13 @@ const rangeFor = (total: number): [number, number] => {
 
 export function typeSpread(dex: Dex, roster: readonly string[]): TypeSpread {
   const counts = TYPE_RING.map((type) => ({ type, scps: 0, moves: 0 }))
-  const at = (t: TypeName) => counts[TYPE_RING.indexOf(t)]
+  const at = (t: RingType) => counts[TYPE_RING.indexOf(t)]
   for (const id of roster) {
     const sp = dex.species[id]
-    for (const t of sp.types) at(t).scps++
+    for (const t of sp.types) if (t !== MUNDANE) at(t).scps++
     for (const m of sp.moves) {
       const move = dex.moves[m]
-      if (move.category !== 'Status') at(move.type).moves++
+      if (move.category !== 'Status' && move.type !== MUNDANE) at(move.type).moves++
     }
   }
   const sum = (k: 'scps' | 'moves') => counts.reduce((s, c) => s + c[k], 0)

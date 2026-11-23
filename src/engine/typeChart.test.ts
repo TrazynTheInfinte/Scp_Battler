@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { TYPE_RING, matchup, typeEffectiveness, type TypeName } from './typeChart'
+import { ALL_TYPES, TYPE_RING, matchup, typeEffectiveness, type RingType } from './typeChart'
 
 // The table agreed in design, row by row.
-const SUPER_EFFECTIVE: Record<TypeName, [TypeName, TypeName]> = {
+const SUPER_EFFECTIVE: Record<RingType, [RingType, RingType]> = {
   Mechanical: ['Antimemetic', 'Memetic'],
   Antimemetic: ['Memetic', 'Biological'],
   Memetic: ['Biological', 'Reality'],
@@ -43,5 +43,19 @@ describe('type ring', () => {
     expect(typeEffectiveness('Kinetic', ['Thaumic', 'Temporal'])).toBe(0.25)
     expect(typeEffectiveness('Kinetic', ['Mechanical', 'Thaumic'])).toBe(1)
     expect(typeEffectiveness('Kinetic', ['Biological'])).toBe(1)
+  })
+})
+
+describe('Mundane', () => {
+  it('is neutral both ways against every type, itself included', () => {
+    for (const t of ALL_TYPES) {
+      expect(matchup('Mundane', t), t).toBe(1)
+      expect(matchup(t, 'Mundane'), t).toBe(1)
+    }
+  })
+
+  it('leaves the other type of a dual-type SCP working normally', () => {
+    expect(typeEffectiveness('Kinetic', ['Mundane', 'Antimemetic'])).toBe(2)
+    expect(typeEffectiveness('Mundane', ['Mechanical', 'Antimemetic'])).toBe(1)
   })
 })

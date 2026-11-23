@@ -1,7 +1,8 @@
 /**
  * The Type Ring (see GLOSSARY.md): each type is super effective (x2) against
  * the next two types around the ring and resisted (x0.5) by them in return.
- * Every other matchup is neutral. There are no immunities.
+ * Every other matchup is neutral. There are no immunities. Mundane sits
+ * outside the ring and is always neutral.
  */
 export const TYPE_RING = [
   'Mechanical',
@@ -14,7 +15,16 @@ export const TYPE_RING = [
   'Kinetic',
 ] as const
 
-export type TypeName = (typeof TYPE_RING)[number]
+/** The eight types in the Type Ring. */
+export type RingType = (typeof TYPE_RING)[number]
+
+/** Mundane (see GLOSSARY.md): outside the ring; x1 against everything, and takes x1 from everything. */
+export const MUNDANE = 'Mundane'
+
+export type TypeName = RingType | typeof MUNDANE
+
+/** Every type: the ring in order, then Mundane. */
+export const ALL_TYPES: readonly TypeName[] = [...TYPE_RING, MUNDANE]
 
 export type Effectiveness = 0.5 | 1 | 2
 
@@ -22,6 +32,7 @@ const RING_SIZE = TYPE_RING.length
 
 /** Multiplier for a move of `attack` type hitting a single `defend` type. */
 export function matchup(attack: TypeName, defend: TypeName): Effectiveness {
+  if (attack === MUNDANE || defend === MUNDANE) return 1
   const a = TYPE_RING.indexOf(attack)
   const d = TYPE_RING.indexOf(defend)
   const forward = (d - a + RING_SIZE) % RING_SIZE

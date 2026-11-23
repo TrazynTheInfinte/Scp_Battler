@@ -15,14 +15,18 @@ import {
   type Rng,
   type SideIndex,
 } from '../engine'
-import { ROSTER, ROSTER_ORDER } from './roster'
+import { ROSTER, ROSTER_ORDER, isOperative } from './roster'
 
 // Per-SCP rules live in scps.test.ts.
 describe('roster integrity', () => {
-  it('lists every SCP once, cheapest object class first', () => {
+  it('lists every SCP once, cheapest object class first, Operatives after numbered SCPs', () => {
     expect([...ROSTER_ORDER].sort()).toEqual(Object.keys(ROSTER.species).sort())
     const costs = ROSTER_ORDER.map((id) => OBJECT_CLASS_COST[ROSTER.species[id].objectClass])
     expect(costs).toEqual([...costs].sort((a, b) => a - b))
+    for (let i = 1; i < ROSTER_ORDER.length; i++) {
+      const [prev, next] = [ROSTER_ORDER[i - 1], ROSTER_ORDER[i]]
+      if (costs[i - 1] === costs[i] && isOperative(prev)) expect(isOperative(next), `${prev} before ${next}`).toBe(true)
+    }
   })
 })
 

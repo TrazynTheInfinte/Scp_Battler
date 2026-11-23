@@ -91,4 +91,9 @@ export const MOVE_POOL: readonly MoveData[] = [
   status('erasure', 'Erasure', 'Antimemetic', 90, [inflict('Amnesiac')]),
   // wave 2
   phys('unmake', 'Unmake', 'Reality', 85, 100),
+  // wave 3: Mundane moves, only for Mundane SCPs and Operatives (see GLOSSARY.md).
+  // A little weaker than typed moves, since nothing resists them.
+  phys('strike', 'Strike', 'Mundane', 70, 100),
+  phys('gunfire', 'Gunfire', 'Mundane', 80, 90),
+  spec('flare', 'Flare', 'Mundane', 70, 100),
 ]

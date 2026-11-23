@@ -108,7 +108,8 @@ describe('chooseAction', () => {
     })
 
     it('stays in if no teammate resists the threat', () => {
-      const s = battle(FOE, ['scp-106', 'scp-914', 'scp-131', 'scp-343'])
+      // A full team, so no padding SCP that resists Reality (e.g. 042) sneaks onto the bench.
+      const s = battle(FOE, ['scp-106', 'scp-914', 'scp-131', 'scp-343', 'scp-105', 'scp-044'])
       expect(chooseAction(s, ROSTER, 1, rng()).kind).toBe('move')
     })
   })

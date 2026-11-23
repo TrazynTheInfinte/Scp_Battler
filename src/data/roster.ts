@@ -19,11 +19,19 @@ export const SCP_FILES: Readonly<Record<string, ScpDefinition>> = Object.fromEnt
   Object.entries(files).map(([path, mod]) => [path, mod.default]),
 )
 
+/** Operatives (see GLOSSARY.md) have ids starting `op-`; every other id is `scp-<number>`. */
+export const isOperative = (id: string) => id.startsWith('op-')
 const number = (id: string) => Number(id.replace(/^scp-/, ''))
 
-/** Every SCP definition, in display order: cheapest object class first, then by number. */
+/**
+ * Every SCP definition, in display order: cheapest object class first; within
+ * a class, numbered SCPs by number, then Operatives by name.
+ */
 export const SCPS: readonly ScpDefinition[] = Object.values(SCP_FILES).sort(
-  (a, b) => OBJECT_CLASS_COST[a.objectClass] - OBJECT_CLASS_COST[b.objectClass] || number(a.id) - number(b.id),
+  (a, b) =>
+    OBJECT_CLASS_COST[a.objectClass] - OBJECT_CLASS_COST[b.objectClass] ||
+    Number(isOperative(a.id)) - Number(isOperative(b.id)) ||
+    (isOperative(a.id) ? a.name.localeCompare(b.name) : number(a.id) - number(b.id)),
 )
 
 function toSpecies(scp: ScpDefinition): SpeciesData {
@@ -57,5 +65,5 @@ export const ROSTER: Dex = {
   equipment: EQUIPMENT,
 }
 
-/** Species ids in display order (cheapest object class first, then by number). */
+/** Species ids in display order (cheapest object class first, then by number, then Operatives). */
 export const ROSTER_ORDER: readonly string[] = SCPS.map((scp) => scp.id)

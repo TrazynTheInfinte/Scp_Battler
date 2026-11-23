@@ -167,6 +167,97 @@ const ABILITY_LIST: AbilityData[] = [
     description: "Can't Bleed.",
     rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
   },
+  // wave 3
+  {
+    id: 'unseenAssailant',
+    name: 'Unseen Assailant',
+    description: 'Attack +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { atk: 1 } }],
+  },
+  {
+    id: 'spreadingFreeze',
+    name: 'Spreading Freeze',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to Bleed.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'teratomorphosis',
+    name: 'Teratomorphosis',
+    description: 'The first time a move hits it after it enters the field: Attack +1 and Defense +1.',
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1, def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'shroud',
+    name: 'Shroud',
+    description: 'Takes 25% less damage from Physical moves.',
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'superelastic',
+    name: 'Superelastic',
+    description: 'Speed +1 each time a move hits it (at most twice each time it enters the field).',
+    rules: [{ kind: 'boostWhenHit', changes: { spe: 1 }, maxPerEntry: 2 }],
+  },
+  {
+    id: 'endlessBrood',
+    name: 'Endless Brood',
+    description: 'An attacker that damages it with a move loses 1/16 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'deathOmen',
+    name: 'Death Omen',
+    description: 'At the end of each turn, the opponent loses 1/16 of its max HP.',
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'verminSwarm',
+    name: 'Vermin Swarm',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to Bleed.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'loyalCreations',
+    name: 'Loyal Creations',
+    description: 'Takes 25% less damage from Physical moves.',
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'euphoricTouch',
+    name: 'Euphoric Touch',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to be Stunned.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Stunned', chance: 30 }],
+  },
+  {
+    id: 'untouchable',
+    name: 'Untouchable',
+    description: 'An attacker that damages it with a move loses 1/8 of its own max HP. Heals 1/16 of its max HP each turn.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 8 }, { kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'formless',
+    name: 'Formless',
+    description: 'Takes 25% less damage from Special moves.',
+    rules: [{ kind: 'damageTaken', category: 'Special', multiplier: 0.75 }],
+  },
+  {
+    id: 'tacticalTraining',
+    name: 'Tactical Training',
+    description: "Opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'expendable',
+    name: 'Expendable',
+    description: 'The first time a move hits it after it enters the field: Attack +1.',
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'wayWalker',
+    name: 'Way-Walker',
+    description: 'Speed +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

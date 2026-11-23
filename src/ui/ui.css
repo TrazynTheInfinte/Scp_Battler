@@ -109,6 +109,7 @@
 .type-Reality { color: var(--t-reality); }
 .type-Temporal { color: var(--t-temporal); }
 .type-Thaumic { color: var(--t-thaumic); }
+.type-Mundane { color: var(--t-mundane); }
 
 /* ---------- type chart popup ---------- */
 .overlay {
@@ -153,6 +154,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Mundane sits outside the Type Ring: set its row and column apart. */
+.type-chart tr.off-ring > * {
+  border-top: 2px solid var(--muted);
+}
+.type-chart .off-ring:is(th[scope='col'], td) {
+  border-left: 2px solid var(--muted);
 }
 .type-chart .corner {
   font-weight: normal;
@@ -230,6 +238,12 @@
 }
 .card-art {
   container-type: inline-size;
+}
+/* An Operative has a name, not a number: smaller, and allowed to wrap. */
+.card-number.card-name {
+  font-size: clamp(11px, 14cqw, 22px);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 .card-types {
   font-size: clamp(9px, 4cqw, 13px);

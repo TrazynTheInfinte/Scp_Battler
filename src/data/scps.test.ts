@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compileAbility, type Stats } from '../engine'
 import { ABILITIES, COUNTER_RULE_KINDS } from './abilities'
 import { MOVE_POOL } from './moves'
-import { ROSTER, SCP_FILES, SCPS } from './roster'
+import { ROSTER, SCP_FILES, SCPS, isOperative } from './roster'
 import { CLASS_STAT_TOTAL, MAX_STAT_TWEAK, STAT_TEMPLATES, scaleTemplate, type StatTemplateId } from './statTemplates'
 
 const total = (s: Stats) => Object.values(s).reduce((a, b) => a + b, 0)
@@ -11,8 +11,14 @@ const total = (s: Stats) => Object.values(s).reduce((a, b) => a + b, 0)
 describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
   it('is named and filed by its id, with a wave', () => {
     expect(Number.isInteger(scp.wave) && scp.wave >= 1).toBe(true)
-    expect(id).toMatch(/^scp-\d{3,4}$/)
-    expect(scp.name).toBe(id.toUpperCase())
+    if (isOperative(id)) {
+      expect(id).toMatch(/^op-[a-z]+(-[a-z0-9]+)*$/)
+      expect(scp.name.trim()).not.toBe('')
+      expect(scp.dossier.wikiUrl, 'Operatives have no SCP article, so need a wiki link').toBeDefined()
+    } else {
+      expect(id).toMatch(/^scp-\d{3,4}$/)
+      expect(scp.name).toBe(id.toUpperCase())
+    }
     const file = Object.entries(SCP_FILES).find(([, s]) => s === scp)?.[0]
     expect(file).toBe(`./scps/${id}.ts`)
   })
@@ -47,6 +53,12 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     expect(scp.dossier.authors.trim()).not.toBe('')
     for (const img of scp.dossier.images) expect(img.license.trim()).not.toBe('')
     if (scp.dossier.art) expect(scp.dossier.images.map((i) => i.file)).toContain(scp.dossier.art)
+  })
+
+  it('uses Mundane moves only if it is Mundane', () => {
+    if ((scp.types as readonly string[]).includes('Mundane')) return
+    const mundane = scp.moves.filter((m) => ROSTER.moves[m].type === 'Mundane')
+    expect(mundane, 'Mundane moves on a non-Mundane SCP').toEqual([])
   })
 
   it.runIf(scp.objectClass === 'Thaumiel')('as a Thaumiel, has an ability that counters something', () => {

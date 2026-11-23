@@ -11,7 +11,7 @@ import {
   equipmentCost,
   teamCost,
   validateTeam,
-  TYPE_RING,
+  ALL_TYPES,
   type ObjectClass,
   type TypeName,
 } from '../../engine'
@@ -74,7 +74,7 @@ function FilterPanel({
     <aside id="roster-filters" className={`filter-panel${open ? ' open' : ''}`} aria-label="Filters">
       <fieldset>
         <legend className="section-label">TYPE</legend>
-        {TYPE_RING.map((t: TypeName) => (
+        {ALL_TYPES.map((t: TypeName) => (
           <label key={t} className={`filter-option type-${t}`}>
             <input
               type="checkbox"
