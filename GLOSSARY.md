@@ -62,6 +62,14 @@ _Avoid_: Point cap, points limit, cost limit
 The most SCPs of one object class a team may include, on top of the team budget. Only the rarest classes (Thaumiel, Apollyon) have one.
 _Avoid_: Unique clause, class cap
 
+**Equipment**:
+A Foundation-issue object an SCP carries into battle that modifies it, like a smaller ability. Each SCP carries at most one piece, and each piece may appear only once per team.
+_Avoid_: Held item, item, gear
+
+**Equipment Allowance**:
+Extra points every team gets that can only be spent on Equipment, on top of whatever team budget its SCPs leave unspent.
+_Avoid_: Item budget, bonus points
+
 **Sweep**:
 A battle in which one SCP Neutralizes half or more of the opposing team by itself.
 _Avoid_: Wipe, carry

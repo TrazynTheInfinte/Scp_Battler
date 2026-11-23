@@ -288,6 +288,34 @@
   border-style: solid;
   color: var(--fg);
 }
+/* Panels opened inside the pinned header scroll, so they never push it past a phone screen. */
+.builder-pinned .panel {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.slot-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.slot-cell .slot {
+  width: 100%;
+}
+.equip-select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-size: 11px;
+  padding: 2px;
+  color: var(--fg);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.meter.over > span {
+  background: var(--accent);
+}
 .budget {
   display: flex;
   align-items: center;
@@ -548,6 +576,12 @@ button.preview-card {
 .preview-card.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.equipment-badge {
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .preview-card .badge {
   font-size: 9px;

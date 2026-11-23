@@ -13,7 +13,12 @@ const KEY = 'scp-battler:teams:v1'
 export interface SavedTeam {
   name: string
   speciesIds: string[]
+  /** Aligned with `speciesIds`; missing in teams saved before Equipment existed. */
+  equipment?: (string | null)[]
 }
+
+/** Problems a saved team may have and still load, so the player can see and fix them (e.g. after a cost change). */
+const FIXABLE = new Set(['overBudget', 'equipmentOverBudget'])
 
 /** The subset of Storage we use, so tests can pass a fake. */
 export type TeamStorage = Pick<Storage, 'getItem' | 'setItem'>
@@ -26,10 +31,7 @@ export function browserStorage(): TeamStorage | null {
   }
 }
 
-/**
- * Load saved teams, silently dropping anything malformed. Teams that are only
- * over budget (e.g. after a cost change) are kept so the player can see and fix them.
- */
+/** Load saved teams, silently dropping anything malformed. Teams that are only over budget are kept. */
 export function loadTeams(storage: TeamStorage | null, dex: Dex): SavedTeam[] {
   if (!storage) return []
   try {
@@ -43,7 +45,9 @@ export function loadTeams(storage: TeamStorage | null, dex: Dex): SavedTeam[] {
           typeof t.name === 'string' &&
           Array.isArray(t.speciesIds) &&
           t.speciesIds.every((id: unknown) => typeof id === 'string') &&
-          validateTeam(dex, t.speciesIds).every((p) => p.kind === 'overBudget'),
+          (t.equipment === undefined ||
+            (Array.isArray(t.equipment) && t.equipment.every((id: unknown) => id === null || typeof id === 'string'))) &&
+          validateTeam(dex, t.speciesIds, t.equipment).every((p) => FIXABLE.has(p.kind)),
       )
       .slice(0, MAX_SAVED_TEAMS)
   } catch {
@@ -64,13 +68,14 @@ export function saveTeam(
   dex: Dex,
   name: string,
   speciesIds: readonly string[],
+  equipment: readonly (string | null)[] = [],
 ): SaveResult {
   const trimmed = name.trim().slice(0, MAX_NAME_LENGTH)
   if (!trimmed) return { ok: false, reason: 'emptyName' }
-  if (validateTeam(dex, speciesIds).length > 0) return { ok: false, reason: 'illegal' }
+  if (validateTeam(dex, speciesIds, equipment).length > 0) return { ok: false, reason: 'illegal' }
   if (!storage) return { ok: false, reason: 'storage' }
   const teams = loadTeams(storage, dex)
-  const entry = { name: trimmed, speciesIds: [...speciesIds] }
+  const entry = { name: trimmed, speciesIds: [...speciesIds], equipment: speciesIds.map((_, i) => equipment[i] ?? null) }
   const existing = teams.findIndex((t) => t.name === trimmed)
   if (existing >= 0) teams[existing] = entry
   else if (teams.length >= MAX_SAVED_TEAMS) return { ok: false, reason: 'full' }

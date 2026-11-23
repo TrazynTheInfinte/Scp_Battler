@@ -4,6 +4,8 @@ import {
   activeOf,
   createBattle,
   createRng,
+  EQUIPMENT_ALLOWANCE,
+  equipmentCost,
   legalChoices,
   resolveReplacements,
   resolveTurn,
@@ -16,7 +18,7 @@ import {
   type SideIndex,
 } from '../engine'
 import { padTeam } from '../engine/testing/teams'
-import { chooseAction, chooseLead, chooseReplacement, randomTeam } from './index'
+import { chooseAction, chooseLead, chooseReplacement, randomEquipment, randomTeam } from './index'
 
 const rng = () => createRng(123)
 const battle = (a: string[], b: string[]): BattleState =>
@@ -32,6 +34,22 @@ describe('randomTeam', () => {
       teams.add([...team].sort().join(','))
     }
     expect(teams.size).toBeGreaterThan(50)
+  })
+})
+
+describe('randomEquipment', () => {
+  it('is always legal, and spends anywhere from nothing to well past the allowance', () => {
+    const extra = new Set<number>()
+    for (let seed = 1; seed <= 200; seed++) {
+      const r = createRng(seed)
+      const team = randomTeam(ROSTER, r)
+      const equipment = randomEquipment(ROSTER, r, team)
+      expect(equipment).toHaveLength(team.length)
+      expect(validateTeam(ROSTER, team, equipment)).toEqual([])
+      extra.add(Math.max(0, equipmentCost(ROSTER, equipment) - EQUIPMENT_ALLOWANCE))
+    }
+    expect(extra.has(0)).toBe(true)
+    expect(Math.max(...extra)).toBeGreaterThanOrEqual(3)
   })
 })
 

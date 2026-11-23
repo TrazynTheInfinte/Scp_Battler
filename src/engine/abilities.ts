@@ -1,4 +1,4 @@
-import type { AbilityData, AbilityRule, Combatant, Dex, MoveData, StatStages, StatusName } from './model'
+import type { AbilityData, AbilityRule, Combatant, Dex, EquipmentData, MoveData, StatStages, StatusName } from './model'
 import type { Rng } from './rng'
 import { MAX_STAGE } from './stats'
 import type { TypeName } from './typeChart'
@@ -42,6 +42,8 @@ interface AbilityHooks {
   watchesOpponent?: boolean
   /** Its attacking moves fail while the opposing active is a watcher. */
   frozenWhileWatched?: boolean
+  /** Multiplier on each move's PP at the start of battle. */
+  ppMultiplier?: number
 
   // --- Hooks ---
   /** Turn order: return true to move before a non-prioritized opponent. */
@@ -58,11 +60,15 @@ interface AbilityHooks {
   onEndOfTurn?(ctx: AbilityContext): void
 }
 
-/** An ability ready for the engine: its data plus the hooks its rules add up to. */
+/**
+ * An ability or a piece of Equipment, ready for the engine: its data plus the
+ * hooks its rules add up to. `source` says which, for the battle log.
+ */
 export interface Ability extends AbilityHooks {
   id: string
   name: string
   description: string
+  source: 'ability' | 'equipment'
 }
 
 /** True if every stat in `changes` that would rise is already at +6. */
@@ -155,6 +161,8 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
           ctx.damage('opponent', rule.fraction)
         },
       }
+    case 'extraPp':
+      return { ppMultiplier: 1 + rule.fraction }
     case 'clearOpponentBoostsOnEntry':
       return {
         onSwitchIn(ctx) {
@@ -168,16 +176,18 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
   }
 }
 
-/** Combine an ability's rules: flags OR together, multipliers multiply, event hooks run in rule order. */
-export function compileAbility(data: AbilityData): Ability {
+/** Combine an ability's (or Equipment's) rules: flags OR together, multipliers multiply, event hooks run in rule order. */
+export function compileAbility(data: AbilityData, source: Ability['source'] = 'ability'): Ability {
   const parts = data.rules.map(hooksFor)
   const fns = <K extends keyof AbilityHooks>(key: K) =>
     parts.flatMap((p) => (p[key] ? [p[key] as NonNullable<AbilityHooks[K]>] : []))
 
-  const ability: Ability = { id: data.id, name: data.name, description: data.description }
+  const ability: Ability = { id: data.id, name: data.name, description: data.description, source }
   if (parts.some((p) => p.blocksOpponentStatDrops)) ability.blocksOpponentStatDrops = true
   if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
   if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
+  const pp = parts.reduce((m, p) => m * (p.ppMultiplier ?? 1), 1)
+  if (pp !== 1) ability.ppMultiplier = pp
   const immunities = parts.flatMap((p) => p.statusImmunities ?? [])
   if (immunities.length > 0) ability.statusImmunities = immunities
 
@@ -198,7 +208,7 @@ export function compileAbility(data: AbilityData): Ability {
   return ability
 }
 
-const compiled = new WeakMap<AbilityData, Ability>()
+const compiled = new WeakMap<AbilityData | EquipmentData, Ability>()
 
 /** The Dex's ability `id`, ready for the engine (built once, then cached). */
 export function getAbility(dex: Dex, id: string | undefined): Ability | null {
@@ -211,4 +221,17 @@ export function getAbility(dex: Dex, id: string | undefined): Ability | null {
     compiled.set(data, ability)
   }
   return ability
+}
+
+/** The Dex's Equipment `id`, compiled like an ability (built once, then cached). */
+export function getEquipment(dex: Dex, id: string | null | undefined): Ability | null {
+  if (id === null || id === undefined) return null
+  const data = dex.equipment[id]
+  if (!data) throw new Error(`unknown equipment '${id}'`)
+  let equipment = compiled.get(data)
+  if (!equipment) {
+    equipment = compileAbility(data, 'equipment')
+    compiled.set(data, equipment)
+  }
+  return equipment
 }

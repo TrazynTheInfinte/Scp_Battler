@@ -11,6 +11,7 @@ import {
   type Dex,
   type Rng,
   type StepResult,
+  type TeamEquipment,
 } from '../engine'
 import { HOSTILE, PLAYER, formatEvents } from './battleLog'
 
@@ -43,10 +44,12 @@ export function startSession(
   aiTeam: readonly string[],
   playerLead: number,
   seed: number,
+  /** [player's, AI's] Equipment, each aligned with its team. */
+  equipment: TeamEquipment = [[], []],
 ): Advance {
   const aiRng = createRng((seed ^ 0x9e3779b9) >>> 0)
-  const aiLead = chooseLead(dex, aiTeam, playerTeam, aiRng)
-  const started = startBattle(dex, [playerTeam, aiTeam], [playerLead, aiLead], seed)
+  const aiLead = chooseLead(dex, aiTeam, playerTeam, aiRng, equipment[1], equipment[0])
+  const started = startBattle(dex, [playerTeam, aiTeam], [playerLead, aiLead], seed, equipment)
   // Leads' switch-in abilities (e.g. Boot Sequence) are the start step's events.
   const step = toStep(dex, started.state, started)
   const lines = [...createSessionIntro(dex, started.state), ...step.lines]

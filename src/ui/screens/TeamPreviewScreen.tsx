@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { ROSTER } from '../../data/roster'
-import { ClassBadge, ContainmentCard, TypeBadge, TypeChartButton } from '../components'
+import { ClassBadge, ContainmentCard, EquipmentTag, TypeBadge, TypeChartButton } from '../components'
 
 function TeamGrid({
   team,
+  equipment,
   selected,
   onSelect,
 }: {
   team: readonly string[]
+  equipment: readonly (string | null)[]
   selected?: number
   onSelect?: (i: number) => void
 }) {
@@ -25,6 +27,7 @@ function TeamGrid({
                 <TypeBadge key={t} type={t} />
               ))}
             </div>
+            <EquipmentTag id={equipment[i] ?? null} />
           </>
         )
         return onSelect ? (
@@ -48,12 +51,16 @@ function TeamGrid({
 
 export function TeamPreviewScreen({
   playerTeam,
+  playerEquipment,
   aiTeam,
+  aiEquipment,
   onBegin,
   onBack,
 }: {
   playerTeam: readonly string[]
+  playerEquipment: readonly (string | null)[]
   aiTeam: readonly string[]
+  aiEquipment: readonly (string | null)[]
   onBegin: (lead: number) => void
   onBack: () => void
 }) {
@@ -69,11 +76,11 @@ export function TeamPreviewScreen({
       </div>
       <section className="stack">
         <p className="section-label">HOSTILE SITE</p>
-        <TeamGrid team={aiTeam} />
+        <TeamGrid team={aiTeam} equipment={aiEquipment} />
       </section>
       <section className="stack">
         <p className="section-label">YOUR TEAM — CHOOSE WHO DEPLOYS FIRST</p>
-        <TeamGrid team={playerTeam} selected={lead ?? undefined} onSelect={setLead} />
+        <TeamGrid team={playerTeam} equipment={playerEquipment} selected={lead ?? undefined} onSelect={setLead} />
       </section>
       <button className="btn btn-primary" disabled={lead === null} onClick={() => lead !== null && onBegin(lead)}>
         {lead === null ? 'Choose a lead' : `Deploy ${ROSTER.species[playerTeam[lead]].name}`}

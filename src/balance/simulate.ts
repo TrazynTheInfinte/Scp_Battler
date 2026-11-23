@@ -1,7 +1,9 @@
-import { chooseAction, chooseLead, chooseReplacement, randomTeam } from '../ai'
+import { chooseAction, chooseLead, chooseReplacement, randomEquipment, randomTeam } from '../ai'
 import {
   activeOf,
   createRng,
+  equipmentCost,
+  EQUIPMENT_ALLOWANCE,
   isNeutralized,
   resolveReplacements,
   resolveTurn,
@@ -38,6 +40,19 @@ export interface BalanceResult {
   perMakeup: Record<string, Tally & { cost: number }>
   /** How many times each move was used (Struggle excluded). */
   moveUses: Record<string, number>
+  /** By piece of Equipment: every team that carried it. */
+  perEquipment: Record<string, Tally>
+  /** By Team Budget points spent on Equipment beyond the allowance (see SPEND_BANDS). */
+  perSpend: Record<SpendBand, Tally>
+}
+
+/** Groups of Team Budget points a team spent on Equipment beyond the Equipment Allowance. */
+export const SPEND_BANDS = ['0', '1–2', '3+'] as const
+export type SpendBand = (typeof SPEND_BANDS)[number]
+
+export function spendBandOf(dex: Dex, equipment: readonly (string | null)[]): SpendBand {
+  const extra = Math.max(0, equipmentCost(dex, equipment) - EQUIPMENT_ALLOWANCE)
+  return extra === 0 ? '0' : extra <= 2 ? '1–2' : '3+'
 }
 
 /** A random legal team that includes `required`. */
@@ -56,12 +71,18 @@ export const makeupOf = (dex: Dex, team: readonly string[]) =>
   team.map((id) => dex.species[id].objectClass[0]).sort().join('')
 
 /** Play one AI-vs-AI battle; returns the final state, Neutralizations per team slot, and moves used. */
-function playBattle(dex: Dex, teams: [string[], string[]], seed: number, rng: Rng) {
+function playBattle(
+  dex: Dex,
+  teams: [string[], string[]],
+  equipment: [(string | null)[], (string | null)[]],
+  seed: number,
+  rng: Rng,
+) {
   const leads: [number, number] = [
-    chooseLead(dex, teams[0], teams[1], rng),
-    chooseLead(dex, teams[1], teams[0], rng),
+    chooseLead(dex, teams[0], teams[1], rng, equipment[0], equipment[1]),
+    chooseLead(dex, teams[1], teams[0], rng, equipment[1], equipment[0]),
   ]
-  let s: BattleState = startBattle(dex, teams, leads, seed).state
+  let s: BattleState = startBattle(dex, teams, leads, seed, equipment).state
   const kos = [teams[0].map(() => 0), teams[1].map(() => 0)]
   const moves: string[] = []
   while (s.phase !== 'ended') {
@@ -96,7 +117,15 @@ export function simulateBalance(
   battlesPerScp: number,
   seed = 1,
 ): BalanceResult {
-  const result: BalanceResult = { battles: 0, timeouts: 0, perScp: {}, perMakeup: {}, moveUses: {} }
+  const result: BalanceResult = {
+    battles: 0,
+    timeouts: 0,
+    perScp: {},
+    perMakeup: {},
+    moveUses: {},
+    perEquipment: {},
+    perSpend: Object.fromEntries(SPEND_BANDS.map((b) => [b, { battles: 0, wins: 0, sweeps: 0 }])) as Record<SpendBand, Tally>,
+  }
   let n = seed
   for (const id of focus) {
     for (let i = 0; i < battlesPerScp; i++, n++) {
@@ -105,7 +134,11 @@ export function simulateBalance(
       const random = randomTeam(dex, rng, pool)
       // Alternate sides so the focused team isn't always side 0.
       const teams: [string[], string[]] = i % 2 === 0 ? [built, random] : [random, built]
-      const { state, kos, moves } = playBattle(dex, teams, n, rng)
+      const equipment: [(string | null)[], (string | null)[]] = [
+        randomEquipment(dex, rng, teams[0]),
+        randomEquipment(dex, rng, teams[1]),
+      ]
+      const { state, kos, moves } = playBattle(dex, teams, equipment, n, rng)
 
       result.battles++
       // The AI never forfeits, so an ending with neither team wiped out is a turn-limit ending.
@@ -124,6 +157,15 @@ export function simulateBalance(
         })
         m.battles++
         m.wins += won
+        for (const id of equipment[side]) {
+          if (id === null) continue
+          const e = (result.perEquipment[id] ??= { battles: 0, wins: 0, sweeps: 0 })
+          e.battles++
+          e.wins += won
+        }
+        const band = result.perSpend[spendBandOf(dex, equipment[side])]
+        band.battles++
+        band.wins += won
       }
     }
   }

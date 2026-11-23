@@ -13,14 +13,21 @@ export const MAX_SWEEP_RATE = 0.15
 export const WIN_RATE_BAND = [0.3, 0.7] as const
 /** No full-budget team makeup (e.g. "EEES") may win more than this share. */
 export const MAX_MAKEUP_WIN_RATE = 0.7
-/** Makeups with fewer battles than this are too noisy to judge. */
+/** Every piece of Equipment's win rate must stay inside this band (the same as SCPs). */
+export const EQUIPMENT_WIN_RATE_BAND = WIN_RATE_BAND
+/**
+ * Teams grouped by how much Team Budget they spent on Equipment must each win
+ * inside this band: Equipment should be worth buying, but never mandatory.
+ */
+export const SPEND_WIN_RATE_BAND = [0.4, 0.6] as const
+/** Makeups (and spending groups) with fewer battles than this are too noisy to judge. */
 export const MIN_MAKEUP_SAMPLE = 100
 /** Each type's count must be within this fraction of an even share (rounded to the nearest whole number). */
 export const TYPE_SPREAD_TOLERANCE = 0.25
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`
 
-/** Broken limits among the `focus` SCPs and the full-budget team makeups. */
+/** Broken limits among the `focus` SCPs, the full-budget team makeups, and Equipment. */
 export function balanceProblems(result: BalanceResult, focus: readonly string[]): string[] {
   const problems: string[] = []
   for (const id of focus) {
@@ -36,6 +43,20 @@ export function balanceProblems(result: BalanceResult, focus: readonly string[])
     if (m.cost < TEAM_BUDGET - 1 || m.battles < MIN_MAKEUP_SAMPLE) continue
     const win = m.wins / m.battles
     if (win > MAX_MAKEUP_WIN_RATE) problems.push(`${makeup} teams win ${pct(win)} (max ${pct(MAX_MAKEUP_WIN_RATE)})`)
+  }
+  const outside = (win: number, [lo, hi]: readonly [number, number]) => win < lo || win > hi
+  const band = ([lo, hi]: readonly [number, number]) => `${pct(lo)}–${pct(hi)}`
+  for (const [id, t] of Object.entries(result.perEquipment)) {
+    const win = t.wins / t.battles
+    if (t.battles >= MIN_MAKEUP_SAMPLE && outside(win, EQUIPMENT_WIN_RATE_BAND)) {
+      problems.push(`Equipment ${id} wins ${pct(win)} (allowed ${band(EQUIPMENT_WIN_RATE_BAND)})`)
+    }
+  }
+  for (const [spend, t] of Object.entries(result.perSpend)) {
+    const win = t.wins / t.battles
+    if (t.battles >= MIN_MAKEUP_SAMPLE && outside(win, SPEND_WIN_RATE_BAND)) {
+      problems.push(`Teams spending ${spend} extra points on Equipment win ${pct(win)} (allowed ${band(SPEND_WIN_RATE_BAND)})`)
+    }
   }
   return problems
 }

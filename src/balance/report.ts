@@ -1,4 +1,4 @@
-import { OBJECT_CLASS_COST, type Dex, type ObjectClass } from '../engine'
+import { EQUIPMENT_ALLOWANCE, OBJECT_CLASS_COST, type Dex, type ObjectClass } from '../engine'
 import {
   BATTLES_PER_SCP,
   balanceProblems,
@@ -59,6 +59,19 @@ export function balanceReport(dex: Dex, roster: readonly string[], result: Balan
     .filter(([, m]) => m.battles >= MIN_MAKEUP_SAMPLE)
     .sort((a, b) => b[1].wins / b[1].battles - a[1].wins / a[1].battles)
   for (const [k, m] of makeups) lines.push(row([k, m.cost, m.battles, pct(m.wins / m.battles)]))
+
+  // Equipment.
+  lines.push('', '## Equipment', '', row(['Equipment', 'Cost', 'Teams', 'Win']), row(['---', '---:', '---:', '---:']))
+  const pieces = Object.entries(result.perEquipment).sort((a, b) => b[1].wins / b[1].battles - a[1].wins / a[1].battles)
+  for (const [id, t] of pieces) lines.push(row([dex.equipment[id].name, dex.equipment[id].cost, t.battles, pct(t.wins / t.battles)]))
+  lines.push(
+    '',
+    `### Team Budget points spent on Equipment (beyond the allowance of ${EQUIPMENT_ALLOWANCE})`,
+    '',
+    row(['Extra points', 'Teams', 'Win']),
+    row(['---', '---:', '---:']),
+    ...Object.entries(result.perSpend).map(([band, t]) => row([band, t.battles, t.battles ? pct(t.wins / t.battles) : '–'])),
+  )
 
   // Type spread.
   const spread = typeSpread(dex, roster)

@@ -11,6 +11,7 @@ import {
   attacksBlocked,
   canReceiveStatus,
   createCombatant,
+  equipmentBudget,
   expectedDamage,
   isNeutralized,
   isStruggling,
@@ -55,15 +56,47 @@ export function randomTeam(dex: Dex, rng: Rng, pool: readonly string[] = Object.
   throw new Error('could not build a legal team from this pool')
 }
 
+/**
+ * Random Equipment for `team` (aligned with it), within its Equipment budget
+ * and at most one of each piece. Each team picks a random share of its slots
+ * to equip, so some teams carry nothing and some fill every slot; this is
+ * what lets the balance simulation compare spending levels.
+ */
+export function randomEquipment(
+  dex: Dex,
+  rng: Rng,
+  team: readonly string[],
+  pool: readonly string[] = Object.keys(dex.equipment),
+): (string | null)[] {
+  const share = rng.int(0, 100) / 100
+  const equipment: (string | null)[] = team.map(() => null)
+  let left = equipmentBudget(dex, team)
+  const unused = [...pool]
+  const slots = team.map((_, i) => i)
+  while (slots.length > 0) {
+    const slot = slots.splice(rng.int(0, slots.length - 1), 1)[0]
+    if (!rng.chance(share)) continue
+    const affordable = unused.filter((id) => dex.equipment[id].cost <= left)
+    if (affordable.length === 0) break
+    const pick = affordable[rng.int(0, affordable.length - 1)]
+    unused.splice(unused.indexOf(pick), 1)
+    equipment[slot] = pick
+    left -= dex.equipment[pick].cost
+  }
+  return equipment
+}
+
 /** Team Preview: the SCP with the best average matchup against the whole opposing team. */
 export function chooseLead(
   dex: Dex,
   myTeam: readonly string[],
   opponentTeam: readonly string[],
   rng: Rng,
+  myEquipment: readonly (string | null)[] = [],
+  opponentEquipment: readonly (string | null)[] = [],
 ): number {
-  const mine = myTeam.map((id) => createCombatant(dex, id))
-  const theirs = opponentTeam.map((id) => createCombatant(dex, id))
+  const mine = myTeam.map((id, i) => createCombatant(dex, id, myEquipment[i] ?? null))
+  const theirs = opponentTeam.map((id, i) => createCombatant(dex, id, opponentEquipment[i] ?? null))
   const scores = mine.map(
     (me) => theirs.reduce((sum, opp) => sum + matchupScore(dex, me, opp), 0) / theirs.length,
   )

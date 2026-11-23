@@ -18,15 +18,16 @@ function fakeStorage(initial: Record<string, string> = {}): TeamStorage & { data
 }
 
 const TEAM = padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131'])
+const NO_GEAR = TEAM.map(() => null)
 
 describe('saved teams', () => {
   it('saves, loads, overwrites by name, and deletes', () => {
     const st = fakeStorage()
     expect(saveTeam(st, ROSTER, '  Alpha  ', TEAM)).toMatchObject({ ok: true })
-    expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: TEAM }])
+    expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: TEAM, equipment: NO_GEAR }])
     const other = padTeam(ROSTER, ['scp-682', 'scp-999', 'scp-914', 'scp-131'])
     saveTeam(st, ROSTER, 'Alpha', other)
-    expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: other }])
+    expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: other, equipment: NO_GEAR }])
     deleteTeam(st, ROSTER, 'Alpha')
     expect(loadTeams(st, ROSTER)).toEqual([])
   })
@@ -62,12 +63,22 @@ describe('saved teams', () => {
     expect(saveTeam(throwing, ROSTER, 'X', TEAM)).toEqual({ ok: false, reason: 'storage' })
   })
 
+  it('saves Equipment with the team, and loads teams saved before Equipment existed', () => {
+    const st = fakeStorage()
+    const gear = ['medkit', null, null, null, null, 'ammoPouch']
+    saveTeam(st, ROSTER, 'Geared', TEAM, gear)
+    expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Geared', speciesIds: TEAM, equipment: gear }])
+    const old = fakeStorage({ 'scp-battler:teams:v1': JSON.stringify([{ name: 'Old', speciesIds: TEAM }]) })
+    expect(loadTeams(old, ROSTER)).toEqual([{ name: 'Old', speciesIds: TEAM }])
+  })
+
   it('drops malformed saved teams but keeps ones that are only over budget', () => {
     const st = fakeStorage({
       'scp-battler:teams:v1': JSON.stringify([
         { name: 'ok', speciesIds: TEAM },
         { name: 'gone', speciesIds: padTeam(ROSTER, ['scp-9999', 'scp-999', 'scp-914', 'scp-131']) },
         { name: 'junk' },
+        { name: 'bad gear', speciesIds: TEAM, equipment: ['no-such-thing'] },
         // Six Euclids: a full team, but 18 points (over the budget of 15).
         { name: 'pricey', speciesIds: ['scp-173', 'scp-096', 'scp-049', 'scp-079', 'scp-012', 'scp-008'] },
       ]),

@@ -86,11 +86,25 @@ export type AbilityRule =
   | { kind: 'retaliate'; fraction: number }
   /** At end of turn, the opponent loses `fraction` of its max HP. */
   | { kind: 'drainOpponentEachTurn'; fraction: number }
+  /** Each of its moves gets `fraction` more PP (rounded down). */
+  | { kind: 'extraPp'; fraction: number }
 
 export interface AbilityData {
   id: string
   name: string
   description: string
+  rules: readonly AbilityRule[]
+}
+
+/**
+ * A piece of Equipment (see GLOSSARY.md): an object an SCP carries into
+ * battle. Built from the same rules as abilities; costs Team Budget points.
+ */
+export interface EquipmentData {
+  id: string
+  name: string
+  description: string
+  cost: number
   rules: readonly AbilityRule[]
 }
 
@@ -110,6 +124,7 @@ export interface Dex {
   species: Readonly<Record<string, SpeciesData>>
   moves: Readonly<Record<string, MoveData>>
   abilities: Readonly<Record<string, AbilityData>>
+  equipment: Readonly<Record<string, EquipmentData>>
 }
 
 // ---------------------------------------------------------------------------
@@ -141,6 +156,8 @@ export interface Volatiles {
 
 export interface Combatant {
   speciesId: string
+  /** Id of the Equipment it carries, if any. */
+  equipment: string | null
   /** Current HP; 0 means Neutralized. */
   hp: number
   /** Calculated (level-applied) stats. */
@@ -217,6 +234,8 @@ export type BattleEvent =
   | { type: 'statusEnded'; side: SideIndex; status: StatusName }
   /** An ability visibly triggered. */
   | { type: 'ability'; side: SideIndex; abilityId: string; typeName?: TypeName }
+  /** A piece of Equipment visibly triggered. */
+  | { type: 'equipment'; side: SideIndex; equipmentId: string }
   | { type: 'neutralized'; side: SideIndex; teamIndex: number }
   | { type: 'forfeit'; side: SideIndex }
   /** The turn limit was reached; the following 'end' is decided by remaining HP. */

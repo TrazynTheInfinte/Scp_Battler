@@ -1,5 +1,6 @@
 import { OBJECT_CLASS_COST, type Dex, type MoveData, type SpeciesData } from '../engine'
 import { ABILITIES } from './abilities'
+import { EQUIPMENT } from './equipment'
 import { MOVE_POOL } from './moves'
 import type { ScpDefinition } from './scp'
 import { CLASS_STAT_TOTAL, templateStats } from './statTemplates'
@@ -53,6 +54,7 @@ export const ROSTER: Dex = {
   moves: buildMoves(),
   species: Object.fromEntries(SCPS.map((scp) => [scp.id, toSpecies(scp)])),
   abilities: ABILITIES,
+  equipment: EQUIPMENT,
 }
 
 /** Species ids in display order (cheapest object class first, then by number). */

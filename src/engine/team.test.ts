@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TEAM_BUDGET, TEAM_SIZE, teamCost, validateTeam } from './team'
+import { EQUIPMENT_ALLOWANCE, TEAM_BUDGET, TEAM_SIZE, equipmentBudget, teamCost, validateTeam } from './team'
 import { dex } from './testing/fixtures'
 
 // Fixture costs: Safe 1 (slow, warder, gear, hexer, medic, eraser), Euclid 3
@@ -73,5 +73,36 @@ describe('class limits', () => {
     expect(validateTeam(twoThaumiel, ['thaumiel', 'thaumiel2', 'slow', 'gear', 'warder', 'hexer'])).toEqual([
       { kind: 'classLimit', objectClass: 'Thaumiel', count: 2 },
     ])
+  })
+})
+
+// Fixture Equipment costs: medkit 1, pouch 1, plating 2, hazmat 2.
+describe('equipment', () => {
+  // Keter 4 x3 + Safe 1 x3 = 15: the whole Team Budget, so only the allowance is left.
+  const FULL = ['keterA', 'keterB', 'lizard', 'slow', 'gear', 'warder']
+  // Keter 4 + Euclid 3 + Safe 1 x4 = 11: 4 points left over.
+  const CHEAP = ['keterA', 'fast', 'slow', 'gear', 'warder', 'hexer']
+
+  it('gives every team the allowance, plus the Team Budget its SCPs leave', () => {
+    expect(EQUIPMENT_ALLOWANCE).toBe(2)
+    expect(equipmentBudget(dex, FULL)).toBe(2)
+    expect(equipmentBudget(dex, CHEAP)).toBe(6)
+  })
+
+  it('accepts Equipment within that budget, in any slots', () => {
+    expect(validateTeam(dex, FULL, ['medkit', null, null, null, null, 'pouch'])).toEqual([])
+    expect(validateTeam(dex, CHEAP, ['medkit', 'pouch', 'plating', 'hazmat'])).toEqual([])
+  })
+
+  it('rejects Equipment over that budget', () => {
+    expect(validateTeam(dex, FULL, ['medkit', 'plating'])).toEqual([
+      { kind: 'equipmentOverBudget', cost: 3, available: 2 },
+    ])
+  })
+
+  it('rejects duplicate, unknown, or extra Equipment', () => {
+    expect(validateTeam(dex, CHEAP, ['medkit', 'medkit'])).toEqual([{ kind: 'duplicateEquipment', equipmentId: 'medkit' }])
+    expect(validateTeam(dex, CHEAP, ['nope'])).toEqual([{ kind: 'unknownEquipment', equipmentId: 'nope' }])
+    expect(validateTeam(dex, CHEAP, [null, null, null, null, null, null, null])).toEqual([{ kind: 'equipmentSlots', count: 7 }])
   })
 })

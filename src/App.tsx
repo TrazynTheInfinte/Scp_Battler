@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { chooseAction, chooseReplacement, randomTeam } from './ai'
+import { chooseAction, chooseReplacement, randomEquipment, randomTeam } from './ai'
 import { ROSTER, ROSTER_ORDER } from './data/roster'
 import { createRng, type BattleState } from './engine'
 import './ui/ui.css'
@@ -24,12 +24,15 @@ const newSeed = () => (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
 
 interface Match {
   aiTeam: string[]
+  aiEquipment: (string | null)[]
   seed: number
 }
 
 function newMatch(): Match {
   const seed = newSeed()
-  return { aiTeam: randomTeam(ROSTER, createRng(seed ^ 0xa1), ROSTER_ORDER), seed }
+  const rng = createRng(seed ^ 0xa1)
+  const aiTeam = randomTeam(ROSTER, rng, ROSTER_ORDER)
+  return { aiTeam, aiEquipment: randomEquipment(ROSTER, rng, aiTeam), seed }
 }
 
 /**
@@ -50,9 +53,11 @@ function devStart(): {
   const screen = (q.get('screen') as Screen | null) ?? 'title'
   const team = q.get('team')?.split(',').filter(Boolean) ?? []
   const ai = q.get('ai')?.split(',').filter(Boolean)
-  const match = ai ? { aiTeam: ai, seed: 1 } : team.length === 4 ? { ...newMatch(), seed: 1 } : null
+  const match = ai ? { aiTeam: ai, aiEquipment: [], seed: 1 } : team.length > 0 ? { ...newMatch(), seed: 1 } : null
   let session =
-    (screen === 'battle' || screen === 'result') && match ? startSession(ROSTER, team, match.aiTeam, 0, match.seed).session : null
+    (screen === 'battle' || screen === 'result') && match
+      ? startSession(ROSTER, team, match.aiTeam, 0, match.seed, [[], match.aiEquipment]).session
+      : null
   // ?turns=N auto-plays N turns with the AI on both sides, to show a battle in progress.
   const devRng = createRng(7)
   for (let i = Number(q.get('turns') ?? 0); session && i > 0 && session.state.phase !== 'ended'; i--) {
@@ -70,6 +75,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(dev.screen)
   // Kept here so the team survives going back to the title and returning.
   const [team, setTeam] = useState<string[]>(dev.team)
+  // Aligned with `team`: each SCP's Equipment id, or null.
+  const [equipment, setEquipment] = useState<(string | null)[]>([])
   const [match, setMatch] = useState<Match | null>(dev.match)
   const [session, setSession] = useState<Session | null>(dev.session)
   const [result, setResult] = useState<BattleState | null>(dev.result)
@@ -93,6 +100,8 @@ export default function App() {
         <TeamBuilderScreen
           team={team}
           setTeam={setTeam}
+          equipment={equipment}
+          setEquipment={setEquipment}
           onBack={() => go('title')}
           onBattle={() => toPreview(newMatch())}
         />
@@ -102,10 +111,12 @@ export default function App() {
       return (
         <TeamPreviewScreen
           playerTeam={team}
+          playerEquipment={equipment}
           aiTeam={match.aiTeam}
+          aiEquipment={match.aiEquipment}
           onBack={() => go('builder')}
           onBegin={(lead) => {
-            setSession(startSession(ROSTER, team, match.aiTeam, lead, match.seed).session)
+            setSession(startSession(ROSTER, team, match.aiTeam, lead, match.seed, [equipment, match.aiEquipment]).session)
             go('battle')
           }}
         />
@@ -128,7 +139,7 @@ export default function App() {
         <ResultScreen
           final={result}
           // Same opposing team, new seed, choose leads again.
-          onRematch={() => toPreview({ aiTeam: match.aiTeam, seed: newSeed() })}
+          onRematch={() => toPreview({ ...match, seed: newSeed() })}
           onBuilder={() => go('builder')}
           onTitle={() => go('title')}
         />

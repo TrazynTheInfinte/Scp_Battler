@@ -16,6 +16,17 @@ export function TypeBadge({ type }: { type: TypeName }) {
   return <span className={`badge type-${type}`}>{type}</span>
 }
 
+/** The Equipment an SCP carries, with its effect on hover; nothing if it carries none. */
+export function EquipmentTag({ id }: { id: string | null }) {
+  const piece = id ? ROSTER.equipment[id] : null
+  if (!piece) return null
+  return (
+    <span className="badge equipment-badge" title={piece.description}>
+      ⚙ {piece.name}
+    </span>
+  )
+}
+
 /** The SCP's art: its licensed image if it has one, else a placeholder card. */
 export function ContainmentCard({ speciesId }: { speciesId: string }) {
   const sp = ROSTER.species[speciesId]

@@ -103,6 +103,9 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(e.typeName ? `${label}: now resistant to ${e.typeName}.` : `${label}!`)
         break
       }
+      case 'equipment':
+        lines.push(`${name(e.side)}'s ${dex.equipment[e.equipmentId]?.name ?? e.equipmentId}!`)
+        break
       case 'neutralized':
         lines.push(`${nameAt(e.side, e.teamIndex)} was neutralized.`)
         break

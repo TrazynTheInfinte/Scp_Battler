@@ -47,11 +47,12 @@ describe('formatEvents', () => {
     ])
   })
 
-  it('formats abilities, stages, timeout, and the result', () => {
+  it('formats abilities, Equipment, stages, timeout, and the result', () => {
     expect(
       fmt([
         { type: 'ability', side: 1, abilityId: 'adaptive', typeName: 'Kinetic' },
         { type: 'ability', side: 0, abilityId: 'unobserved' },
+        { type: 'equipment', side: 0, equipmentId: 'medkit' },
         { type: 'stage', side: 0, stat: 'atk', delta: 2 },
         { type: 'stage', side: 1, stat: 'spe', delta: -1 },
         { type: 'timeout' },
@@ -60,6 +61,7 @@ describe('formatEvents', () => {
     ).toEqual([
       "Hostile SCP-682's ADAPTIVE: now resistant to Kinetic.",
       "SCP-173's UNOBSERVED!",
+      "SCP-173's Medkit!",
       "SCP-173's Atk rose sharply.",
       "Hostile SCP-682's Speed fell.",
       'CONTAINMENT TIMEOUT — decided by remaining HP.',

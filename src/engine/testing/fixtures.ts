@@ -1,4 +1,4 @@
-import type { AbilityData, Dex, MoveData, ObjectClass, SpeciesData, Stats } from '../model'
+import type { AbilityData, Dex, EquipmentData, MoveData, ObjectClass, SpeciesData, Stats } from '../model'
 import type { TypeName } from '../typeChart'
 
 /**
@@ -88,9 +88,17 @@ const abilities: Record<string, AbilityData> = {
   },
 }
 
+const equipment: Record<string, EquipmentData> = {
+  medkit: { id: 'medkit', name: 'Medkit', description: 'Heals.', cost: 1, rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }] },
+  plating: { id: 'plating', name: 'Plating', description: 'Retaliates.', cost: 2, rules: [{ kind: 'retaliate', fraction: 1 / 8 }] },
+  pouch: { id: 'pouch', name: 'Pouch', description: 'More PP.', cost: 1, rules: [{ kind: 'extraPp', fraction: 0.5 }] },
+  hazmat: { id: 'hazmat', name: 'Hazmat', description: 'No Bleeding.', cost: 2, rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }] },
+}
+
 export const dex: Dex = {
   moves,
   abilities,
+  equipment,
   species: {
     fast: sp('fast', 'Euclid', kinetic, stats(80, 120, 80, 80, 80, 130)),
     twin: sp('twin', 'Euclid', kinetic, stats(80, 120, 80, 80, 80, 130)), // same Speed as fast

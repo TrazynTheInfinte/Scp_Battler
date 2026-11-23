@@ -41,6 +41,7 @@ describe('computeDamage', () => {
 describe('attackAndDefense', () => {
   const combatant = (stages: Partial<Combatant['stages']>): Combatant => ({
     speciesId: 'x',
+    equipment: null,
     hp: 100,
     stats: { hp: 100, atk: 100, def: 100, spa: 80, spd: 80, spe: 100 },
     stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, ...stages },

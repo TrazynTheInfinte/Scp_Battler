@@ -20,7 +20,7 @@ import {
   type Advance,
   type Session,
 } from '../battleController'
-import { ClassBadge, ContainmentCard, TypeBadge, TypeChartButton } from '../components'
+import { ClassBadge, ContainmentCard, EquipmentTag, TypeBadge, TypeChartButton } from '../components'
 import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
 
@@ -65,6 +65,7 @@ function SideInfo({ state, side }: { state: BattleState; side: SideIndex }) {
         {sp.types.map((t) => (
           <TypeBadge key={t} type={t} />
         ))}
+        <EquipmentTag id={c.equipment} />
         <span className="muted small">
           {'●'.repeat(remaining)}
           {'○'.repeat(state.sides[side].team.length - remaining)}

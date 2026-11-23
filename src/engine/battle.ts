@@ -1,4 +1,4 @@
-import { getAbility, type Ability, type AbilityContext } from './abilities'
+import { getAbility, getEquipment, type Ability, type AbilityContext } from './abilities'
 import { CRIT_CHANCE, MAX_ROLL, MIN_ROLL, computeDamage } from './damage'
 import type {
   BattleEvent,
@@ -73,9 +73,13 @@ export const AVERAGE_ROLL = (MIN_ROLL + MAX_ROLL) / 2
 // Setup
 // ---------------------------------------------------------------------------
 
+/** Each side's Equipment ids, aligned with its team (null or missing = none). */
+export type TeamEquipment = readonly [readonly (string | null)[], readonly (string | null)[]]
+
 /**
  * Build the initial battle state after Team Preview: both teams (species ids,
- * in team order), each side's chosen starting SCP, and the RNG seed.
+ * in team order), each side's chosen starting SCP, the RNG seed, and each
+ * side's Equipment.
  *
  * This does NOT run the leads' switch-in abilities; use `startBattle` for a
  * real battle. `createBattle` exists for tests and tooling that need the raw
@@ -86,9 +90,10 @@ export function createBattle(
   teams: readonly [readonly string[], readonly string[]],
   leads: readonly [number, number],
   seed: number,
+  equipment: TeamEquipment = [[], []],
 ): BattleState {
   const sides = SIDES.map((side) => {
-    const problems = validateTeam(dex, teams[side])
+    const problems = validateTeam(dex, teams[side], equipment[side])
     if (problems.length > 0) {
       throw new Error(`side ${side} team is illegal: ${JSON.stringify(problems)}`)
     }
@@ -97,7 +102,7 @@ export function createBattle(
       throw new RangeError(`side ${side} lead index ${lead} out of range`)
     }
     return {
-      team: teams[side].map((id) => newCombatant(dex, species(dex, id))),
+      team: teams[side].map((id, i) => newCombatant(dex, species(dex, id), equipment[side][i] ?? null)),
       active: lead,
     }
   }) as [SideState, SideState]
@@ -119,8 +124,9 @@ export function startBattle(
   teams: readonly [readonly string[], readonly string[]],
   leads: readonly [number, number],
   seed: number,
+  equipment: TeamEquipment = [[], []],
 ): StepResult {
-  const s = createBattle(dex, teams, leads, seed)
+  const s = createBattle(dex, teams, leads, seed, equipment)
   const rng = createRng(s.rngState)
   const events: BattleEvent[] = []
   for (const side of orderBySpeed(s, SIDES, rng)) runSwitchIn(s, dex, side, rng, events)
@@ -129,12 +135,16 @@ export function startBattle(
 }
 
 /** A fresh, full-HP level-50 combatant (e.g. for AI matchup estimates). */
-export function createCombatant(dex: Dex, speciesId: string): Combatant {
-  return newCombatant(dex, species(dex, speciesId))
+export function createCombatant(dex: Dex, speciesId: string, equipment: string | null = null): Combatant {
+  return newCombatant(dex, species(dex, speciesId), equipment)
 }
 
-function newCombatant(dex: Dex, sp: SpeciesData): Combatant {
-  getAbility(dex, sp.ability) // fail fast on an unknown ability id
+function newCombatant(dex: Dex, sp: SpeciesData, equipment: string | null): Combatant {
+  // Also fails fast on an unknown ability or Equipment id.
+  const ppMultiplier = [getAbility(dex, sp.ability), getEquipment(dex, equipment)].reduce(
+    (m, e) => m * (e?.ppMultiplier ?? 1),
+    1,
+  )
   const b = sp.baseStats
   const stats = {
     hp: calcStat('hp', b.hp),
@@ -146,10 +156,11 @@ function newCombatant(dex: Dex, sp: SpeciesData): Combatant {
   }
   return {
     speciesId: sp.id,
+    equipment,
     hp: stats.hp,
     stats,
     stages: { ...ZERO_STAGES },
-    pp: sp.moves.map((id) => moveData(dex, id).pp),
+    pp: sp.moves.map((id) => Math.floor(moveData(dex, id).pp * ppMultiplier)),
     status: null,
     volatiles: { ...FRESH_VOLATILES },
   }
@@ -190,7 +201,7 @@ export function isStruggling(c: Combatant): boolean {
  * Unobserved facing an Ever Watchful one). Status moves still work.
  */
 export function attacksBlocked(dex: Dex, user: Combatant, target: Combatant): boolean {
-  return Boolean(abilityOf(dex, user)?.frozenWhileWatched && abilityOf(dex, target)?.watchesOpponent)
+  return effectsOf(dex, user).some((e) => e.frozenWhileWatched) && effectsOf(dex, target).some((e) => e.watchesOpponent)
 }
 
 /**
@@ -372,8 +383,21 @@ function moveData(dex: Dex, id: string): MoveData {
   return m
 }
 
-function abilityOf(dex: Dex, c: Combatant): Ability | null {
-  return getAbility(dex, species(dex, c.speciesId).ability)
+/** What modifies an SCP in battle: its ability, then its Equipment (each if it has one). */
+function effectsOf(dex: Dex, c: Combatant): Ability[] {
+  const out: Ability[] = []
+  const ability = getAbility(dex, species(dex, c.speciesId).ability)
+  if (ability) out.push(ability)
+  const equipment = getEquipment(dex, c.equipment)
+  if (equipment) out.push(equipment)
+  return out
+}
+
+/** The log event for an ability or Equipment visibly triggering. */
+function triggered(side: SideIndex, effect: Ability, typeName?: TypeName): BattleEvent {
+  return effect.source === 'equipment'
+    ? { type: 'equipment', side, equipmentId: effect.id }
+    : { type: 'ability', side, abilityId: effect.id, ...(typeName ? { typeName } : {}) }
 }
 
 function other(side: SideIndex): SideIndex {
@@ -402,23 +426,23 @@ function orderMovers(
   events: BattleEvent[],
 ): SideIndex[] {
   if (sides.length < 2) return [...sides]
-  const priority = (side: SideIndex): string | null => {
+  const priority = (side: SideIndex): Ability | null => {
     const c = activeOf(s, side)
-    const ability = abilityOf(dex, c)
-    if (!ability?.movesFirst?.(c)) return null
-    const opposing = abilityOf(dex, activeOf(s, other(side)))
-    if (opposing?.watchesOpponent) {
-      events.push({ type: 'ability', side: other(side), abilityId: opposing.id })
+    const effect = effectsOf(dex, c).find((e) => e.movesFirst?.(c))
+    if (!effect) return null
+    const watcher = effectsOf(dex, activeOf(s, other(side))).find((e) => e.watchesOpponent)
+    if (watcher) {
+      events.push(triggered(other(side), watcher))
       return null
     }
-    return ability.id
+    return effect
   }
   const [a, b] = sides
   const pa = priority(a)
   const pb = priority(b)
   if ((pa === null) !== (pb === null)) {
     const first = pa !== null ? a : b
-    events.push({ type: 'ability', side: first, abilityId: (pa ?? pb) as string })
+    events.push(triggered(first, (pa ?? pb) as Ability))
     return [first, other(first)]
   }
   return orderBySpeed(s, sides, rng)
@@ -442,8 +466,9 @@ function switchIn(
 }
 
 function runSwitchIn(s: BattleState, dex: Dex, side: SideIndex, rng: Rng, events: BattleEvent[]) {
-  const ability = abilityOf(dex, activeOf(s, side))
-  ability?.onSwitchIn?.(abilityContext(s, dex, side, ability, rng, events))
+  for (const effect of effectsOf(dex, activeOf(s, side))) {
+    effect.onSwitchIn?.(abilityContext(s, dex, side, effect, rng, events))
+  }
 }
 
 /**
@@ -491,8 +516,8 @@ function executeMove(
   const targetSide = other(side)
 
   if (!isStatusMove && attacksBlocked(dex, user, activeOf(s, targetSide))) {
-    const watcher = abilityOf(dex, activeOf(s, targetSide)) as Ability
-    events.push({ type: 'ability', side: targetSide, abilityId: watcher.id })
+    const watcher = effectsOf(dex, activeOf(s, targetSide)).find((e) => e.watchesOpponent) as Ability
+    events.push(triggered(targetSide, watcher))
     events.push({ type: 'frozen', side })
     return false
   }
@@ -511,7 +536,6 @@ function executeMove(
   }
 
   const target = activeOf(s, targetSide)
-  const targetAbility = abilityOf(dex, target)
 
   const crit = rng.chance(CRIT_CHANCE)
   const { damage, effectiveness } = damageFor(dex, s.level, user, target, move, crit, rng.int(MIN_ROLL, MAX_ROLL))
@@ -532,11 +556,8 @@ function executeMove(
     return false
   }
 
-  if (targetAbility?.afterDamagedByMove) {
-    targetAbility.afterDamagedByMove(
-      abilityContext(s, dex, targetSide, targetAbility, rng, events),
-      move,
-    )
+  for (const effect of effectsOf(dex, target)) {
+    effect.afterDamagedByMove?.(abilityContext(s, dex, targetSide, effect, rng, events), move)
   }
 
   applyEffects(s, dex, side, move, rng, events)
@@ -610,13 +631,13 @@ function changeStages(
 ): boolean {
   const c = activeOf(s, side)
   if (isNeutralized(c)) return false
-  const ability = abilityOf(dex, c)
+  const blocker = effectsOf(dex, c).find((e) => e.blocksOpponentStatDrops)
   let changed = false
   let blocked = false
   for (const stat of STAGEABLE) {
     const requested = changes[stat]
     if (!requested) continue
-    if (requested < 0 && byOpponent && ability?.blocksOpponentStatDrops) {
+    if (requested < 0 && byOpponent && blocker) {
       blocked = true
       continue
     }
@@ -627,7 +648,7 @@ function changeStages(
     events.push({ type: 'stage', side, stat, delta })
     changed = true
   }
-  if (blocked && ability) events.push({ type: 'ability', side, abilityId: ability.id })
+  if (blocked && blocker) events.push(triggered(side, blocker))
   return changed
 }
 
@@ -656,8 +677,8 @@ function damageFor(
   const { attack, defense } = attackAndDefense(user, target, move, crit)
   const effectiveness = move.typeless ? 1 : typeEffectiveness(move.type, targetSpecies.types)
   const abilityMultiplier =
-    (getAbility(dex, targetSpecies.ability)?.incomingDamageMultiplier?.(target, move) ?? 1) *
-    (getAbility(dex, userSpecies.ability)?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
+    effectsOf(dex, target).reduce((m, e) => m * (e.incomingDamageMultiplier?.(target, move) ?? 1), 1) *
+    effectsOf(dex, user).reduce((m, e) => m * (e.outgoingDamageMultiplier?.(user, target, move) ?? 1), 1)
   const damage = computeDamage({
     level,
     power: move.power,
@@ -692,7 +713,7 @@ export function canReceiveStatus(dex: Dex, c: Combatant, status: StatusName): bo
   if (isNeutralized(c) || c.status) return false
   const sp = species(dex, c.speciesId)
   if (isImmuneToStatus(sp.types, status)) return false
-  return !getAbility(dex, sp.ability)?.statusImmunities?.includes(status)
+  return !effectsOf(dex, c).some((e) => e.statusImmunities?.includes(status))
 }
 
 function canInflict(s: BattleState, dex: Dex, side: SideIndex, status: StatusName): boolean {
@@ -734,7 +755,7 @@ function abilityContext(
     opponent: activeOf(s, other(side)),
     rng,
     announce(typeName?: TypeName) {
-      events.push({ type: 'ability', side, abilityId: ability.id, ...(typeName ? { typeName } : {}) })
+      events.push(triggered(side, ability, typeName))
     },
     changeStages: (who, changes) =>
       changeStages(s, dex, sideOf(who), changes, who === 'opponent', events),
@@ -804,8 +825,9 @@ function endOfTurn(
         status.turnsLeft = left
       }
     }
-    const ability = abilityOf(dex, c)
-    ability?.onEndOfTurn?.(abilityContext(s, dex, side, ability, rng, events))
+    for (const effect of effectsOf(dex, c)) {
+      effect.onEndOfTurn?.(abilityContext(s, dex, side, effect, rng, events))
+    }
   }
 
   for (const side of SIDES) {
