@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { ADAPTIVE_MULTIPLIER } from './abilities'
 import { activeOf, createBattle, legalChoices, resolveTurn, speedOf } from './battle'
 import type { BattleEvent, BattleState, Choice, StatusName } from './model'
-import { ERASER, FOCUS, HEX, JAB, MEDIC, dex } from './testing/fixtures'
+import { ADAPTIVE_MULTIPLIER, ERASER, FOCUS, HEX, JAB, MEDIC, dex } from './testing/fixtures'
 
 const move = (moveIndex: number): Choice => ({ kind: 'move', moveIndex })
 const sw = (teamIndex: number): Choice => ({ kind: 'switch', teamIndex })

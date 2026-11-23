@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeOf,
-  ENRAGED_MAX_BOOSTS,
   createBattle,
   resolveReplacements,
   resolveTurn,
@@ -12,6 +11,8 @@ import {
   type Dex,
 } from '../engine'
 import { ROSTER } from './roster'
+
+const ENRAGED_MAX_BOOSTS = 2
 
 const move = (moveIndex: number): Choice => ({ kind: 'move', moveIndex })
 const sw = (teamIndex: number): Choice => ({ kind: 'switch', teamIndex })

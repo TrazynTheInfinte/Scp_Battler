@@ -1,4 +1,4 @@
-import { ABILITIES, STRUGGLE, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
+import { STRUGGLE, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
 import { STAT_LABEL } from './text'
 
 /** The human player is always side 0; the AI is side 1. */
@@ -95,7 +95,7 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(`${name(e.side)} is no longer ${e.status.toUpperCase()}.`)
         break
       case 'ability': {
-        const ability = ABILITIES[e.abilityId]
+        const ability = dex.abilities[e.abilityId]
         const label = `${name(e.side)}'s ${ability?.name.toUpperCase() ?? e.abilityId}`
         lines.push(e.typeName ? `${label}: now resistant to ${e.typeName}.` : `${label}!`)
         break

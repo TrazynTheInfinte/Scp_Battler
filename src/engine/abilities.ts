@@ -1,12 +1,7 @@
-import type { Combatant, MoveData, StatStages, StatusName } from './model'
+import type { AbilityData, AbilityRule, Combatant, Dex, MoveData, StatStages, StatusName } from './model'
 import type { Rng } from './rng'
+import { MAX_STAGE } from './stats'
 import type { TypeName } from './typeChart'
-
-/** Enraged stops raising Attack after this many boosts, until the SCP leaves the field. */
-export const ENRAGED_MAX_BOOSTS = 2
-
-/** Adaptive: damage taken from the adapted type is multiplied by this. */
-export const ADAPTIVE_MULTIPLIER = 0.75
 
 /**
  * What an ability hook may do. The engine builds one bound to the ability
@@ -31,15 +26,8 @@ export interface AbilityContext {
   heal(who: 'self' | 'opponent', fraction: number): boolean
 }
 
-/**
- * An ability is a bundle of optional hooks and flags the engine checks at
- * fixed points. Add a new hook point only when an ability needs one.
- */
-export interface Ability {
-  id: string
-  name: string
-  description: string
-
+/** The hooks and flags the engine checks at fixed points. Rules fill these in. */
+interface AbilityHooks {
   // --- Flags ---
   /** Opponents' moves and abilities can't lower this SCP's stat stages. */
   blocksOpponentStatDrops?: boolean
@@ -68,130 +56,141 @@ export interface Ability {
   onEndOfTurn?(ctx: AbilityContext): void
 }
 
-export const ABILITIES: Readonly<Record<string, Ability>> = {
-  unobserved: {
-    id: 'unobserved',
-    name: 'Unobserved',
-    description:
-      "Always moves first, unless it has a status condition, or the opponent used a Status move last turn and is watching it. Can't attack an Ever Watchful opponent.",
-    movesFirst: (self) => !self.volatiles.watched && !self.status,
-    frozenWhileWatched: true,
-  },
-
-  adaptive: {
-    id: 'adaptive',
-    name: 'Adaptive',
-    description:
-      'After taking damage from a move, takes 25% less damage from that type until it switches out. Remembers only the latest type.',
-    incomingDamageMultiplier: (self, move) =>
-      !move.typeless && self.volatiles.adaptedType === move.type ? ADAPTIVE_MULTIPLIER : 1,
-    afterDamagedByMove(ctx, move) {
-      if (move.typeless || ctx.self.volatiles.adaptedType === move.type) return
-      ctx.self.volatiles.adaptedType = move.type
-      ctx.announce(move.type)
-    },
-  },
-
-  jovial: {
-    id: 'jovial',
-    name: 'Jovial',
-    description: 'Heals 1/16 of its max HP at the end of each turn.',
-    onEndOfTurn(ctx) {
-      if (ctx.self.hp >= ctx.self.stats.hp) return
-      ctx.announce()
-      ctx.heal('self', 1 / 16)
-    },
-  },
-
-  precisionEngineering: {
-    id: 'precisionEngineering',
-    name: 'Precision Engineering',
-    description: "Opponents can't lower its stats.",
-    blocksOpponentStatDrops: true,
-  },
-
-  willingDetainee: {
-    id: 'willingDetainee',
-    name: 'Willing Detainee',
-    description: "Can't be Contained.",
-    statusImmunities: ['Contained'],
-  },
-
-  everWatchful: {
-    id: 'everWatchful',
-    name: 'Ever Watchful',
-    description: "The opponent's Unobserved never triggers, and an SCP with Unobserved can't use attacking moves while facing it.",
-    watchesOpponent: true,
-  },
-
-  enraged: {
-    id: 'enraged',
-    name: 'Enraged',
-    description:
-      'Raises its Attack by 1 when it takes damage from a move, up to twice each time it enters the field.',
-    afterDamagedByMove(ctx) {
-      if (ctx.self.stages.atk >= 6 || ctx.self.volatiles.enragedBoosts >= ENRAGED_MAX_BOOSTS) return
-      ctx.self.volatiles.enragedBoosts++
-      ctx.announce()
-      ctx.changeStages('self', { atk: 1 })
-    },
-  },
-
-  theCure: {
-    id: 'theCure',
-    name: 'The Cure',
-    description: 'Deals 1.5x damage to targets that have a status condition.',
-    outgoingDamageMultiplier: (_self, target) => (target.status ? 1.5 : 1),
-  },
-
-  bootSequence: {
-    id: 'bootSequence',
-    name: 'Boot Sequence',
-    description: 'Raises its Sp. Attack by 1 when it enters the field.',
-    onSwitchIn(ctx) {
-      if (ctx.self.stages.spa >= 6) return
-      ctx.announce()
-      ctx.changeStages('self', { spa: 1 })
-    },
-  },
-
-  morbidAllure: {
-    id: 'morbidAllure',
-    name: 'Morbid Allure',
-    description: 'An SCP that hits it with a Physical move has a 30% chance to start Bleeding.',
-    afterDamagedByMove(ctx, move) {
-      if (move.category !== 'Physical') return
-      if (!ctx.rng.chance(0.3)) return
-      if (!ctx.canInflict('opponent', 'Bleeding')) return
-      ctx.announce()
-      ctx.inflictStatus('opponent', 'Bleeding')
-    },
-  },
-
-  phasing: {
-    id: 'phasing',
-    name: 'Phasing',
-    description: 'Takes half damage from Physical moves.',
-    incomingDamageMultiplier: (_self, move) => (move.category === 'Physical' ? 0.5 : 1),
-  },
-
-  selfKeepingSecret: {
-    id: 'selfKeepingSecret',
-    name: 'Self-Keeping Secret',
-    description: "When it enters the field, the opponent forgets its stat boosts.",
-    onSwitchIn(ctx) {
-      const opp = ctx.opponent
-      if (opp.hp <= 0) return
-      if (!Object.values(opp.stages).some((v) => v > 0)) return
-      ctx.announce()
-      ctx.clearBoosts('opponent')
-    },
-  },
+/** An ability ready for the engine: its data plus the hooks its rules add up to. */
+export interface Ability extends AbilityHooks {
+  id: string
+  name: string
+  description: string
 }
 
-export function getAbility(id: string | undefined): Ability | null {
+/** True if every stat in `changes` that would rise is already at +6. */
+const allMaxed = (stages: StatStages, changes: Partial<StatStages>) =>
+  (Object.entries(changes) as [keyof StatStages, number][]).every(
+    ([stat, n]) => n <= 0 || stages[stat] >= MAX_STAGE,
+  )
+
+/**
+ * The engine's implementation of each rule kind. Adding a new kind here is
+ * the only code a new ability ever needs; everything else is data.
+ */
+function hooksFor(rule: AbilityRule): AbilityHooks {
+  switch (rule.kind) {
+    case 'healEachTurn':
+      return {
+        onEndOfTurn(ctx) {
+          if (ctx.self.hp >= ctx.self.stats.hp) return
+          ctx.announce()
+          ctx.heal('self', rule.fraction)
+        },
+      }
+    case 'blockStatDrops':
+      return { blocksOpponentStatDrops: true }
+    case 'statusImmunity':
+      return { statusImmunities: rule.statuses }
+    case 'watcher':
+      return { watchesOpponent: true }
+    case 'unobserved':
+      return {
+        movesFirst: (self) => !self.volatiles.watched && !self.status,
+        frozenWhileWatched: true,
+      }
+    case 'adaptive':
+      return {
+        incomingDamageMultiplier: (self, move) =>
+          !move.typeless && self.volatiles.adaptedType === move.type ? rule.multiplier : 1,
+        afterDamagedByMove(ctx, move) {
+          if (move.typeless || ctx.self.volatiles.adaptedType === move.type) return
+          ctx.self.volatiles.adaptedType = move.type
+          ctx.announce(move.type)
+        },
+      }
+    case 'boostWhenHit':
+      return {
+        afterDamagedByMove(ctx) {
+          if (allMaxed(ctx.self.stages, rule.changes) || ctx.self.volatiles.hitBoosts >= rule.maxPerEntry) return
+          ctx.self.volatiles.hitBoosts++
+          ctx.announce()
+          ctx.changeStages('self', rule.changes)
+        },
+      }
+    case 'boostOnEntry':
+      return {
+        onSwitchIn(ctx) {
+          if (allMaxed(ctx.self.stages, rule.changes)) return
+          ctx.announce()
+          ctx.changeStages('self', rule.changes)
+        },
+      }
+    case 'damageDealtVsStatused':
+      return { outgoingDamageMultiplier: (_self, target) => (target.status ? rule.multiplier : 1) }
+    case 'damageTaken':
+      return {
+        incomingDamageMultiplier: (_self, move) => (move.category === rule.category ? rule.multiplier : 1),
+      }
+    case 'afflictAttacker':
+      return {
+        afterDamagedByMove(ctx, move) {
+          if (move.category !== rule.category) return
+          if (!ctx.rng.chance(rule.chance / 100)) return
+          if (!ctx.canInflict('opponent', rule.status)) return
+          ctx.announce()
+          ctx.inflictStatus('opponent', rule.status)
+        },
+      }
+    case 'clearOpponentBoostsOnEntry':
+      return {
+        onSwitchIn(ctx) {
+          const opp = ctx.opponent
+          if (opp.hp <= 0) return
+          if (!Object.values(opp.stages).some((v) => v > 0)) return
+          ctx.announce()
+          ctx.clearBoosts('opponent')
+        },
+      }
+  }
+}
+
+/** Combine an ability's rules: flags OR together, multipliers multiply, event hooks run in rule order. */
+export function compileAbility(data: AbilityData): Ability {
+  const parts = data.rules.map(hooksFor)
+  const fns = <K extends keyof AbilityHooks>(key: K) =>
+    parts.flatMap((p) => (p[key] ? [p[key] as NonNullable<AbilityHooks[K]>] : []))
+
+  const ability: Ability = { id: data.id, name: data.name, description: data.description }
+  if (parts.some((p) => p.blocksOpponentStatDrops)) ability.blocksOpponentStatDrops = true
+  if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
+  if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
+  const immunities = parts.flatMap((p) => p.statusImmunities ?? [])
+  if (immunities.length > 0) ability.statusImmunities = immunities
+
+  const first = fns('movesFirst')
+  if (first.length > 0) ability.movesFirst = (self) => first.some((f) => f(self))
+  const incoming = fns('incomingDamageMultiplier')
+  if (incoming.length > 0) ability.incomingDamageMultiplier = (self, move) => incoming.reduce((m, f) => m * f(self, move), 1)
+  const outgoing = fns('outgoingDamageMultiplier')
+  if (outgoing.length > 0) {
+    ability.outgoingDamageMultiplier = (self, target, move) => outgoing.reduce((m, f) => m * f(self, target, move), 1)
+  }
+  const afterHit = fns('afterDamagedByMove')
+  if (afterHit.length > 0) ability.afterDamagedByMove = (ctx, move) => afterHit.forEach((f) => f(ctx, move))
+  const entry = fns('onSwitchIn')
+  if (entry.length > 0) ability.onSwitchIn = (ctx) => entry.forEach((f) => f(ctx))
+  const endTurn = fns('onEndOfTurn')
+  if (endTurn.length > 0) ability.onEndOfTurn = (ctx) => endTurn.forEach((f) => f(ctx))
+  return ability
+}
+
+const compiled = new WeakMap<AbilityData, Ability>()
+
+/** The Dex's ability `id`, ready for the engine (built once, then cached). */
+export function getAbility(dex: Dex, id: string | undefined): Ability | null {
   if (id === undefined) return null
-  const ability = ABILITIES[id]
-  if (!ability) throw new Error(`unknown ability '${id}'`)
+  const data = dex.abilities[id]
+  if (!data) throw new Error(`unknown ability '${id}'`)
+  let ability = compiled.get(data)
+  if (!ability) {
+    ability = compileAbility(data)
+    compiled.set(data, ability)
+  }
   return ability
 }

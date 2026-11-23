@@ -48,7 +48,7 @@ export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
-const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, enragedBoosts: 0 }
+const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0 }
 
 /**
  * Used automatically once an SCP has no PP left in any move: always x1
@@ -134,7 +134,7 @@ export function createCombatant(dex: Dex, speciesId: string): Combatant {
 }
 
 function newCombatant(dex: Dex, sp: SpeciesData): Combatant {
-  getAbility(sp.ability) // fail fast on an unknown ability id
+  getAbility(dex, sp.ability) // fail fast on an unknown ability id
   const b = sp.baseStats
   const stats = {
     hp: calcStat('hp', b.hp),
@@ -373,7 +373,7 @@ function moveData(dex: Dex, id: string): MoveData {
 }
 
 function abilityOf(dex: Dex, c: Combatant): Ability | null {
-  return getAbility(species(dex, c.speciesId).ability)
+  return getAbility(dex, species(dex, c.speciesId).ability)
 }
 
 function other(side: SideIndex): SideIndex {
@@ -655,8 +655,8 @@ function damageFor(
   const { attack, defense } = attackAndDefense(user, target, move, crit)
   const effectiveness = move.typeless ? 1 : typeEffectiveness(move.type, targetSpecies.types)
   const abilityMultiplier =
-    (getAbility(targetSpecies.ability)?.incomingDamageMultiplier?.(target, move) ?? 1) *
-    (getAbility(userSpecies.ability)?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
+    (getAbility(dex, targetSpecies.ability)?.incomingDamageMultiplier?.(target, move) ?? 1) *
+    (getAbility(dex, userSpecies.ability)?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
   const damage = computeDamage({
     level,
     power: move.power,
@@ -691,7 +691,7 @@ export function canReceiveStatus(dex: Dex, c: Combatant, status: StatusName): bo
   if (isNeutralized(c) || c.status) return false
   const sp = species(dex, c.speciesId)
   if (isImmuneToStatus(sp.types, status)) return false
-  return !getAbility(sp.ability)?.statusImmunities?.includes(status)
+  return !getAbility(dex, sp.ability)?.statusImmunities?.includes(status)
 }
 
 function canInflict(s: BattleState, dex: Dex, side: SideIndex, status: StatusName): boolean {

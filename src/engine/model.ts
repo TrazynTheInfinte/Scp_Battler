@@ -52,6 +52,44 @@ export interface MoveData {
   effects?: readonly MoveEffect[]
 }
 
+/**
+ * One reusable building block of an ability. The engine implements each kind;
+ * an ability is a list of rules, so most new abilities are pure data.
+ * Chances are percents (0-100).
+ */
+export type AbilityRule =
+  /** Heals `fraction` of max HP at end of turn when hurt. */
+  | { kind: 'healEachTurn'; fraction: number }
+  /** Opponents can't lower its stat stages. */
+  | { kind: 'blockStatDrops' }
+  /** Can never receive these statuses. */
+  | { kind: 'statusImmunity'; statuses: readonly StatusName[] }
+  /** Watches the opponent: cancels its priority, and freezes `unobserved` attackers. */
+  | { kind: 'watcher' }
+  /** Moves first unless statused or watched last turn; can't attack a watcher. */
+  | { kind: 'unobserved' }
+  /** After a damaging hit, takes `multiplier` damage from that move's type until it leaves. */
+  | { kind: 'adaptive'; multiplier: number }
+  /** After surviving a damaging hit, applies `changes`, at most `maxPerEntry` times per entry. */
+  | { kind: 'boostWhenHit'; changes: Partial<StatStages>; maxPerEntry: number }
+  /** Applies `changes` to itself whenever it enters the field. */
+  | { kind: 'boostOnEntry'; changes: Partial<StatStages> }
+  /** Deals `multiplier` damage to targets that have a status condition. */
+  | { kind: 'damageDealtVsStatused'; multiplier: number }
+  /** Takes `multiplier` damage from moves of `category`. */
+  | { kind: 'damageTaken'; category: MoveCategory; multiplier: number }
+  /** An attacker that hits it with a `category` move has `chance`% to receive `status`. */
+  | { kind: 'afflictAttacker'; category: MoveCategory; status: StatusName; chance: number }
+  /** When it enters the field, the opponent loses its stat boosts (not its drops). */
+  | { kind: 'clearOpponentBoostsOnEntry' }
+
+export interface AbilityData {
+  id: string
+  name: string
+  description: string
+  rules: readonly AbilityRule[]
+}
+
 export interface SpeciesData {
   id: string
   name: string
@@ -60,13 +98,14 @@ export interface SpeciesData {
   baseStats: Stats
   /** Exactly four move ids. */
   moves: readonly [string, string, string, string]
-  /** Id of an ability in the engine's ability registry. */
+  /** Id of an ability in the Dex. */
   ability?: string
 }
 
 export interface Dex {
   species: Readonly<Record<string, SpeciesData>>
   moves: Readonly<Record<string, MoveData>>
+  abilities: Readonly<Record<string, AbilityData>>
 }
 
 // ---------------------------------------------------------------------------
@@ -92,8 +131,8 @@ export interface Volatiles {
    * switched in, or the upcoming turn for a replacement. 0 for a lead.
    */
   enteredTurn: number
-  /** Enraged: Attack raises gained since entering (capped, so it can't snowball forever). */
-  enragedBoosts: number
+  /** boostWhenHit: boosts gained since entering (capped, so it can't snowball forever). */
+  hitBoosts: number
 }
 
 export interface Combatant {

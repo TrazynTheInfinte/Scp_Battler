@@ -1,4 +1,4 @@
-import type { Dex, MoveData, ObjectClass, SpeciesData, Stats } from '../model'
+import type { AbilityData, Dex, MoveData, ObjectClass, SpeciesData, Stats } from '../model'
 import type { TypeName } from '../typeChart'
 
 /**
@@ -77,8 +77,20 @@ export const JAB = 1
 export const WHIFF = 2
 export const FOCUS = 3
 
+/** Adaptive's damage multiplier in the fixture Dex. */
+export const ADAPTIVE_MULTIPLIER = 0.75
+
+const abilities: Record<string, AbilityData> = {
+  unobserved: { id: 'unobserved', name: 'Unobserved', description: 'Moves first.', rules: [{ kind: 'unobserved' }] },
+  adaptive: {
+    id: 'adaptive', name: 'Adaptive', description: 'Adapts.',
+    rules: [{ kind: 'adaptive', multiplier: ADAPTIVE_MULTIPLIER }],
+  },
+}
+
 export const dex: Dex = {
   moves,
+  abilities,
   species: {
     fast: sp('fast', 'Euclid', kinetic, stats(80, 120, 80, 80, 80, 130)),
     twin: sp('twin', 'Euclid', kinetic, stats(80, 120, 80, 80, 80, 130)), // same Speed as fast

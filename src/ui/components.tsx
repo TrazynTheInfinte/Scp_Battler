@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ABILITIES, OBJECT_CLASS_COST, TYPE_RING, matchup, type ObjectClass, type TypeName } from '../engine'
+import { OBJECT_CLASS_COST, TYPE_RING, matchup, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { ROSTER } from '../data/roster'
 import { STAT_LABEL, TYPE_ABBR, describeMove } from './text'
@@ -54,7 +54,7 @@ export function DossierCard({
 }) {
   const sp = ROSTER.species[speciesId]
   const dossier = DOSSIERS[speciesId]
-  const ability = sp.ability ? ABILITIES[sp.ability] : null
+  const ability = sp.ability ? ROSTER.abilities[sp.ability] : null
   return (
     <article className={`dossier${inTeam ? ' in-team' : ''}`}>
       <button className="dossier-head" onClick={onToggle} aria-expanded={open}>
