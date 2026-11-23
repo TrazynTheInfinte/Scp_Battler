@@ -50,6 +50,22 @@ const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
 const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, enragedBoosts: 0 }
 
+/**
+ * Used automatically once an SCP has no PP left in any move: always x1
+ * effectiveness, and the user takes recoil of STRUGGLE_RECOIL of its max HP.
+ */
+export const STRUGGLE: MoveData = {
+  id: 'struggle',
+  name: 'Struggle',
+  type: 'Kinetic',
+  category: 'Physical',
+  power: 50,
+  accuracy: null,
+  pp: 0,
+  typeless: true,
+}
+export const STRUGGLE_RECOIL = 1 / 4
+
 /** Mid-point of the damage roll, used for expected-damage estimates. */
 export const AVERAGE_ROLL = (MIN_ROLL + MAX_ROLL) / 2
 
@@ -81,7 +97,7 @@ export function createBattle(
       throw new RangeError(`side ${side} lead index ${lead} out of range`)
     }
     return {
-      team: teams[side].map((id) => newCombatant(species(dex, id))),
+      team: teams[side].map((id) => newCombatant(dex, species(dex, id))),
       active: lead,
     }
   }) as [SideState, SideState]
@@ -114,10 +130,10 @@ export function startBattle(
 
 /** A fresh, full-HP level-50 combatant (e.g. for AI matchup estimates). */
 export function createCombatant(dex: Dex, speciesId: string): Combatant {
-  return newCombatant(species(dex, speciesId))
+  return newCombatant(dex, species(dex, speciesId))
 }
 
-function newCombatant(sp: SpeciesData): Combatant {
+function newCombatant(dex: Dex, sp: SpeciesData): Combatant {
   getAbility(sp.ability) // fail fast on an unknown ability id
   const b = sp.baseStats
   const stats = {
@@ -133,6 +149,7 @@ function newCombatant(sp: SpeciesData): Combatant {
     hp: stats.hp,
     stats,
     stages: { ...ZERO_STAGES },
+    pp: sp.moves.map((id) => moveData(dex, id).pp),
     status: null,
     volatiles: { ...FRESH_VOLATILES },
   }
@@ -163,10 +180,30 @@ export function switchTargets(state: BattleState, side: SideIndex): number[] {
   return s.team.flatMap((c, i) => (i !== s.active && !isNeutralized(c) ? [i] : []))
 }
 
-/** Every legal Choice for a side in the 'choose' phase (empty otherwise). */
+/** True once an SCP has no PP left in any move: whatever move it picks, it uses Struggle. */
+export function isStruggling(c: Combatant): boolean {
+  return c.pp.every((n) => n <= 0)
+}
+
+/**
+ * True if `user`'s attacking moves fail against `target` (an SCP with
+ * Unobserved facing an Ever Watchful one). Status moves still work.
+ */
+export function attacksBlocked(dex: Dex, user: Combatant, target: Combatant): boolean {
+  return Boolean(abilityOf(dex, user)?.frozenWhileWatched && abilityOf(dex, target)?.watchesOpponent)
+}
+
+/**
+ * Every legal Choice for a side in the 'choose' phase (empty otherwise).
+ * Moves need PP left; once every move is out, any move index is legal and
+ * means Struggle.
+ */
 export function legalChoices(state: BattleState, side: SideIndex): Choice[] {
   if (state.phase !== 'choose') return []
-  const moves: Choice[] = [0, 1, 2, 3].map((moveIndex) => ({ kind: 'move', moveIndex }))
+  const active = activeOf(state, side)
+  const moves: Choice[] = [0, 1, 2, 3]
+    .filter((i) => isStruggling(active) || active.pp[i] > 0)
+    .map((moveIndex) => ({ kind: 'move', moveIndex }))
   if (activeOf(state, side).status?.name === 'Contained') return moves
   const switches: Choice[] = switchTargets(state, side).map((teamIndex) => ({
     kind: 'switch',
@@ -370,7 +407,7 @@ function orderMovers(
     const ability = abilityOf(dex, c)
     if (!ability?.movesFirst?.(c)) return null
     const opposing = abilityOf(dex, activeOf(s, other(side)))
-    if (opposing?.suppressesOpponentPriority) {
+    if (opposing?.watchesOpponent) {
       events.push({ type: 'ability', side: other(side), abilityId: opposing.id })
       return null
     }
@@ -431,6 +468,7 @@ function executeMove(
     return false
   }
 
+  const struggling = isStruggling(user)
   let moveIndex = chosenIndex
   if (user.status?.name === 'Amnesiac') {
     const left = (user.status.turnsLeft ?? 1) - 1
@@ -439,23 +477,33 @@ function executeMove(
       events.push({ type: 'statusEnded', side, status: 'Amnesiac' })
     } else {
       user.status.turnsLeft = left
-      if (rng.chance(AMNESIA_RANDOM_MOVE_CHANCE)) {
-        moveIndex = rng.int(0, 3)
+      if (!struggling && rng.chance(AMNESIA_RANDOM_MOVE_CHANCE)) {
+        // A random move that still has PP.
+        const usable = user.pp.flatMap((n, i) => (n > 0 ? [i] : []))
+        moveIndex = usable[rng.int(0, usable.length - 1)]
         events.push({ type: 'amnesia', side })
       }
     }
   }
 
-  const move = moveData(dex, userSpecies.moves[moveIndex])
+  const move = struggling ? STRUGGLE : moveData(dex, userSpecies.moves[moveIndex])
   const isStatusMove = move.category === 'Status'
+  const targetSide = other(side)
+
+  if (!isStatusMove && attacksBlocked(dex, user, activeOf(s, targetSide))) {
+    const watcher = abilityOf(dex, activeOf(s, targetSide)) as Ability
+    events.push({ type: 'ability', side: targetSide, abilityId: watcher.id })
+    events.push({ type: 'frozen', side })
+    return false
+  }
+
   events.push({ type: 'move', side, moveId: move.id })
+  if (!struggling) user.pp[moveIndex] -= 1
 
   if (move.accuracy !== null && rng.int(1, 100) > move.accuracy) {
     events.push({ type: 'miss', side })
     return isStatusMove
   }
-
-  const targetSide = other(side)
 
   if (isStatusMove) {
     if (!applyEffects(s, dex, side, move, rng, events)) events.push({ type: 'noEffect', side })
@@ -480,6 +528,7 @@ function executeMove(
   })
   if (isNeutralized(target)) {
     events.push({ type: 'neutralized', side: targetSide, teamIndex: s.sides[targetSide].active })
+    if (move === STRUGGLE) struggleRecoil(s, side, events)
     return false
   }
 
@@ -491,7 +540,16 @@ function executeMove(
   }
 
   applyEffects(s, dex, side, move, rng, events)
+  if (move === STRUGGLE) struggleRecoil(s, side, events)
   return false
+}
+
+function struggleRecoil(s: BattleState, side: SideIndex, events: BattleEvent[]): void {
+  const user = activeOf(s, side)
+  const amount = Math.min(user.hp, Math.max(1, Math.floor(user.stats.hp * STRUGGLE_RECOIL)))
+  user.hp -= amount
+  events.push({ type: 'recoil', side, amount, hpAfter: user.hp })
+  if (isNeutralized(user)) events.push({ type: 'neutralized', side, teamIndex: s.sides[side].active })
 }
 
 /** Apply a move's extra effects. Returns true if anything changed. */
@@ -595,7 +653,7 @@ function damageFor(
   const userSpecies = species(dex, user.speciesId)
   const targetSpecies = species(dex, target.speciesId)
   const { attack, defense } = attackAndDefense(user, target, move, crit)
-  const effectiveness = typeEffectiveness(move.type, targetSpecies.types)
+  const effectiveness = move.typeless ? 1 : typeEffectiveness(move.type, targetSpecies.types)
   const abilityMultiplier =
     (getAbility(targetSpecies.ability)?.incomingDamageMultiplier?.(target, move) ?? 1) *
     (getAbility(userSpecies.ability)?.outgoingDamageMultiplier?.(user, target, move) ?? 1)
@@ -604,7 +662,7 @@ function damageFor(
     power: move.power,
     attack,
     defense,
-    sameType: (userSpecies.types as readonly string[]).includes(move.type),
+    sameType: !move.typeless && (userSpecies.types as readonly string[]).includes(move.type),
     effectiveness,
     abilityMultiplier,
     crit,
@@ -810,6 +868,7 @@ function cloneState(state: BattleState): BattleState {
       ...c,
       stats: { ...c.stats },
       stages: { ...c.stages },
+      pp: [...c.pp],
       status: c.status ? { ...c.status } : null,
       volatiles: { ...c.volatiles },
     })),

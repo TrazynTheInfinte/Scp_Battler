@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   activeOf,
+  isStruggling,
+  STRUGGLE,
   switchTargets,
   typeEffectiveness,
   type BattleState,
@@ -130,7 +132,9 @@ export function BattleScreen({
   const real = session.state
   const ended = real.phase === 'ended'
   const mustReplace = playerMustReplace(real)
-  const contained = activeOf(real, PLAYER).status?.name === 'Contained'
+  const realActive = activeOf(real, PLAYER)
+  const contained = realActive.status?.name === 'Contained'
+  const struggling = isStruggling(realActive)
   const benchOptions = switchTargets(real, PLAYER)
 
   useEffect(() => {
@@ -288,6 +292,11 @@ export function BattleScreen({
             <p className="move-info small muted" aria-live="polite">
               {info ?? 'Hold a move for details.'}
             </p>
+            {struggling && (
+              <button className="btn btn-primary" onClick={() => act({ kind: 'move', moveIndex: 0 })}>
+                No PP left — {STRUGGLE.name}
+              </button>
+            )}
             <div className="moves">
               {mySpecies.moves.map((id, i) => {
                 const m = ROSTER.moves[id]
@@ -298,6 +307,7 @@ export function BattleScreen({
                     key={id}
                     className="move-btn"
                     title={desc}
+                    disabled={realActive.pp[i] <= 0}
                     onPointerDown={() => startPress(desc)}
                     onPointerUp={endPress}
                     onPointerLeave={endPress}
@@ -313,6 +323,9 @@ export function BattleScreen({
                       <span className="muted">
                         {m.category === 'Status' ? 'STATUS' : m.power} · {m.accuracy ?? '—'}
                         {m.accuracy !== null ? '%' : ''}
+                      </span>
+                      <span className={realActive.pp[i] <= 2 ? 'pp-low' : 'muted'}>
+                        PP {realActive.pp[i]}/{m.pp}
                       </span>
                       {tag && <span className={`eff ${tag.startsWith('▲') ? 'eff-up' : 'eff-down'}`}>{tag}</span>}
                     </span>

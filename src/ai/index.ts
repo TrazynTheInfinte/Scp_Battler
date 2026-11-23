@@ -8,10 +8,12 @@
  */
 import {
   activeOf,
+  attacksBlocked,
   canReceiveStatus,
   createCombatant,
   expectedDamage,
   isNeutralized,
+  isStruggling,
   legalChoices,
   switchTargets,
   typeEffectiveness,
@@ -74,22 +76,28 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
   const me = activeOf(state, side)
   const opp = activeOf(state, side === 0 ? 1 : 0)
   const moves = movesOf(dex, me)
+  const usable = (i: number) => legal.some((c) => c.kind === 'move' && c.moveIndex === i)
 
-  // 1. Escape a x4 weakness, if a teammate resists it and we didn't just come in.
-  const switchTo = escapeSwitch(state, dex, side, me, opp, legal, rng)
+  // 1. Escape: get out if our attacks can't work here (frozen by a watcher),
+  // or away from a x4 weakness if a teammate resists it and we didn't just come in.
+  const switchTo = blockedSwitch(dex, state, side, me, opp, legal, rng) ?? escapeSwitch(state, dex, side, me, opp, legal, rng)
   if (switchTo !== null) return { kind: 'switch', teamIndex: switchTo }
+
+  // Out of PP everywhere: every move index means Struggle.
+  if (isStruggling(me)) return { kind: 'move', moveIndex: 0 }
 
   // 2. Heal when low.
   if (me.hp <= me.stats.hp * HEAL_THRESHOLD) {
-    const heal = moves.findIndex((m) => m.effects?.some((e) => e.kind === 'heal'))
+    const heal = moves.findIndex((m, i) => usable(i) && m.effects?.some((e) => e.kind === 'heal'))
     if (heal >= 0) return { kind: 'move', moveIndex: heal }
   }
 
   // 3. Inflict a status when attacks are weak against this target.
   const attackScores = moves.map((m) => expectedShare(dex, me, opp, m))
-  if (Math.max(...attackScores) < STATUS_DAMAGE_THRESHOLD) {
+  const usableScores = attackScores.filter((_, i) => usable(i))
+  if (Math.max(0, ...usableScores) < STATUS_DAMAGE_THRESHOLD) {
     const statusMoves = moves.flatMap((m, i) => {
-      if (m.category !== 'Status') return []
+      if (m.category !== 'Status' || !usable(i)) return []
       const inflicts = m.effects?.find((e) => e.kind === 'status')
       if (!inflicts || inflicts.kind !== 'status') return []
       if (!canReceiveStatus(dex, opp, inflicts.status)) return []
@@ -101,7 +109,10 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
   // 4. Otherwise, the attack with the highest expected damage.
   return {
     kind: 'move',
-    moveIndex: pickBest(attackScores.map((score, i) => ({ value: i, score })), rng),
+    moveIndex: pickBest(
+      attackScores.flatMap((score, i) => (usable(i) ? [{ value: i, score }] : [])),
+      rng,
+    ),
   }
 }
 
@@ -136,7 +147,7 @@ function movesOf(dex: Dex, c: Combatant): MoveData[] {
 
 /** Expected share of the target's current HP one use of `move` removes (accuracy included, capped at 1). */
 function expectedShare(dex: Dex, user: Combatant, target: Combatant, move: MoveData): number {
-  if (move.category === 'Status' || target.hp <= 0) return 0
+  if (move.category === 'Status' || target.hp <= 0 || attacksBlocked(dex, user, target)) return 0
   const dmg = expectedDamage(dex, user, target, move) * ((move.accuracy ?? 100) / 100)
   return Math.min(1, dmg / target.hp)
 }
@@ -148,6 +159,24 @@ function bestShare(dex: Dex, user: Combatant, target: Combatant): number {
 /** Best share I deal minus best share I take. Higher is better for `me`. */
 export function matchupScore(dex: Dex, me: Combatant, opp: Combatant): number {
   return bestShare(dex, me, opp) - bestShare(dex, opp, me)
+}
+
+/** Switch to the best-matched teammate if our attacks fail against this opponent. */
+function blockedSwitch(
+  dex: Dex,
+  state: BattleState,
+  side: SideIndex,
+  me: Combatant,
+  opp: Combatant,
+  legal: readonly Choice[],
+  rng: Rng,
+): number | null {
+  if (!attacksBlocked(dex, me, opp)) return null
+  const team = state.sides[side].team
+  const options = legal.flatMap((c) =>
+    c.kind === 'switch' ? [{ value: c.teamIndex, score: matchupScore(dex, team[c.teamIndex], opp) }] : [],
+  )
+  return options.length > 0 ? pickBest(options, rng) : null
 }
 
 function escapeSwitch(

@@ -12,19 +12,30 @@ import type {
 
 // --- move helpers -----------------------------------------------------------
 
+/**
+ * PP tiers: heal moves and attacks with 100+ power are limited (so healing
+ * can't stall a battle forever); everything else has plenty.
+ */
+export const PP_LIMITED = 8
+export const PP_STANDARD = 16
+const attackPp = (power: number) => (power >= 100 ? PP_LIMITED : PP_STANDARD)
+
 const phys = (
   id: string, name: string, type: TypeName, power: number, accuracy: number | null,
   effects?: MoveEffect[],
-): MoveData => ({ id, name, type, category: 'Physical', power, accuracy, effects })
+): MoveData => ({ id, name, type, category: 'Physical', power, accuracy, pp: attackPp(power), effects })
 
 const spec = (
   id: string, name: string, type: TypeName, power: number, accuracy: number | null,
   effects?: MoveEffect[],
-): MoveData => ({ id, name, type, category: 'Special', power, accuracy, effects })
+): MoveData => ({ id, name, type, category: 'Special', power, accuracy, pp: attackPp(power), effects })
 
 const status = (
   id: string, name: string, type: TypeName, accuracy: number | null, effects: MoveEffect[],
-): MoveData => ({ id, name, type, category: 'Status', power: 0, accuracy, effects })
+): MoveData => ({
+  id, name, type, category: 'Status', power: 0, accuracy,
+  pp: effects.some((e) => e.kind === 'heal') ? PP_LIMITED : PP_STANDARD, effects,
+})
 
 const inflict = (s: StatusName, chance = 100): MoveEffect => ({ kind: 'status', status: s, chance })
 const self = (changes: Partial<StatStages>): MoveEffect => ({
@@ -34,14 +45,15 @@ const foe = (changes: Partial<StatStages>, chance = 100): MoveEffect => ({
   kind: 'stages', who: 'target', changes, chance,
 })
 const healHalf: MoveEffect = { kind: 'heal', percent: 50 }
+const healThird: MoveEffect = { kind: 'heal', percent: 33 }
 
 // --- moves -------------------------------------------------------------------
 
 const MOVE_LIST: MoveData[] = [
   // SCP-999
-  status('embrace', 'Embrace', 'Biological', null, [healHalf, { kind: 'cure' }]),
-  phys('tickle', 'Tickle', 'Biological', 55, 100, [foe({ atk: -1 })]),
-  phys('bounce', 'Bounce', 'Kinetic', 70, 100),
+  status('embrace', 'Embrace', 'Biological', null, [healThird, { kind: 'cure' }]),
+  phys('tickle', 'Tickle', 'Biological', 55, 100, [foe({ atk: -1 }, 30)]),
+  phys('contagious-joy', 'Contagious Joy', 'Memetic', 70, 100),
   status('calming-ooze', 'Calming Ooze', 'Biological', 100, [foe({ atk: -1, spa: -1 })]),
   // SCP-914
   spec('gear-grind', 'Gear Grind', 'Mechanical', 80, 100),
@@ -54,13 +66,13 @@ const MOVE_LIST: MoveData[] = [
   spec('turn-back-time', 'Turn Back Time', 'Temporal', 75, 100),
   status('divine-calm', 'Divine Calm', 'Reality', null, [healHalf]),
   // SCP-131
-  phys('roll-out', 'Roll Out', 'Kinetic', 60, 100),
+  phys('roll-out', 'Roll Out', 'Mechanical', 60, 100),
   phys('ram', 'Ram', 'Kinetic', 85, 90),
-  phys('flank', 'Flank', 'Biological', 50, 100),
+  phys('flank', 'Flank', 'Temporal', 50, 100),
   status('keep-watch', 'Keep Watch', 'Memetic', 100, [foe({ spe: -1 })]),
   // SCP-173
   phys('neck-snap', 'Neck Snap', 'Kinetic', 100, 85),
-  phys('blink', 'Blink', 'Kinetic', 55, null),
+  phys('blink', 'Blink', 'Antimemetic', 55, null),
   phys('crimson-residue', 'Crimson Residue', 'Biological', 70, 100, [inflict('Bleeding', 30)]),
   status('stalk', 'Stalk', 'Kinetic', null, [self({ atk: 1, spe: 1 })]),
   // SCP-096
@@ -87,7 +99,7 @@ const MOVE_LIST: MoveData[] = [
   phys('crushing-jaws', 'Crushing Jaws', 'Kinetic', 95, 100),
   spec('acidic-bile', 'Acidic Bile', 'Biological', 80, 100, [foe({ def: -1 }, 20)]),
   phys('rampage', 'Rampage', 'Kinetic', 110, 80),
-  status('regenerate', 'Regenerate', 'Biological', null, [{ kind: 'heal', percent: 33 }]),
+  status('regenerate', 'Regenerate', 'Biological', null, [healThird]),
   // SCP-106
   phys('corrosive-touch', 'Corrosive Touch', 'Temporal', 85, 100, [foe({ def: -1 }, 30)]),
   spec('decay', 'Decay', 'Temporal', 80, 100),
@@ -97,7 +109,7 @@ const MOVE_LIST: MoveData[] = [
   spec('memory-hole', 'Memory Hole', 'Antimemetic', 85, 100),
   spec('negative-space', 'Negative Space', 'Antimemetic', 60, null, [foe({ spa: -1 })]),
   status('erasure', 'Erasure', 'Antimemetic', 90, [inflict('Amnesiac')]),
-  phys('what-isnt', "What Isn't", 'Kinetic', 80, 100),
+  phys('what-isnt', "What Isn't", 'Reality', 80, 100),
 ]
 
 // --- species -----------------------------------------------------------------
@@ -107,15 +119,15 @@ const SPECIES_LIST: SpeciesData[] = [
   {
     id: 'scp-999', name: 'SCP-999', objectClass: 'Safe', types: ['Biological'],
     baseStats: { hp: 110, atk: 60, def: 80, spa: 70, spd: 90, spe: 40 },
-    moves: ['embrace', 'tickle', 'bounce', 'calming-ooze'], ability: 'jovial',
+    moves: ['embrace', 'tickle', 'contagious-joy', 'calming-ooze'], ability: 'jovial',
   },
   {
-    id: 'scp-914', name: 'SCP-914', objectClass: 'Safe', types: ['Mechanical'],
+    id: 'scp-914', name: 'SCP-914', objectClass: 'Safe', types: ['Mechanical', 'Reality'],
     baseStats: { hp: 90, atk: 60, def: 100, spa: 100, spd: 70, spe: 30 },
     moves: ['gear-grind', 'refine', 'coarse', 'very-fine'], ability: 'precisionEngineering',
   },
   {
-    id: 'scp-343', name: 'SCP-343', objectClass: 'Safe', types: ['Reality'],
+    id: 'scp-343', name: 'SCP-343', objectClass: 'Safe', types: ['Reality', 'Temporal'],
     baseStats: { hp: 100, atk: 60, def: 70, spa: 110, spd: 80, spe: 30 },
     moves: ['rewrite', 'smite', 'turn-back-time', 'divine-calm'], ability: 'willingDetainee',
   },
@@ -126,12 +138,12 @@ const SPECIES_LIST: SpeciesData[] = [
   },
   // Euclid
   {
-    id: 'scp-173', name: 'SCP-173', objectClass: 'Euclid', types: ['Kinetic'],
+    id: 'scp-173', name: 'SCP-173', objectClass: 'Euclid', types: ['Kinetic', 'Antimemetic'],
     baseStats: { hp: 75, atk: 115, def: 110, spa: 20, spd: 55, spe: 100 },
     moves: ['neck-snap', 'blink', 'crimson-residue', 'stalk'], ability: 'unobserved',
   },
   {
-    id: 'scp-096', name: 'SCP-096', objectClass: 'Euclid', types: ['Memetic', 'Kinetic'],
+    id: 'scp-096', name: 'SCP-096', objectClass: 'Euclid', types: ['Memetic'],
     baseStats: { hp: 85, atk: 85, def: 70, spa: 65, spd: 70, spe: 100 },
     moves: ['rend', 'relentless-pursuit', 'unveiled-face', 'weep'], ability: 'enraged',
   },

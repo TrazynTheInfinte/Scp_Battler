@@ -95,6 +95,32 @@ describe('Ever Watchful (131)', () => {
   })
 })
 
+describe('Ever Watchful (131) vs Unobserved (173)', () => {
+  it("173's attacks fail against 131, but its Status moves still work", () => {
+    const s = battle(team('scp-173'), team('scp-131'))
+    const attack = resolveTurn(s, ROSTER, [move(0), move(3)]) // Neck Snap; 131 Keep Watch
+    expect(attack.events).toContainEqual({ type: 'frozen', side: 0 })
+    expect(ofType(attack.events, 'damage').filter((e) => e.side === 1)).toEqual([])
+    expect(activeOf(attack.state, 0).pp[0]).toBe(activeOf(s, 0).pp[0]) // no PP spent
+
+    const stalk = resolveTurn(s, ROSTER, [move(3), move(3)])
+    expect(stalk.events).not.toContainEqual({ type: 'frozen', side: 0 })
+    expect(activeOf(stalk.state, 0).stages.atk).toBe(1)
+  })
+
+  it('131 now beats 173 one-on-one', () => {
+    let wins = 0
+    for (const seed of seeds(20)) {
+      let s = battle(team('scp-131'), team('scp-173'), seed)
+      for (let t = 0; t < 40 && s.phase === 'choose'; t++) {
+        s = resolveTurn(s, ROSTER, [move(1), move(0)]).state // Ram vs Neck Snap
+      }
+      if (s.sides[1].team[0].hp === 0) wins++
+    }
+    expect(wins).toBe(20)
+  })
+})
+
 describe('Enraged (096)', () => {
   it('raises Attack by 1 when hit and surviving', () => {
     // 914 Gear Grind into 096.

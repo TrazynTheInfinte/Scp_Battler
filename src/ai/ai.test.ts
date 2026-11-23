@@ -70,6 +70,20 @@ describe('chooseAction', () => {
     expect(chooseAction(s, ROSTER, 0, rng())).not.toEqual({ kind: 'move', moveIndex: 0 })
   })
 
+  it('never picks a move with no PP, and Struggles when everything is out', () => {
+    const s = battle(['scp-999', 'scp-914', 'scp-343', 'scp-131'], ['scp-914', 'scp-999', 'scp-343', 'scp-131'])
+    activeOf(s, 0).hp = 50
+    activeOf(s, 0).pp[0] = 0 // Embrace out: can't heal
+    expect(chooseAction(s, ROSTER, 0, rng())).not.toEqual({ kind: 'move', moveIndex: 0 })
+    activeOf(s, 0).pp = [0, 0, 0, 0]
+    expect(legalChoices(s, 0)).toContainEqual(chooseAction(s, ROSTER, 0, rng()))
+  })
+
+  it('switches 173 out when facing 131 (its attacks would fail)', () => {
+    const s = battle(['scp-173', 'scp-999', 'scp-914', 'scp-343'], ['scp-131', 'scp-999', 'scp-914', 'scp-343'])
+    expect(chooseAction(s, ROSTER, 0, rng()).kind).toBe('switch')
+  })
+
   describe('status moves', () => {
     // 049's attacks do well under 35% to a full-HP 682.
     const AI_TEAM = ['scp-049', 'scp-999', 'scp-914', 'scp-131']

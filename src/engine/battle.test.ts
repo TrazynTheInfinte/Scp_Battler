@@ -274,3 +274,38 @@ describe('determinism and purity', () => {
     expect(activeOf(s, 1).hp).toBe(activeOf(s, 1).stats.hp)
   })
 })
+
+describe('PP', () => {
+  it('each use spends 1 PP, and a move with 0 PP is not a legal choice', () => {
+    const s = battle()
+    const start = activeOf(s, 0).pp[JAB]
+    const after = resolveTurn(s, dex, [move(JAB), move(FOCUS)]).state
+    expect(activeOf(after, 0).pp[JAB]).toBe(start - 1)
+    activeOf(after, 0).pp[JAB] = 0
+    expect(legalChoices(after, 0)).not.toContainEqual(move(JAB))
+    expect(() => resolveTurn(after, dex, [move(JAB), move(FOCUS)])).toThrow(/illegal/)
+  })
+
+  it('PP is kept through switching out and back in', () => {
+    let s = battle()
+    activeOf(s, 0).pp[JAB] = 3
+    s = resolveTurn(s, dex, [sw(1), move(FOCUS)]).state
+    s = resolveTurn(s, dex, [sw(0), move(FOCUS)]).state
+    expect(activeOf(s, 0).pp[JAB]).toBe(3)
+  })
+
+  it('with no PP left, any move index uses Struggle: x1 damage and 1/4 max HP recoil', () => {
+    // fast (Kinetic) into warder (Thaumic, resists Kinetic): Struggle ignores that.
+    const s = battle([0, 1])
+    activeOf(s, 0).pp = [0, 0, 0, 0]
+    expect(legalChoices(s, 0).filter((c) => c.kind === 'move')).toHaveLength(4)
+    const { state, events } = resolveTurn(s, dex, [move(2), move(FOCUS)])
+    expect(ofType(events, 'move')[0]).toEqual({ type: 'move', side: 0, moveId: 'struggle' })
+    expect(ofType(events, 'damage')[0].effectiveness).toBe(1)
+    const max = activeOf(s, 0).stats.hp
+    expect(ofType(events, 'recoil')[0]).toEqual({
+      type: 'recoil', side: 0, amount: Math.floor(max / 4), hpAfter: max - Math.floor(max / 4),
+    })
+    expect(activeOf(state, 0).pp).toEqual([0, 0, 0, 0])
+  })
+})

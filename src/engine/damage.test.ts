@@ -44,11 +44,12 @@ describe('attackAndDefense', () => {
     hp: 100,
     stats: { hp: 100, atk: 100, def: 100, spa: 80, spd: 80, spe: 100 },
     stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, ...stages },
+    pp: [16, 16, 16, 16],
     status: null,
     volatiles: { adaptedType: null, watched: false, enteredTurn: 0, enragedBoosts: 0 },
   })
   const physical: MoveData = {
-    id: 'p', name: 'p', type: 'Kinetic', category: 'Physical', power: 50, accuracy: null,
+    id: 'p', name: 'p', type: 'Kinetic', category: 'Physical', power: 50, accuracy: null, pp: 16,
   }
   const special: MoveData = { ...physical, id: 's', category: 'Special' }
 

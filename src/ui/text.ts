@@ -62,10 +62,11 @@ export function describeEffect(e: MoveEffect): string {
   }
 }
 
-/** One-line stats summary, e.g. "Physical · 100 power · 85% accuracy". */
+/** One-line stats summary, e.g. "Physical · 100 power · 85% accuracy · 8 PP". */
 export function moveSummary(m: MoveData): string {
   const acc = m.accuracy === null ? 'never misses' : `${m.accuracy}% accuracy`
-  return m.category === 'Status' ? `Status · ${acc}` : `${m.category} · ${m.power} power · ${acc}`
+  const base = m.category === 'Status' ? `Status · ${acc}` : `${m.category} · ${m.power} power · ${acc}`
+  return `${base} · ${m.pp} PP`
 }
 
 /** Full move description: summary plus every effect. */

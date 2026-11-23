@@ -1,4 +1,4 @@
-import { ABILITIES, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
+import { ABILITIES, STRUGGLE, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
 import { STAT_LABEL } from './text'
 
 /** The human player is always side 0; the AI is side 1. */
@@ -47,7 +47,8 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(`${name(e.side)} forgot what it was doing...`)
         break
       case 'move':
-        lines.push(`${name(e.side)} used ${dex.moves[e.moveId].name}.`)
+        lines.push(`${name(e.side)} used ${(dex.moves[e.moveId] ?? STRUGGLE).name}.`)
+        if (e.moveId === STRUGGLE.id) lines.splice(-1, 0, `${name(e.side)} has no PP left!`)
         break
       case 'miss':
         lines.push('It missed.')
@@ -68,6 +69,12 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
           `${name(e.side)} is hurt by ${e.status === 'Bleeding' ? 'BLEEDING' : 'CONTAINMENT'}. ` +
             damageLine('', e.side, e.amount, maxHp(e.side)).trim(),
         )
+        break
+      case 'recoil':
+        lines.push(`${name(e.side)} is hurt by the strain. ${damageLine('', e.side, e.amount, maxHp(e.side)).trim()}`)
+        break
+      case 'frozen':
+        lines.push(`${name(e.side)} can't move while it's being watched!`)
         break
       case 'heal':
         lines.push(`${name(e.side)} recovered ${amountText(e.side, e.amount, maxHp(e.side))}.`)

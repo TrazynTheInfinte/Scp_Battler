@@ -45,8 +45,13 @@ export interface Ability {
   blocksOpponentStatDrops?: boolean
   /** Statuses this SCP can never receive (on top of type immunities). */
   statusImmunities?: readonly StatusName[]
-  /** The opposing active's priority abilities (e.g. Unobserved) don't work. */
-  suppressesOpponentPriority?: boolean
+  /**
+   * A watcher: the opposing active's priority abilities (e.g. Unobserved)
+   * don't work, and an opponent with `frozenWhileWatched` can't attack.
+   */
+  watchesOpponent?: boolean
+  /** Its attacking moves fail while the opposing active is a watcher. */
+  frozenWhileWatched?: boolean
 
   // --- Hooks ---
   /** Turn order: return true to move before a non-prioritized opponent. */
@@ -68,8 +73,9 @@ export const ABILITIES: Readonly<Record<string, Ability>> = {
     id: 'unobserved',
     name: 'Unobserved',
     description:
-      'Always moves first, unless it has a status condition, or the opponent used a Status move last turn and is watching it.',
+      "Always moves first, unless it has a status condition, or the opponent used a Status move last turn and is watching it. Can't attack an Ever Watchful opponent.",
     movesFirst: (self) => !self.volatiles.watched && !self.status,
+    frozenWhileWatched: true,
   },
 
   adaptive: {
@@ -77,9 +83,10 @@ export const ABILITIES: Readonly<Record<string, Ability>> = {
     name: 'Adaptive',
     description:
       'After taking damage from a move, takes 25% less damage from that type until it switches out. Remembers only the latest type.',
-    incomingDamageMultiplier: (self, move) => (self.volatiles.adaptedType === move.type ? ADAPTIVE_MULTIPLIER : 1),
+    incomingDamageMultiplier: (self, move) =>
+      !move.typeless && self.volatiles.adaptedType === move.type ? ADAPTIVE_MULTIPLIER : 1,
     afterDamagedByMove(ctx, move) {
-      if (ctx.self.volatiles.adaptedType === move.type) return
+      if (move.typeless || ctx.self.volatiles.adaptedType === move.type) return
       ctx.self.volatiles.adaptedType = move.type
       ctx.announce(move.type)
     },
@@ -113,8 +120,8 @@ export const ABILITIES: Readonly<Record<string, Ability>> = {
   everWatchful: {
     id: 'everWatchful',
     name: 'Ever Watchful',
-    description: "The opponent's Unobserved never triggers.",
-    suppressesOpponentPriority: true,
+    description: "The opponent's Unobserved never triggers, and an SCP with Unobserved can't use attacking moves while facing it.",
+    watchesOpponent: true,
   },
 
   enraged: {

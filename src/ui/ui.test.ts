@@ -81,14 +81,14 @@ describe('text helpers', () => {
 
   it('describes moves from their data', () => {
     expect(describeMove(ROSTER.moves['crimson-residue'])).toBe(
-      'Physical · 70 power · 100% accuracy. 30% chance to make the target Bleed.',
+      'Physical · 70 power · 100% accuracy · 16 PP. 30% chance to make the target Bleed.',
     )
-    expect(describeMove(ROSTER.moves['stalk'])).toBe('Status · never misses. User: Atk +1, Speed +1.')
+    expect(describeMove(ROSTER.moves['stalk'])).toBe('Status · never misses · 16 PP. User: Atk +1, Speed +1.')
     expect(describeMove(ROSTER.moves['embrace'])).toBe(
-      'Status · never misses. Heals 50% of max HP. Cures its own status condition.',
+      'Status · never misses · 8 PP. Heals 33% of max HP. Cures its own status condition.',
     )
     expect(describeMove(ROSTER.moves['corrupt-file'])).toBe(
-      'Special · 75 power · 100% accuracy. Target: Sp.Def −1 (30% chance).',
+      'Special · 75 power · 100% accuracy · 16 PP. Target: Sp.Def −1 (30% chance).',
     )
   })
 

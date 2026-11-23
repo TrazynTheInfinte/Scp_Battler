@@ -9,8 +9,13 @@ import type { TypeName } from '../typeChart'
  *   1 jab    — 20 power, never misses (never KOs from full HP)
  *   2 whiff  — 0% accuracy (always misses)
  *   3 focus  — Status move
+ *
+ * Every fixture move has FIXTURE_PP PP (plenty); PP tests set a combatant's
+ * `pp` directly.
  */
-const moves: Record<string, MoveData> = {
+export const FIXTURE_PP = 64
+
+const moveList: Record<string, Omit<MoveData, 'pp'>> = {
   smash: { id: 'smash', name: 'Smash', type: 'Kinetic', category: 'Physical', power: 250, accuracy: null },
   jab: { id: 'jab', name: 'Jab', type: 'Kinetic', category: 'Physical', power: 20, accuracy: null },
   whiff: { id: 'whiff', name: 'Whiff', type: 'Kinetic', category: 'Physical', power: 40, accuracy: 0 },
@@ -39,7 +44,11 @@ const moves: Record<string, MoveData> = {
   zap: { id: 'zap', name: 'Zap', type: 'Mechanical', category: 'Special', power: 20, accuracy: null },
 }
 
-function statusMove(id: string, type: TypeName, effects: MoveData['effects']): MoveData {
+const moves: Record<string, MoveData> = Object.fromEntries(
+  Object.entries(moveList).map(([id, m]) => [id, { ...m, pp: FIXTURE_PP }]),
+)
+
+function statusMove(id: string, type: TypeName, effects: MoveData['effects']): Omit<MoveData, 'pp'> {
   return { id, name: id, type, category: 'Status', power: 0, accuracy: null, effects }
 }
 

@@ -45,6 +45,10 @@ export interface MoveData {
   power: number
   /** Percent chance to hit (0-100); null means the move never misses. */
   accuracy: number | null
+  /** Power Points: how many times the move can be used in one battle. */
+  pp: number
+  /** Ignores types: always x1 effectiveness and never same-type boosted (Struggle). */
+  typeless?: boolean
   effects?: readonly MoveEffect[]
 }
 
@@ -99,6 +103,8 @@ export interface Combatant {
   /** Calculated (level-applied) stats. */
   stats: Stats
   stages: StatStages
+  /** PP left for each of its four moves, in move order. Persists through switching. */
+  pp: number[]
   /** At most one status condition. Persists through switching. */
   status: StatusState | null
   volatiles: Volatiles
@@ -156,6 +162,10 @@ export type BattleEvent =
   /** End-of-turn status damage (Bleeding / Contained). */
   | { type: 'residual'; side: SideIndex; status: StatusName; amount: number; hpAfter: number }
   | { type: 'heal'; side: SideIndex; amount: number; hpAfter: number }
+  /** Struggle's recoil damage to the user. */
+  | { type: 'recoil'; side: SideIndex; amount: number; hpAfter: number }
+  /** Tried to attack while frozen by a watcher (Unobserved vs Ever Watchful): the attack fails. */
+  | { type: 'frozen'; side: SideIndex }
   | { type: 'stage'; side: SideIndex; stat: StageableStat; delta: number }
   | { type: 'status'; side: SideIndex; status: StatusName }
   /** A status was cured or wore off. */

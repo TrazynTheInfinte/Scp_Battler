@@ -566,8 +566,16 @@ button.preview-card {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
 }
-.move-btn:hover {
+.move-btn:hover:not(:disabled) {
   border-color: var(--muted);
+}
+.move-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pp-low {
+  color: var(--keter);
+  font-weight: 700;
 }
 .move-name {
   font-weight: 700;
