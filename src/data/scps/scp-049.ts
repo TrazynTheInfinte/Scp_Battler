@@ -5,6 +5,7 @@ export default {
   id: 'scp-049',
   name: 'SCP-049',
   objectClass: 'Euclid',
+  wave: 1,
   types: ['Biological', 'Thaumic'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 90, atk: 95, def: 80, spa: 75, spd: 90, spe: 45 } },

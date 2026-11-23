@@ -5,6 +5,7 @@ export default {
   id: 'scp-131',
   name: 'SCP-131',
   objectClass: 'Safe',
+  wave: 1,
   types: ['Kinetic'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 70, atk: 85, def: 55, spa: 50, spd: 55, spe: 135 } },

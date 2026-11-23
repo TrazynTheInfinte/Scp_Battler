@@ -5,6 +5,7 @@ export default {
   id: 'scp-999',
   name: 'SCP-999',
   objectClass: 'Safe',
+  wave: 1,
   types: ['Biological'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 110, atk: 60, def: 80, spa: 70, spd: 90, spe: 40 } },

@@ -20,6 +20,8 @@ export interface ScpDefinition {
   /** e.g. 'SCP-173'. */
   name: string
   objectClass: ObjectClass
+  /** The Wave (see GLOSSARY.md) it joined in; the balance test focuses on the newest. */
+  wave: number
   types: SpeciesData['types']
   stats: StatSpec
   /** Four distinct move ids: Move Pool moves, plus the signature move's id if it has one. */

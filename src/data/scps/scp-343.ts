@@ -5,6 +5,7 @@ export default {
   id: 'scp-343',
   name: 'SCP-343',
   objectClass: 'Safe',
+  wave: 1,
   types: ['Reality', 'Temporal'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 100, atk: 60, def: 70, spa: 110, spd: 80, spe: 30 } },

@@ -5,6 +5,7 @@ export default {
   id: 'scp-914',
   name: 'SCP-914',
   objectClass: 'Safe',
+  wave: 1,
   types: ['Mechanical', 'Reality'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 90, atk: 60, def: 100, spa: 100, spd: 70, spe: 30 } },

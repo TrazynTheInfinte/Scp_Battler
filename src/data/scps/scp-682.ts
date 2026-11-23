@@ -5,6 +5,7 @@ export default {
   id: 'scp-682',
   name: 'SCP-682',
   objectClass: 'Keter',
+  wave: 1,
   types: ['Kinetic', 'Biological'],
   // Pre-template stats, to be fitted to a stat template.
   stats: { legacy: { hp: 90, atk: 115, def: 100, spa: 120, spd: 100, spe: 75 } },

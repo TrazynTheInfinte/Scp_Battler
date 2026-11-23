@@ -9,7 +9,8 @@ const total = (s: Stats) => Object.values(s).reduce((a, b) => a + b, 0)
 
 /** Every SCP file must pass these before it can join the roster. */
 describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
-  it('is named and filed by its id', () => {
+  it('is named and filed by its id, with a wave', () => {
+    expect(Number.isInteger(scp.wave) && scp.wave >= 1).toBe(true)
     expect(id).toMatch(/^scp-\d{3,4}$/)
     expect(scp.name).toBe(id.toUpperCase())
     const file = Object.entries(SCP_FILES).find(([, s]) => s === scp)?.[0]

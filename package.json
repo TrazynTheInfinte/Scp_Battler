@@ -11,7 +11,8 @@
     "lint": "oxlint",
     "test": "vitest run",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "balance": "vitest run --config vitest.balance.config.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
