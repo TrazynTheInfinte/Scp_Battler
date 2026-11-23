@@ -31,6 +31,7 @@ export function applyEventToView(view: BattleState, e: BattleEvent): BattleState
     case 'damage':
     case 'residual':
     case 'recoil':
+    case 'abilityDamage':
     case 'heal':
       activeOf(e.side).hp = e.hpAfter
       break

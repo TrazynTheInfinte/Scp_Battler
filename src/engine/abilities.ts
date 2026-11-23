@@ -24,6 +24,8 @@ export interface AbilityContext {
   inflictStatus(who: 'self' | 'opponent', status: StatusName): boolean
   /** Heal a fraction of max HP (min 1); returns true if any HP was restored. */
   heal(who: 'self' | 'opponent', fraction: number): boolean
+  /** Deal a fraction of max HP as damage (min 1); returns true if any was dealt. */
+  damage(who: 'self' | 'opponent', fraction: number): boolean
 }
 
 /** The hooks and flags the engine checks at fixed points. Rules fill these in. */
@@ -135,6 +137,22 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
           if (!ctx.canInflict('opponent', rule.status)) return
           ctx.announce()
           ctx.inflictStatus('opponent', rule.status)
+        },
+      }
+    case 'retaliate':
+      return {
+        afterDamagedByMove(ctx) {
+          if (ctx.opponent.hp <= 0) return
+          ctx.announce()
+          ctx.damage('opponent', rule.fraction)
+        },
+      }
+    case 'drainOpponentEachTurn':
+      return {
+        onEndOfTurn(ctx) {
+          if (ctx.opponent.hp <= 0) return
+          ctx.announce()
+          ctx.damage('opponent', rule.fraction)
         },
       }
     case 'clearOpponentBoostsOnEntry':

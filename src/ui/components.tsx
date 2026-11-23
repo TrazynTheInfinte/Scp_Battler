@@ -115,9 +115,12 @@ export function DossierCard({
             </ul>
           </div>
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <a className="small" href={dossier.wikiUrl} target="_blank" rel="noreferrer">
-              Read the SCP Wiki article ↗
-            </a>
+            <span className="small">
+              <a href={dossier.wikiUrl} target="_blank" rel="noreferrer">
+                Read the SCP Wiki article ↗
+              </a>
+              {dossier.mature && <span className="mature-note"> · Mature content</span>}
+            </span>
             {action}
           </div>
         </div>

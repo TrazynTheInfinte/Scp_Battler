@@ -93,6 +93,80 @@ const ABILITY_LIST: AbilityData[] = [
     description: 'When it enters the field, the opponent forgets its stat boosts.',
     rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
   },
+
+  // --- wave 2 ---
+  {
+    id: 'guardianOfTheGate',
+    name: 'Guardian of the Gate',
+    description: 'Any SCP that damages it with a move loses 1/8 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 8 }],
+  },
+  {
+    id: 'provoked',
+    name: 'Provoked',
+    description: 'Raises its Attack by 1 the first time it takes damage from a move each time it enters the field.',
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'contagious',
+    name: 'Contagious',
+    description: 'An SCP that hits it with a Physical move has a 30% chance to start Bleeding.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'psychoticAura',
+    name: 'Psychotic Aura',
+    description: 'The opponent loses 1/16 of its max HP at the end of each turn.',
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'loadedChamber',
+    name: 'Loaded Chamber',
+    description: 'Raises its Sp. Attack by 1 when it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spa: 1 } }],
+  },
+  {
+    id: 'y909',
+    name: 'Y-909',
+    description: 'When it enters the field, the opponent forgets its stat boosts.',
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'centerOfEverything',
+    name: 'Center of Everything',
+    description: "The story can't be undone: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'failsafe',
+    name: 'Failsafe',
+    description: "Opponents can't lower its stats, and it can't become Amnesiac.",
+    rules: [{ kind: 'blockStatDrops' }, { kind: 'statusImmunity', statuses: ['Amnesiac'] }],
+  },
+  {
+    id: 'undying',
+    name: 'Undying',
+    description: 'Heals 1/16 of its max HP at the end of each turn.',
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'agitated',
+    name: 'Agitated',
+    description: 'Raises its Speed by 1 when it takes damage from a move, up to twice each time it enters the field.',
+    rules: [{ kind: 'boostWhenHit', changes: { spe: 1 }, maxPerEntry: 2 }],
+  },
+  {
+    id: 'outOfReach',
+    name: 'Out of Reach',
+    description: 'Takes half damage from Physical moves.',
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.5 }],
+  },
+  {
+    id: 'stuffed',
+    name: 'Stuffed',
+    description: "Can't Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

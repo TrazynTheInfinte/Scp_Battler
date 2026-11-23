@@ -102,7 +102,7 @@ describe('art credits', () => {
   it('every SCP with art has a matching licensed image credit', () => {
     for (const id of Object.keys(ART_SOURCE)) {
       expect(DOSSIERS[id], id).toBeDefined()
-      expect(artCredit(id)?.license, id).toMatch(/^CC BY-SA/)
+      expect(artCredit(id)?.license, id).toMatch(/^(CC BY(-SA)? \d|Public Domain)/)
     }
     expect(artCredit('scp-173')).toBeNull()
   })

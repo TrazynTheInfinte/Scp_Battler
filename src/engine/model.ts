@@ -82,6 +82,10 @@ export type AbilityRule =
   | { kind: 'afflictAttacker'; category: MoveCategory; status: StatusName; chance: number }
   /** When it enters the field, the opponent loses its stat boosts (not its drops). */
   | { kind: 'clearOpponentBoostsOnEntry' }
+  /** An attacker that damages it with a move loses `fraction` of its own max HP. */
+  | { kind: 'retaliate'; fraction: number }
+  /** At end of turn, the opponent loses `fraction` of its max HP. */
+  | { kind: 'drainOpponentEachTurn'; fraction: number }
 
 export interface AbilityData {
   id: string
@@ -201,6 +205,8 @@ export type BattleEvent =
   /** End-of-turn status damage (Bleeding / Contained). */
   | { type: 'residual'; side: SideIndex; status: StatusName; amount: number; hpAfter: number }
   | { type: 'heal'; side: SideIndex; amount: number; hpAfter: number }
+  /** Damage dealt by an ability (e.g. retaliation), to `side`. */
+  | { type: 'abilityDamage'; side: SideIndex; amount: number; hpAfter: number }
   /** Struggle's recoil damage to the user. */
   | { type: 'recoil'; side: SideIndex; amount: number; hpAfter: number }
   /** Tried to attack while frozen by a watcher (Unobserved vs Ever Watchful): the attack fails. */

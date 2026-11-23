@@ -70,6 +70,9 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
             damageLine('', e.side, e.amount, maxHp(e.side)).trim(),
         )
         break
+      case 'abilityDamage':
+        lines.push(damageLine(name(e.side), e.side, e.amount, maxHp(e.side)))
+        break
       case 'recoil':
         lines.push(`${name(e.side)} is hurt by the strain. ${damageLine('', e.side, e.amount, maxHp(e.side)).trim()}`)
         break

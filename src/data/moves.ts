@@ -89,4 +89,6 @@ export const MOVE_POOL: readonly MoveData[] = [
   spec('memory-hole', 'Memory Hole', 'Antimemetic', 85, 100),
   spec('negative-space', 'Negative Space', 'Antimemetic', 60, null, [foe({ spa: -1 })]),
   status('erasure', 'Erasure', 'Antimemetic', 90, [inflict('Amnesiac')]),
+  // wave 2
+  phys('unmake', 'Unmake', 'Reality', 85, 100),
 ]

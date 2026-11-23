@@ -6,7 +6,8 @@ export const CLASS_STAT_TOTAL: Readonly<Record<ObjectClass, number>> = {
   Euclid: 475,
   Keter: 600,
   Thaumiel: 550,
-  Apollyon: 700,
+  /** Lowered from 700: at 700 any meaningful ability made an Apollyon dominate (wave 2 balance). */
+  Apollyon: 650,
 }
 
 /**

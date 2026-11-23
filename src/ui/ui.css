@@ -412,6 +412,11 @@
   width: 48px;
   flex: none;
 }
+/* Fit long class names (THAUMIEL, APOLLYON) in the 48px thumbnail band. */
+.dossier-thumb .card-band {
+  font-size: 8px;
+  letter-spacing: 0.02em;
+}
 .dossier-title {
   flex: 1;
   min-width: 0;
@@ -650,6 +655,9 @@ button.preview-card {
 .move-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+.mature-note {
+  color: var(--warn);
 }
 .pp-low {
   color: var(--keter);

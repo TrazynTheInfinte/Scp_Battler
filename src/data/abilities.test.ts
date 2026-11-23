@@ -235,3 +235,24 @@ describe('Self-Keeping Secret (055)', () => {
     ])
   })
 })
+
+describe('Guardian of the Gate (001)', () => {
+  it('an attacker that damages it loses 1/8 of its own max HP', () => {
+    // 131 (faster) Roll Out into 001, which answers with Erasure (a Status move).
+    const s = battle(team('scp-131'), team('scp-001'))
+    const { events } = resolveTurn(s, ROSTER, [move(0), move(3)])
+    const max = activeOf(s, 0).stats.hp
+    expect(events).toContainEqual({ type: 'ability', side: 1, abilityId: 'guardianOfTheGate' })
+    expect(events).toContainEqual({ type: 'abilityDamage', side: 0, amount: Math.floor(max / 8), hpAfter: max - Math.floor(max / 8) })
+  })
+})
+
+describe('Psychotic Aura (035)', () => {
+  it('the opponent loses 1/16 of its max HP at the end of each turn', () => {
+    // 035 Calming Ooze, 914 Coarse: neither deals damage.
+    const s = battle(team('scp-035'), team('scp-914'))
+    const { events } = resolveTurn(s, ROSTER, [move(3), move(2)])
+    const max = activeOf(s, 1).stats.hp
+    expect(events.at(-1)).toEqual({ type: 'abilityDamage', side: 1, amount: Math.floor(max / 16), hpAfter: max - Math.floor(max / 16) })
+  })
+})

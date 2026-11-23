@@ -546,6 +546,7 @@ function executeMove(
 
 function struggleRecoil(s: BattleState, side: SideIndex, events: BattleEvent[]): void {
   const user = activeOf(s, side)
+  if (isNeutralized(user)) return // e.g. already Neutralized by the target's retaliation
   const amount = Math.min(user.hp, Math.max(1, Math.floor(user.stats.hp * STRUGGLE_RECOIL)))
   user.hp -= amount
   events.push({ type: 'recoil', side, amount, hpAfter: user.hp })
@@ -753,6 +754,16 @@ function abilityContext(
     canInflict: (who, status) => canInflict(s, dex, sideOf(who), status),
     inflictStatus: (who, status) => inflictStatus(s, dex, sideOf(who), status, rng, events),
     heal: (who, fraction) => heal(s, sideOf(who), fraction, events),
+    damage(who, fraction) {
+      const target = sideOf(who)
+      const c = activeOf(s, target)
+      if (isNeutralized(c)) return false
+      const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
+      c.hp -= amount
+      events.push({ type: 'abilityDamage', side: target, amount, hpAfter: c.hp })
+      if (isNeutralized(c)) events.push({ type: 'neutralized', side: target, teamIndex: s.sides[target].active })
+      return true
+    },
   }
 }
 
@@ -771,6 +782,8 @@ function endOfTurn(
   const alive = SIDES.filter((side) => !isNeutralized(activeOf(s, side)))
   for (const side of orderBySpeed(s, alive, rng)) {
     const c = activeOf(s, side)
+    // An earlier side's end-of-turn ability may have Neutralized this one.
+    if (isNeutralized(c)) continue
     const status = c.status
     if (status && (status.name === 'Bleeding' || status.name === 'Contained')) {
       const fraction = status.name === 'Bleeding' ? BLEED_FRACTION : CONTAINED_FRACTION

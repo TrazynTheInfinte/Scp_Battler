@@ -49,6 +49,7 @@ export function CreditsScreen({ onBack }: { onBack: () => void }) {
                 <a href={d.wikiUrl} target="_blank" rel="noreferrer">
                   article
                 </a>
+                {d.mature && <span className="mature-note"> (mature content)</span>}
               </div>
               {art && (
                 <div className="muted">

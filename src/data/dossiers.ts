@@ -27,6 +27,8 @@ export interface Dossier {
   /** Exactly as credited on the article. */
   authors: string
   images: readonly ImageCredit[]
+  /** The article has mature content: show a warning next to its link. */
+  mature: boolean
 }
 
 export const DOSSIERS: Readonly<Record<string, Dossier>> = Object.fromEntries(
@@ -38,6 +40,7 @@ export const DOSSIERS: Readonly<Record<string, Dossier>> = Object.fromEntries(
       wikiUrl: scp.dossier.wikiUrl ?? `https://scp-wiki.wikidot.com/${scp.id}`,
       authors: scp.dossier.authors,
       images: scp.dossier.images,
+      mature: scp.dossier.mature ?? false,
     },
   ]),
 )

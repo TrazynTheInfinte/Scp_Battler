@@ -38,6 +38,11 @@ export interface ScpDefinition {
     authors: string
     /** Defaults to https://scp-wiki.wikidot.com/<id>. */
     wikiUrl?: string
+    /**
+     * The wiki article has mature content (the wiki flags it). The game never
+     * uses that content; this only adds a warning next to the article link.
+     */
+    mature?: boolean
     /** Images whose licensing box allows reuse. */
     images: readonly ImageCredit[]
     /** Which of `images` (by filename) the game shows, resized to public/scp/<id>.jpg. */
