@@ -4,7 +4,7 @@ import type { TypeName } from './typeChart'
 // Static data (the roster). Supplied to the engine as a Dex.
 // ---------------------------------------------------------------------------
 
-export type ObjectClass = 'Safe' | 'Euclid' | 'Keter'
+export type ObjectClass = 'Safe' | 'Euclid' | 'Keter' | 'Thaumiel' | 'Apollyon'
 
 export type StatName = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'
 export type Stats = Record<StatName, number>

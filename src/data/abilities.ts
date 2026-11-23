@@ -1,4 +1,16 @@
-import type { AbilityData } from '../engine'
+import type { AbilityData, AbilityRule } from '../engine'
+
+/**
+ * Rule kinds that counter something the opponent does (its boosts, stat
+ * drops, statuses, or priority). Every Thaumiel SCP's ability must include
+ * at least one; add new counter kinds here as they're created.
+ */
+export const COUNTER_RULE_KINDS: ReadonlySet<AbilityRule['kind']> = new Set([
+  'blockStatDrops',
+  'statusImmunity',
+  'watcher',
+  'clearOpponentBoostsOnEntry',
+])
 
 /**
  * Every ability, as data. Each is a list of rules the engine implements

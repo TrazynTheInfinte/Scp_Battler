@@ -21,6 +21,18 @@ describe('validateTeam', () => {
     ])
   })
 
+  it('fits an Apollyon only with three Safe SCPs, and never two', () => {
+    // Apollyon 6 + Safe 1 x3 = 9
+    expect(validateTeam(dex, ['apollyon', 'slow', 'gear', 'warder'])).toEqual([])
+    // Apollyon 6 + Euclid 3 + Safe 1 x2 = 11
+    expect(validateTeam(dex, ['apollyon', 'fast', 'slow', 'gear'])).toEqual([{ kind: 'overBudget', cost: 11 }])
+  })
+
+  it('prices a Thaumiel like a Keter', () => {
+    // Thaumiel 4 + Keter 4 + Safe 1 x2 = 10
+    expect(teamCost(dex, ['thaumiel', 'keterA', 'slow', 'gear'])).toBe(10)
+  })
+
   it('requires exactly four SCPs', () => {
     expect(validateTeam(dex, ['fast', 'slow', 'gear'])).toEqual([{ kind: 'size', size: 3 }])
     expect(validateTeam(dex, ['fast', 'slow', 'gear', 'warder', 'twin'])).toContainEqual({

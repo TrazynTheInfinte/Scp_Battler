@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { compileAbility, type Stats } from '../engine'
-import { ABILITIES } from './abilities'
+import { ABILITIES, COUNTER_RULE_KINDS } from './abilities'
 import { MOVE_POOL } from './moves'
 import { ROSTER, SCP_FILES, SCPS } from './roster'
 import { CLASS_STAT_TOTAL, MAX_STAT_TWEAK, STAT_TEMPLATES, scaleTemplate, type StatTemplateId } from './statTemplates'
@@ -48,6 +48,10 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     expect(scp.dossier.authors.trim()).not.toBe('')
     for (const img of scp.dossier.images) expect(img.license.trim()).not.toBe('')
     if (scp.dossier.art) expect(scp.dossier.images.map((i) => i.file)).toContain(scp.dossier.art)
+  })
+
+  it.runIf(scp.objectClass === 'Thaumiel')('as a Thaumiel, has an ability that counters something', () => {
+    expect(ABILITIES[scp.ability].rules.some((r) => COUNTER_RULE_KINDS.has(r.kind))).toBe(true)
   })
 })
 

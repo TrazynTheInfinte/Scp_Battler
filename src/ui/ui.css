@@ -99,6 +99,8 @@
 .class-Safe { color: var(--safe); }
 .class-Euclid { color: var(--euclid); }
 .class-Keter { color: var(--keter); }
+.class-Thaumiel { color: var(--thaumiel); }
+.class-Apollyon { color: var(--apollyon); }
 .type-Kinetic { color: var(--t-kinetic); }
 .type-Biological { color: var(--t-biological); }
 .type-Mechanical { color: var(--t-mechanical); }
@@ -203,6 +205,8 @@
 .card-band.class-Safe { background: var(--safe); }
 .card-band.class-Euclid { background: var(--euclid); }
 .card-band.class-Keter { background: var(--keter); }
+.card-band.class-Thaumiel { background: var(--thaumiel); }
+.card-band.class-Apollyon { background: var(--apollyon); }
 .card-body {
   position: relative;
   z-index: 1;

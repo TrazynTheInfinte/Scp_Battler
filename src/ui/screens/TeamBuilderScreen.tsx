@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
 import { randomTeam } from '../../ai'
-import { OBJECT_CLASS_COST, TEAM_BUDGET, TEAM_SIZE, createRng, teamCost, validateTeam } from '../../engine'
+import {
+  OBJECT_CLASS_COST,
+  TEAM_BUDGET,
+  TEAM_SIZE,
+  createRng,
+  teamCost,
+  validateTeam,
+  type ObjectClass,
+} from '../../engine'
 import { ROSTER, ROSTER_ORDER } from '../../data/roster'
 import { DossierCard, TypeChartButton } from '../components'
 import { useToggle } from '../hooks'
@@ -22,6 +30,12 @@ function addBlocker(team: readonly string[], id: string): string | null {
   if (cost > TEAM_BUDGET) return `Over budget: would cost ${cost}/${TEAM_BUDGET}.`
   return null
 }
+
+/** Costs of the object classes on the roster, cheapest first, e.g. "Safe 1 · Euclid 3 · Keter 4". */
+const COST_HINT = (Object.keys(OBJECT_CLASS_COST) as ObjectClass[])
+  .filter((c) => ROSTER_ORDER.some((id) => ROSTER.species[id].objectClass === c))
+  .map((c) => `${c} ${OBJECT_CLASS_COST[c]}`)
+  .join(' · ')
 
 const SAVE_ERRORS = {
   emptyName: 'Give the team a name first.',
@@ -145,7 +159,7 @@ export function TeamBuilderScreen({
               ? 'Team ready.'
               : overBudget
                 ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
-                : `Pick ${TEAM_SIZE - team.length} more. Safe ${OBJECT_CLASS_COST.Safe} · Euclid ${OBJECT_CLASS_COST.Euclid} · Keter ${OBJECT_CLASS_COST.Keter}.`)}
+                : `Pick ${TEAM_SIZE - team.length} more. ${COST_HINT}.`)}
         </p>
         <div className="row">
           <button className="btn btn-primary" style={{ flex: 1 }} disabled={!legal} onClick={onBattle}>

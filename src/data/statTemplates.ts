@@ -5,6 +5,8 @@ export const CLASS_STAT_TOTAL: Readonly<Record<ObjectClass, number>> = {
   Safe: 450,
   Euclid: 475,
   Keter: 600,
+  Thaumiel: 550,
+  Apollyon: 700,
 }
 
 /**

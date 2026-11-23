@@ -99,6 +99,8 @@ export const dex: Dex = {
     gear: sp('gear', 'Safe', ['Mechanical'], stats(70, 70, 70, 70, 70, 50)),
     keterA: sp('keterA', 'Keter', ['Reality'], stats(100, 100, 100, 100, 100, 100)),
     keterB: sp('keterB', 'Keter', ['Temporal', 'Thaumic'], stats(100, 100, 100, 100, 100, 100)),
+    thaumiel: sp('thaumiel', 'Thaumiel', ['Reality'], stats(90, 90, 90, 90, 90, 100)),
+    apollyon: sp('apollyon', 'Apollyon', ['Thaumic'], stats(120, 120, 110, 120, 110, 120)),
 
     // Milestone 3: statuses, effects, abilities.
     hexer: sp('hexer', 'Safe', ['Thaumic'], stats(100, 50, 100, 50, 100, 200), ['bleed', 'stun', 'forget', 'trap']),

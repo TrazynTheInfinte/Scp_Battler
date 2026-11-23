@@ -6,6 +6,10 @@ export const OBJECT_CLASS_COST: Readonly<Record<ObjectClass, number>> = {
   Safe: 1,
   Euclid: 3,
   Keter: 4,
+  /** Same cost as Keter, but fewer stats: a Thaumiel's strength is its counter ability. */
+  Thaumiel: 4,
+  /** Only ever one per team, backed by three Safe SCPs. */
+  Apollyon: 6,
 }
 
 export type TeamProblem =
