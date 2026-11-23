@@ -7,10 +7,14 @@ import {
   createRng,
   teamCost,
   validateTeam,
+  TYPE_RING,
   type ObjectClass,
+  type TypeName,
 } from '../../engine'
+import { DOSSIERS } from '../../data/dossiers'
 import { ROSTER, ROSTER_ORDER } from '../../data/roster'
 import { DossierCard, TypeChartButton } from '../components'
+import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from '../rosterFilter'
 import { useToggle } from '../hooks'
 import {
   MAX_NAME_LENGTH,
@@ -31,11 +35,62 @@ function addBlocker(team: readonly string[], id: string): string | null {
   return null
 }
 
-/** Costs of the object classes on the roster, cheapest first, e.g. "Safe 1 · Euclid 3 · Keter 4". */
-const COST_HINT = (Object.keys(OBJECT_CLASS_COST) as ObjectClass[])
-  .filter((c) => ROSTER_ORDER.some((id) => ROSTER.species[id].objectClass === c))
-  .map((c) => `${c} ${OBJECT_CLASS_COST[c]}`)
-  .join(' · ')
+/** The object classes on the roster, cheapest first. */
+const ROSTER_CLASSES = (Object.keys(OBJECT_CLASS_COST) as ObjectClass[]).filter((c) =>
+  ROSTER_ORDER.some((id) => ROSTER.species[id].objectClass === c),
+)
+/** e.g. "Safe 1 · Euclid 3 · Keter 4". */
+const COST_HINT = ROSTER_CLASSES.map((c) => `${c} ${OBJECT_CLASS_COST[c]}`).join(' · ')
+
+/** Toggle `value` in a set, returning a new set. */
+function toggled<T>(set: ReadonlySet<T>, value: T): Set<T> {
+  const next = new Set(set)
+  if (next.has(value)) next.delete(value)
+  else next.add(value)
+  return next
+}
+
+/** Type and object-class checkboxes. Ticks within a group widen; groups narrow each other. */
+function FilterPanel({
+  filter,
+  setFilter,
+  open,
+}: {
+  filter: RosterFilter
+  setFilter: (f: RosterFilter) => void
+  open: boolean
+}) {
+  return (
+    <aside id="roster-filters" className={`filter-panel${open ? ' open' : ''}`} aria-label="Filters">
+      <fieldset>
+        <legend className="section-label">TYPE</legend>
+        {TYPE_RING.map((t: TypeName) => (
+          <label key={t} className={`filter-option type-${t}`}>
+            <input
+              type="checkbox"
+              checked={filter.types.has(t)}
+              onChange={() => setFilter({ ...filter, types: toggled(filter.types, t) })}
+            />
+            {t}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset>
+        <legend className="section-label">OBJECT CLASS</legend>
+        {ROSTER_CLASSES.map((c) => (
+          <label key={c} className={`filter-option class-${c}`}>
+            <input
+              type="checkbox"
+              checked={filter.classes.has(c)}
+              onChange={() => setFilter({ ...filter, classes: toggled(filter.classes, c) })}
+            />
+            {c}
+          </label>
+        ))}
+      </fieldset>
+    </aside>
+  )
+}
 
 const SAVE_ERRORS = {
   emptyName: 'Give the team a name first.',
@@ -64,6 +119,10 @@ export function TeamBuilderScreen({
   const [saved, setSaved] = useState<SavedTeam[]>(() => loadTeams(storage, ROSTER))
   const [showSaved, setShowSaved] = useState(false)
   const [name, setName] = useState('')
+  const [filter, setFilter] = useState<RosterFilter>(NO_FILTER)
+  const [showFilters, setShowFilters] = useState(false)
+  const shown = useMemo(() => filterRoster(ROSTER, ROSTER_ORDER, DOSSIERS, filter), [filter])
+  const activeFilters = filter.types.size + filter.classes.size
 
   const cost = teamCost(ROSTER, team)
   const legal = validateTeam(ROSTER, team).length === 0
@@ -106,7 +165,7 @@ export function TeamBuilderScreen({
   }
 
   return (
-    <main className="screen">
+    <main className="screen builder-screen">
       <div className="screen-head wrap">
         <button className="btn btn-small" onClick={onBack}>
           ← Back
@@ -210,36 +269,68 @@ export function TeamBuilderScreen({
         )}
       </div>
 
-      <div className="stack">
-        {ROSTER_ORDER.map((id) => {
-          const inTeam = team.includes(id)
-          const blocker = addBlocker(team, id)
-          return (
-            <DossierCard
-              key={id}
-              speciesId={id}
-              open={open === id}
-              onToggle={() => toggle(id)}
-              inTeam={inTeam}
-              action={
-                inTeam ? (
-                  <button className="btn btn-small" onClick={() => remove(id)}>
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    className="btn btn-small btn-primary"
-                    onClick={() => add(id)}
-                    aria-disabled={blocker !== null}
-                    style={blocker ? { opacity: 0.45 } : undefined}
-                  >
-                    Add
-                  </button>
-                )
-              }
-            />
-          )
-        })}
+      <div className="builder-body">
+        <div className="row builder-search" style={{ flexWrap: 'nowrap' }}>
+          <input
+            className="text-input"
+            type="search"
+            placeholder="Name or number"
+            aria-label="Search SCPs by number, name, or nickname"
+            value={filter.query}
+            onChange={(e) => setFilter({ ...filter, query: e.target.value })}
+          />
+          <button
+            className="btn btn-small filters-toggle"
+            onClick={() => setShowFilters((v) => !v)}
+            aria-expanded={showFilters}
+            aria-controls="roster-filters"
+          >
+            Filters{activeFilters > 0 ? ` (${activeFilters})` : ''}
+          </button>
+        </div>
+        <FilterPanel filter={filter} setFilter={setFilter} open={showFilters} />
+        <div className="stack builder-list">
+          <div className="row small muted" style={{ justifyContent: 'space-between' }}>
+            <span aria-live="polite">
+              Showing {shown.length} of {ROSTER_ORDER.length}
+            </span>
+            {isFiltering(filter) && (
+              <button className="btn-link" onClick={() => setFilter(NO_FILTER)}>
+                Clear filters
+              </button>
+            )}
+          </div>
+          {shown.length === 0 && <p className="muted small">No SCPs match.</p>}
+          {shown.map((id) => {
+            const inTeam = team.includes(id)
+            const blocker = addBlocker(team, id)
+            return (
+              <DossierCard
+                key={id}
+                speciesId={id}
+                open={open === id}
+                onToggle={() => toggle(id)}
+                inTeam={inTeam}
+                action={
+                  inTeam ? (
+                    <button className="btn btn-small" onClick={() => remove(id)}>
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-small btn-primary"
+                      onClick={() => add(id)}
+                      aria-disabled={blocker !== null}
+                      style={blocker ? { opacity: 0.45 } : undefined}
+                    >
+                      Add
+                    </button>
+                  )
+                }
+              />
+            )
+          })}
+        </div>
       </div>
     </main>
   )

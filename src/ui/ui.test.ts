@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { ROSTER } from '../data/roster'
+import { ROSTER, ROSTER_ORDER } from '../data/roster'
 import { artCredit, ART_SOURCE, DOSSIERS } from '../data/dossiers'
+import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from './rosterFilter'
 import { MAX_SAVED_TEAMS, deleteTeam, loadTeams, saveTeam, type TeamStorage } from './savedTeams'
 import { describeMove, effectivenessTag } from './text'
 
@@ -104,5 +105,30 @@ describe('art credits', () => {
       expect(artCredit(id)?.license, id).toMatch(/^CC BY-SA/)
     }
     expect(artCredit('scp-173')).toBeNull()
+  })
+})
+
+describe('roster filter', () => {
+  const ids = (f: Partial<RosterFilter>) => filterRoster(ROSTER, ROSTER_ORDER, DOSSIERS, { ...NO_FILTER, ...f })
+
+  it('shows everything with no filter', () => {
+    expect(ids({})).toEqual(ROSTER_ORDER)
+    expect(isFiltering(NO_FILTER)).toBe(false)
+  })
+
+  it('searches number, name, and nickname, ignoring case and spaces', () => {
+    expect(ids({ query: '173' })).toEqual(['scp-173'])
+    expect(ids({ query: ' scp-682 ' })).toEqual(['scp-682'])
+    expect(ids({ query: 'shy guy' })).toEqual(['scp-096'])
+    expect(ids({ query: 'zzz' })).toEqual([])
+  })
+
+  it('any ticked option within a group matches; all groups must match', () => {
+    const bioOrMemetic = ids({ types: new Set(['Biological', 'Memetic'] as const) })
+    expect(bioOrMemetic).toContain('scp-999') // Biological
+    expect(bioOrMemetic).toContain('scp-079') // Mechanical/Memetic
+    expect(bioOrMemetic).not.toContain('scp-173')
+    // Biological AND Keter: only 682.
+    expect(ids({ types: new Set(['Biological'] as const), classes: new Set(['Keter'] as const) })).toEqual(['scp-682'])
   })
 })
