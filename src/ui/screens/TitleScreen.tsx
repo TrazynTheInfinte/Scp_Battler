@@ -5,7 +5,7 @@ export function TitleScreen({ onPlay, onCredits }: { onPlay: () => void; onCredi
         <p className="eyebrow">SECURE · CONTAIN · PROTECT</p>
         <h1>SCP Battler</h1>
         <p className="muted">
-          Assemble a containment team of four anomalies within your clearance budget, then
+          Assemble a containment team of six anomalies within your clearance budget, then
           neutralize the opposing site's SCPs.
         </p>
         <div className="title-actions">

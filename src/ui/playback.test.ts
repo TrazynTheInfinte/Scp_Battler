@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { chooseAction, chooseReplacement, randomTeam } from '../ai'
 import { ROSTER, ROSTER_ORDER } from '../data/roster'
+import { padTeam } from '../engine/testing/teams'
 import { createRng } from '../engine'
 import { playerMustReplace, playerReplace, playerTurn, startSession, type Advance } from './battleController'
 import { framesFor } from './playback'
@@ -44,8 +45,8 @@ describe('playback frames', () => {
   it('marks damage frames with the side that was hit', () => {
     const adv = startSession(
       ROSTER,
-      ['scp-173', 'scp-999', 'scp-914', 'scp-131'],
-      ['scp-914', 'scp-999', 'scp-343', 'scp-131'],
+      padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131']),
+      padTeam(ROSTER, ['scp-914', 'scp-999', 'scp-343', 'scp-131']),
       0,
       3,
     )

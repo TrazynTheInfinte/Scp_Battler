@@ -7,6 +7,7 @@ import {
   resolveTurn,
   startBattle,
   teamCost,
+  TEAM_SIZE,
   validateTeam,
   type BattleState,
   type Dex,
@@ -24,7 +25,7 @@ import {
 export interface Tally {
   battles: number
   wins: number
-  /** Battles in which it Neutralized 3+ opponents. */
+  /** Sweeps (see GLOSSARY.md): battles in which it Neutralized half or more of the opposing team. */
   sweeps: number
 }
 
@@ -45,7 +46,7 @@ export function randomTeamWith(dex: Dex, rng: Rng, pool: readonly string[], requ
   for (let attempt = 0; attempt < 10_000; attempt++) {
     const rest = [...others]
     const team = [required]
-    while (team.length < 4 && rest.length > 0) team.push(rest.splice(rng.int(0, rest.length - 1), 1)[0])
+    while (team.length < TEAM_SIZE && rest.length > 0) team.push(rest.splice(rng.int(0, rest.length - 1), 1)[0])
     if (validateTeam(dex, team).length === 0) return team
   }
   throw new Error(`no legal team includes ${required}`)
@@ -116,7 +117,7 @@ export function simulateBalance(
           const t = (result.perScp[scp] ??= { battles: 0, wins: 0, sweeps: 0 })
           t.battles++
           t.wins += won
-          if (kos[side][slot] >= 3) t.sweeps++
+          if (kos[side][slot] >= Math.ceil(teams[1 - side].length / 2)) t.sweeps++
         })
         const m = (result.perMakeup[makeupOf(dex, teams[side])] ??= {
           battles: 0, wins: 0, sweeps: 0, cost: teamCost(dex, teams[side]),

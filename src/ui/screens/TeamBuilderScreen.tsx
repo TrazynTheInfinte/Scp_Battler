@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { randomTeam } from '../../ai'
 import {
+  CLASS_LIMIT,
   OBJECT_CLASS_COST,
   TEAM_BUDGET,
   TEAM_SIZE,
@@ -30,7 +31,12 @@ import {
 function addBlocker(team: readonly string[], id: string): string | null {
   if (team.includes(id)) return 'Already on your team.'
   if (team.length >= TEAM_SIZE) return `Team is full (${TEAM_SIZE} SCPs).`
-  const cost = teamCost(ROSTER, team) + OBJECT_CLASS_COST[ROSTER.species[id].objectClass]
+  const objectClass = ROSTER.species[id].objectClass
+  const limit = CLASS_LIMIT[objectClass]
+  if (limit !== undefined && team.filter((t) => ROSTER.species[t].objectClass === objectClass).length >= limit) {
+    return `Only ${limit} ${objectClass} per team.`
+  }
+  const cost = teamCost(ROSTER, team) + OBJECT_CLASS_COST[objectClass]
   if (cost > TEAM_BUDGET) return `Over budget: would cost ${cost}/${TEAM_BUDGET}.`
   return null
 }

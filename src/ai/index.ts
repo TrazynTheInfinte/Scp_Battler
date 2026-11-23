@@ -42,7 +42,7 @@ export const BOOST_STAGE_LIMIT = 2
 // Team building and Team Preview
 // ---------------------------------------------------------------------------
 
-/** A random legal team (4 distinct SCPs within budget) from `pool` (default: whole Dex). */
+/** A random legal team (TEAM_SIZE distinct SCPs within budget and class limits) from `pool` (default: whole Dex). */
 export function randomTeam(dex: Dex, rng: Rng, pool: readonly string[] = Object.keys(dex.species)): string[] {
   for (let attempt = 0; attempt < 10_000; attempt++) {
     const remaining = [...pool]

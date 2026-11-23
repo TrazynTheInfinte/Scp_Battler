@@ -11,6 +11,7 @@ import {
 } from './battle'
 import type { BattleEvent, BattleState, Choice } from './model'
 import { FOCUS, JAB, SMASH, WHIFF, dex } from './testing/fixtures'
+import { padTeam } from './testing/teams'
 
 const move = (moveIndex: number): Choice => ({ kind: 'move', moveIndex })
 const sw = (teamIndex: number): Choice => ({ kind: 'switch', teamIndex })
@@ -25,7 +26,7 @@ function battle(
   seed = 1,
   teams: [readonly string[], readonly string[]] = [TEAM_A, TEAM_B],
 ): BattleState {
-  return createBattle(dex, teams, leads, seed)
+  return createBattle(dex, [padTeam(dex, teams[0]), padTeam(dex, teams[1])], leads, seed)
 }
 
 const ofType = <T extends BattleEvent['type']>(events: BattleEvent[], type: T) =>
@@ -45,7 +46,7 @@ describe('createBattle', () => {
 
   it('rejects illegal teams and out-of-range leads', () => {
     expect(() => battle([0, 0], 1, [['fast', 'fast', 'slow', 'gear'], TEAM_B])).toThrow(/illegal/)
-    expect(() => battle([4, 0])).toThrow(RangeError)
+    expect(() => battle([6, 0])).toThrow(RangeError)
   })
 })
 
@@ -137,7 +138,7 @@ describe('Neutralized', () => {
 describe('battle end', () => {
   it('Neutralizing the last SCP ends the battle with a winner', () => {
     const s = battle()
-    for (const i of [1, 2, 3]) s.sides[1].team[i].hp = 0
+    s.sides[1].team.forEach((c, i) => i > 0 && (c.hp = 0)) // every bench SCP already out
     const { state, events } = resolveTurn(s, dex, [move(SMASH), move(JAB)])
     expect(state.phase).toBe('ended')
     expect(state.winner).toBe(0)
@@ -217,7 +218,7 @@ describe('turn limit', () => {
   it('a knockout on the last turn still wins outright', () => {
     const s = battle()
     s.turn = TURN_LIMIT
-    for (const i of [1, 2, 3]) s.sides[1].team[i].hp = 0
+    s.sides[1].team.forEach((c, i) => i > 0 && (c.hp = 0)) // every bench SCP already out
     const { events } = resolveTurn(s, dex, [move(SMASH), move(JAB)])
     expect(events.some((e) => e.type === 'timeout')).toBe(false)
     expect(events.at(-1)).toEqual({ type: 'end', winner: 0 })

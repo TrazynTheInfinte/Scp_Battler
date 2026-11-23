@@ -7,7 +7,7 @@ import type { BalanceResult } from './simulate'
  */
 /** Battles each focused SCP is guaranteed. */
 export const BATTLES_PER_SCP = 300
-/** No SCP may Neutralize 3+ opponents in more than this share of its battles. */
+/** No SCP may Sweep (Neutralize half or more of the opposing team) in more than this share of its battles. */
 export const MAX_SWEEP_RATE = 0.15
 /** Every SCP's win rate must stay inside this band. */
 export const WIN_RATE_BAND = [0.3, 0.7] as const

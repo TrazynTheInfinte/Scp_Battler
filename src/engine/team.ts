@@ -1,7 +1,7 @@
 import type { Dex, ObjectClass } from './model'
 
-export const TEAM_SIZE = 4
-export const TEAM_BUDGET = 10
+export const TEAM_SIZE = 6
+export const TEAM_BUDGET = 15
 export const OBJECT_CLASS_COST: Readonly<Record<ObjectClass, number>> = {
   Safe: 1,
   Euclid: 3,
@@ -12,11 +12,18 @@ export const OBJECT_CLASS_COST: Readonly<Record<ObjectClass, number>> = {
   Apollyon: 6,
 }
 
+/** Class Limits (see GLOSSARY.md): the most SCPs of a class one team may include. */
+export const CLASS_LIMIT: Readonly<Partial<Record<ObjectClass, number>>> = {
+  Thaumiel: 1,
+  Apollyon: 1,
+}
+
 export type TeamProblem =
   | { kind: 'size'; size: number }
   | { kind: 'unknown'; speciesId: string }
   | { kind: 'duplicate'; speciesId: string }
   | { kind: 'overBudget'; cost: number }
+  | { kind: 'classLimit'; objectClass: ObjectClass; count: number }
 
 /** Total object-class cost of a team (unknown species count as 0). */
 export function teamCost(dex: Dex, speciesIds: readonly string[]): number {
@@ -38,5 +45,9 @@ export function validateTeam(dex: Dex, speciesIds: readonly string[]): TeamProbl
   }
   const cost = teamCost(dex, speciesIds)
   if (cost > TEAM_BUDGET) problems.push({ kind: 'overBudget', cost })
+  for (const [objectClass, limit] of Object.entries(CLASS_LIMIT) as [ObjectClass, number][]) {
+    const count = speciesIds.filter((id) => dex.species[id]?.objectClass === objectClass).length
+    if (count > limit) problems.push({ kind: 'classLimit', objectClass, count })
+  }
   return problems
 }

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { ROSTER } from '../data/roster'
 import { createBattle, resolveTurn, type BattleEvent } from '../engine'
+import { padTeam } from '../engine/testing/teams'
 import { formatEvents } from './battleLog'
 
 const s = createBattle(
   ROSTER,
   [
-    ['scp-173', 'scp-999', 'scp-914', 'scp-131'],
-    ['scp-682', 'scp-999', 'scp-914', 'scp-131'],
+    padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131']),
+    padTeam(ROSTER, ['scp-682', 'scp-999', 'scp-914', 'scp-131']),
   ],
   [0, 0],
   1,

@@ -31,7 +31,7 @@ export function balanceReport(dex: Dex, roster: readonly string[], result: Balan
   const scps = roster
     .map((id) => ({ id, t: result.perScp[id] }))
     .sort((a, b) => b.t.wins / b.t.battles - a.t.wins / a.t.battles)
-  lines.push('', '## SCPs', '', row(['SCP', 'Class', 'Battles', 'Win', 'Sweep 3+', '']), row(['---', '---', '---:', '---:', '---:', '---']))
+  lines.push('', '## SCPs', '', row(['SCP', 'Class', 'Battles', 'Win', 'Sweeps', '']), row(['---', '---', '---:', '---:', '---:', '---']))
   for (const { id, t } of scps) {
     const win = t.wins / t.battles
     const sweep = t.sweeps / t.battles

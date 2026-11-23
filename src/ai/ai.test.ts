@@ -15,10 +15,12 @@ import {
   type Rng,
   type SideIndex,
 } from '../engine'
+import { padTeam } from '../engine/testing/teams'
 import { chooseAction, chooseLead, chooseReplacement, randomTeam } from './index'
 
 const rng = () => createRng(123)
-const battle = (a: string[], b: string[]): BattleState => createBattle(ROSTER, [a, b], [0, 0], 1)
+const battle = (a: string[], b: string[]): BattleState =>
+  createBattle(ROSTER, [padTeam(ROSTER, a), padTeam(ROSTER, b)], [0, 0], 1)
 
 describe('randomTeam', () => {
   it('always builds a legal team, deterministically per seed, with variety', () => {

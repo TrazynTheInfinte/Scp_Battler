@@ -10,6 +10,7 @@ import {
   type Choice,
   type Dex,
 } from '../engine'
+import { padTeam } from '../engine/testing/teams'
 import { ROSTER } from './roster'
 
 const ENRAGED_MAX_BOOSTS = 2
@@ -25,7 +26,7 @@ const team = (lead: string, ...rest: string[]) => {
   const fillers = ['scp-999', 'scp-914', 'scp-343', 'scp-131'].filter(
     (id) => id !== lead && !rest.includes(id),
   )
-  return [lead, ...rest, ...fillers].slice(0, 4)
+  return padTeam(ROSTER, [lead, ...rest, ...fillers].slice(0, 4))
 }
 const battle = (a: string[], b: string[], seed = 1, dex: Dex = ROSTER): BattleState =>
   createBattle(dex, [a, b], [0, 0], seed)

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { activeOf, createBattle, legalChoices, resolveTurn, speedOf } from './battle'
 import type { BattleEvent, BattleState, Choice, StatusName } from './model'
 import { ADAPTIVE_MULTIPLIER, ERASER, FOCUS, HEX, JAB, MEDIC, dex } from './testing/fixtures'
+import { padTeam } from './testing/teams'
 
 const move = (moveIndex: number): Choice => ({ kind: 'move', moveIndex })
 const sw = (teamIndex: number): Choice => ({ kind: 'switch', teamIndex })
@@ -10,7 +11,7 @@ const battle = (
   teams: [readonly string[], readonly string[]],
   leads: [number, number] = [0, 0],
   seed = 1,
-): BattleState => createBattle(dex, teams, leads, seed)
+): BattleState => createBattle(dex, [padTeam(dex, teams[0]), padTeam(dex, teams[1])], leads, seed)
 
 const ofType = <T extends BattleEvent['type']>(events: BattleEvent[], type: T) =>
   events.filter((e): e is Extract<BattleEvent, { type: T }> => e.type === type)

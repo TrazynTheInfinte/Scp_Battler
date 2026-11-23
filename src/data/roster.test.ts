@@ -3,6 +3,7 @@ import {
   OBJECT_CLASS_COST,
   TURN_LIMIT,
   TEAM_BUDGET,
+  TEAM_SIZE,
   createRng,
   legalChoices,
   resolveReplacements,
@@ -25,21 +26,22 @@ describe('roster integrity', () => {
   })
 })
 
-/** A random legal team: 4 distinct SCPs within budget. */
+/** A random legal team: TEAM_SIZE distinct SCPs within budget and class limits. */
 function randomTeam(rng: Rng): string[] {
-  for (;;) {
+  for (let attempt = 0; attempt < 10_000; attempt++) {
     const pool = [...ROSTER_ORDER]
     const team: string[] = []
-    while (team.length < 4) team.push(pool.splice(rng.int(0, pool.length - 1), 1)[0])
+    while (team.length < TEAM_SIZE) team.push(pool.splice(rng.int(0, pool.length - 1), 1)[0])
     if (validateTeam(ROSTER, team).length === 0) return team
   }
+  throw new Error('no legal random team found')
 }
 
 /** Play a whole battle with random legal choices. */
 function playRandomBattle(seed: number): BattleState {
   const rng = createRng(seed ^ 0x5eed)
   const teams: [string[], string[]] = [randomTeam(rng), randomTeam(rng)]
-  let s = startBattle(ROSTER, teams, [rng.int(0, 3), rng.int(0, 3)], seed).state
+  let s = startBattle(ROSTER, teams, [rng.int(0, TEAM_SIZE - 1), rng.int(0, TEAM_SIZE - 1)], seed).state
   for (let step = 0; step < 1000 && s.phase !== 'ended'; step++) {
     if (s.phase === 'choose') {
       const pick = (side: SideIndex) => {

@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { chooseAction, chooseReplacement, randomTeam } from '../ai'
 import { ROSTER, ROSTER_ORDER } from '../data/roster'
+import { padTeam } from '../engine/testing/teams'
 import { createRng, switchTargets } from '../engine'
 import { playerForfeit, playerMustReplace, playerReplace, playerTurn, startSession, type Session } from './battleController'
 
-const PLAYER_TEAM = ['scp-173', 'scp-999', 'scp-914', 'scp-131']
-const AI_TEAM = ['scp-682', 'scp-999', 'scp-914', 'scp-131']
+const PLAYER_TEAM = padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131'])
+const AI_TEAM = padTeam(ROSTER, ['scp-682', 'scp-999', 'scp-914', 'scp-131'])
 
 describe('battle session', () => {
   it('starts with intro lines and the AI already deployed', () => {

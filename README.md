@@ -1,7 +1,7 @@
 # SCP Battler
 
 A turn-based, Pokémon-style battler themed on the SCP Foundation. Build a team
-of four SCPs within a containment budget and battle an AI opponent in your
+of six SCPs within a containment budget and battle an AI opponent in your
 browser — phone or desktop.
 
 ## Development

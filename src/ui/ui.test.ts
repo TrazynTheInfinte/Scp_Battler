@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ROSTER, ROSTER_ORDER } from '../data/roster'
+import { padTeam } from '../engine/testing/teams'
 import { artCredit, ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from './rosterFilter'
 import { MAX_SAVED_TEAMS, deleteTeam, loadTeams, saveTeam, type TeamStorage } from './savedTeams'
@@ -16,14 +17,14 @@ function fakeStorage(initial: Record<string, string> = {}): TeamStorage & { data
   }
 }
 
-const TEAM = ['scp-173', 'scp-999', 'scp-914', 'scp-131']
+const TEAM = padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131'])
 
 describe('saved teams', () => {
   it('saves, loads, overwrites by name, and deletes', () => {
     const st = fakeStorage()
     expect(saveTeam(st, ROSTER, '  Alpha  ', TEAM)).toMatchObject({ ok: true })
     expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: TEAM }])
-    const other = ['scp-682', 'scp-999', 'scp-914', 'scp-131']
+    const other = padTeam(ROSTER, ['scp-682', 'scp-999', 'scp-914', 'scp-131'])
     saveTeam(st, ROSTER, 'Alpha', other)
     expect(loadTeams(st, ROSTER)).toEqual([{ name: 'Alpha', speciesIds: other }])
     deleteTeam(st, ROSTER, 'Alpha')
@@ -65,10 +66,10 @@ describe('saved teams', () => {
     const st = fakeStorage({
       'scp-battler:teams:v1': JSON.stringify([
         { name: 'ok', speciesIds: TEAM },
-        { name: 'gone', speciesIds: ['scp-9999', 'scp-999', 'scp-914', 'scp-131'] },
+        { name: 'gone', speciesIds: padTeam(ROSTER, ['scp-9999', 'scp-999', 'scp-914', 'scp-131']) },
         { name: 'junk' },
-        // Four Euclids: legal before the cost change, over budget now.
-        { name: 'pricey', speciesIds: ['scp-173', 'scp-096', 'scp-049', 'scp-079'] },
+        // Six Euclids: a full team, but 18 points (over the budget of 15).
+        { name: 'pricey', speciesIds: ['scp-173', 'scp-096', 'scp-049', 'scp-079', 'scp-012', 'scp-008'] },
       ]),
     })
     expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok', 'pricey'])

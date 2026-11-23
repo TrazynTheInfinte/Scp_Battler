@@ -9,7 +9,7 @@ The full, fixed set of SCPs available to every player when building a team.
 _Avoid_: Pokédex, collection, inventory
 
 **Team**:
-The four SCPs a player brings into a battle, chosen from the roster.
+The six SCPs a player brings into a battle, chosen from the roster within the team budget and class limits.
 _Avoid_: Party, squad, deck
 
 **Battle**:
@@ -56,7 +56,15 @@ _Avoid_: Rarity, tier, rank
 
 **Team Budget**:
 The maximum total object-class cost a team may have.
-_Avoid_: Points cap, cost limit
+_Avoid_: Point cap, points limit, cost limit
+
+**Class Limit**:
+The most SCPs of one object class a team may include, on top of the team budget. Only the rarest classes (Thaumiel, Apollyon) have one.
+_Avoid_: Unique clause, class cap
+
+**Sweep**:
+A battle in which one SCP Neutralizes half or more of the opposing team by itself.
+_Avoid_: Wipe, carry
 
 **Type**:
 One of eight anomaly categories (Kinetic, Biological, Mechanical, Memetic, Antimemetic, Reality, Temporal, Thaumic) that determines matchup effectiveness. An SCP has one or two types; a move has exactly one.

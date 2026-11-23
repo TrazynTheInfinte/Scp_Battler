@@ -270,7 +270,7 @@
 }
 .slots {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr) /* 6 slots: 3 x 2 */;
   gap: 6px;
 }
 .slot {
@@ -527,7 +527,7 @@
 /* ---------- team preview ---------- */
 .preview-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr) /* 6 cards: 3 x 2 */;
   gap: 6px;
 }
 .preview-card {
