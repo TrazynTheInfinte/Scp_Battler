@@ -28,6 +28,12 @@ export const STAT_TEMPLATES = {
   support: { hp: 140, atk: 70, def: 110, spa: 80, spd: 130, spe: 70 },
   /** Even across the board. */
   balanced: { hp: 100, atk: 100, def: 100, spa: 100, spd: 100, spe: 100 },
+  /** Very slow but bulky, with heavy special hits. */
+  slowSpecial: { hp: 125, atk: 80, def: 115, spa: 140, spd: 100, spe: 40 },
+  /** Fast and armored, all physical; almost no special side. */
+  armoredStriker: { hp: 95, atk: 145, def: 140, spa: 25, spd: 70, spe: 125 },
+  /** Strong on both the physical and special side. */
+  mixedAttacker: { hp: 90, atk: 115, def: 100, spa: 115, spd: 100, spe: 80 },
 } as const satisfies Record<string, Stats>
 
 export type StatTemplateId = keyof typeof STAT_TEMPLATES

@@ -2,12 +2,11 @@ import type { MoveData, ObjectClass, SpeciesData, Stats } from '../engine'
 import type { ImageCredit } from './dossiers'
 import type { StatTemplateId } from './statTemplates'
 
-/** How an SCP's base stats are set. */
-export type StatSpec =
-  /** A stat template scaled to the class total, with small tweaks that net to 0. */
-  | { template: StatTemplateId; tweaks?: Partial<Stats> }
-  /** Exact stats from before templates existed; each will be fitted to a template. */
-  | { legacy: Stats }
+/** How an SCP's base stats are set: a stat template scaled to the class total, with small tweaks that net to 0. */
+export interface StatSpec {
+  template: StatTemplateId
+  tweaks?: Partial<Stats>
+}
 
 /**
  * Everything about one roster SCP, in one file under scps/ (named after its

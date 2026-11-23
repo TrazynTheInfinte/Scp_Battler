@@ -7,8 +7,7 @@ export default {
   objectClass: 'Safe',
   wave: 1,
   types: ['Biological'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 110, atk: 60, def: 80, spa: 70, spd: 90, spe: 40 } },
+  stats: { template: 'support', tweaks: { hp: 4, atk: 6, def: -2, spa: 8, spd: -6, spe: -10 } },
   moves: ['embrace', 'tickle', 'contagious-joy', 'calming-ooze'],
   signatureMove: status('embrace', 'Embrace', 'Biological', null, [heal(33), cure]),
   ability: 'jovial',

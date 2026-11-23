@@ -21,12 +21,10 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     const stats = ROSTER.species[id].baseStats
     expect(total(stats)).toBe(CLASS_STAT_TOTAL[scp.objectClass])
     for (const v of Object.values(stats)) expect(v).toBeGreaterThan(0)
-    if ('template' in scp.stats) {
-      const tweaks = Object.values(scp.stats.tweaks ?? {})
-      expect(tweaks.reduce((a, b) => a + b, 0), 'tweaks must net to 0').toBe(0)
-      const moved = tweaks.filter((n) => n > 0).reduce((a, b) => a + b, 0)
-      expect(moved, `at most ${MAX_STAT_TWEAK} points moved`).toBeLessThanOrEqual(MAX_STAT_TWEAK)
-    }
+    const tweaks = Object.values(scp.stats.tweaks ?? {})
+    expect(tweaks.reduce((a, b) => a + b, 0), 'tweaks must net to 0').toBe(0)
+    const moved = tweaks.filter((n) => n > 0).reduce((a, b) => a + b, 0)
+    expect(moved, `at most ${MAX_STAT_TWEAK} points moved`).toBeLessThanOrEqual(MAX_STAT_TWEAK)
   })
 
   it('has 4 distinct existing moves, at most one signature move, and a same-type attack', () => {

@@ -7,8 +7,7 @@ export default {
   objectClass: 'Euclid',
   wave: 1,
   types: ['Kinetic', 'Antimemetic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 75, atk: 115, def: 110, spa: 20, spd: 55, spe: 100 } },
+  stats: { template: 'armoredStriker', tweaks: { def: -1, spe: 1 } },
   moves: ['neck-snap', 'blink', 'crimson-residue', 'stalk'],
   signatureMove: phys('neck-snap', 'Neck Snap', 'Kinetic', 100, 85),
   ability: 'unobserved',

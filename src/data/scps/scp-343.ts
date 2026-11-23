@@ -7,8 +7,7 @@ export default {
   objectClass: 'Safe',
   wave: 1,
   types: ['Reality', 'Temporal'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 100, atk: 60, def: 70, spa: 110, spd: 80, spe: 30 } },
+  stats: { template: 'slowSpecial', tweaks: { hp: 6, def: -16, spa: 5, spd: 5 } },
   moves: ['rewrite', 'smite', 'turn-back-time', 'divine-calm'],
   signatureMove: spec('rewrite', 'Rewrite', 'Reality', 80, 100),
   ability: 'willingDetainee',

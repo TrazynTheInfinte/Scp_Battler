@@ -7,8 +7,7 @@ export default {
   objectClass: 'Keter',
   wave: 1,
   types: ['Temporal', 'Thaumic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 110, atk: 110, def: 100, spa: 100, spd: 100, spe: 80 } },
+  stats: { template: 'balanced', tweaks: { hp: 10, atk: 10, spe: -20 } },
   moves: ['corrosive-touch', 'decay', 'ambush', 'into-the-pocket'],
   signatureMove: status('into-the-pocket', 'Into the Pocket', 'Thaumic', 90, [inflict('Contained')]),
   ability: 'phasing',

@@ -7,8 +7,7 @@ export default {
   objectClass: 'Euclid',
   wave: 1,
   types: ['Memetic', 'Thaumic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 70, atk: 50, def: 70, spa: 105, spd: 100, spe: 80 } },
+  stats: { template: 'specialBruiser', tweaks: { hp: -13, atk: 8, spa: -5, spd: 10 } },
   moves: ['dissonant-chord', 'blood-ink', 'unfinished-score', 'crescendo'],
   signatureMove: status('unfinished-score', 'Unfinished Score', 'Memetic', 85, [inflict('Amnesiac')]),
   ability: 'morbidAllure',

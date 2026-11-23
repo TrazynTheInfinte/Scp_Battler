@@ -26,10 +26,7 @@ export const SCPS: readonly ScpDefinition[] = Object.values(SCP_FILES).sort(
 )
 
 function toSpecies(scp: ScpDefinition): SpeciesData {
-  const baseStats =
-    'legacy' in scp.stats
-      ? scp.stats.legacy
-      : templateStats(scp.stats.template, CLASS_STAT_TOTAL[scp.objectClass], scp.stats.tweaks)
+  const baseStats = templateStats(scp.stats.template, CLASS_STAT_TOTAL[scp.objectClass], scp.stats.tweaks)
   return {
     id: scp.id,
     name: scp.name,

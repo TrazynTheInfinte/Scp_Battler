@@ -7,8 +7,7 @@ export default {
   objectClass: 'Safe',
   wave: 1,
   types: ['Mechanical', 'Reality'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 90, atk: 60, def: 100, spa: 100, spd: 70, spe: 30 } },
+  stats: { template: 'slowSpecial', tweaks: { hp: -4, def: 14, spa: -5, spd: -5 } },
   moves: ['gear-grind', 'refine', 'coarse', 'very-fine'],
   signatureMove: status('very-fine', 'Very Fine', 'Mechanical', null, [self({ spa: 2 })]),
   ability: 'precisionEngineering',

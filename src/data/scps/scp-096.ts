@@ -7,8 +7,7 @@ export default {
   objectClass: 'Euclid',
   wave: 1,
   types: ['Memetic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 85, atk: 85, def: 70, spa: 65, spd: 70, spe: 100 } },
+  stats: { template: 'balanced', tweaks: { hp: 3, atk: 3, def: -5, spa: -8, spd: -5, spe: 12 } },
   moves: ['rend', 'relentless-pursuit', 'unveiled-face', 'weep'],
   signatureMove: status('unveiled-face', 'Unveiled Face', 'Memetic', 90, [inflict('Stunned')]),
   ability: 'enraged',

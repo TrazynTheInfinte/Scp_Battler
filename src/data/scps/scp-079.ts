@@ -7,8 +7,7 @@ export default {
   objectClass: 'Euclid',
   wave: 1,
   types: ['Mechanical', 'Memetic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 95, atk: 30, def: 85, spa: 95, spd: 90, spe: 80 } },
+  stats: { template: 'specialBruiser', tweaks: { hp: 6, atk: -7, def: 10, spa: -11, spd: 2 } },
   moves: ['data-surge', 'corrupt-file', 'lockdown', 'overclock'],
   signatureMove: status('lockdown', 'Lockdown', 'Mechanical', 90, [inflict('Contained')]),
   ability: 'bootSequence',

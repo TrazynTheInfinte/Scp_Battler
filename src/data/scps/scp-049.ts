@@ -7,8 +7,7 @@ export default {
   objectClass: 'Euclid',
   wave: 1,
   types: ['Biological', 'Thaumic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 90, atk: 95, def: 80, spa: 75, spd: 90, spe: 45 } },
+  stats: { template: 'mixedAttacker', tweaks: { hp: 10, atk: 2, spa: -9, spd: 6, spe: -9 } },
   moves: ['diagnose-pestilence', 'the-cure', 'bone-saw', 'sedative'],
   signatureMove: phys('the-cure', 'The Cure', 'Biological', 85, 100),
   ability: 'theCure',

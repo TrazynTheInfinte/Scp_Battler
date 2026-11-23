@@ -7,8 +7,7 @@ export default {
   objectClass: 'Safe',
   wave: 1,
   types: ['Kinetic'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 70, atk: 85, def: 55, spa: 50, spd: 55, spe: 135 } },
+  stats: { template: 'fastPhysical', tweaks: { hp: 4, atk: -12, def: -3, spa: 6, spd: -3, spe: 8 } },
   moves: ['roll-out', 'ram', 'flank', 'keep-watch'],
   signatureMove: status('keep-watch', 'Keep Watch', 'Memetic', 100, [foe({ spe: -1 })]),
   ability: 'everWatchful',

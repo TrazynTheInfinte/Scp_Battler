@@ -7,8 +7,7 @@ export default {
   objectClass: 'Keter',
   wave: 1,
   types: ['Kinetic', 'Biological'],
-  // Pre-template stats, to be fitted to a stat template.
-  stats: { legacy: { hp: 90, atk: 115, def: 100, spa: 120, spd: 100, spe: 75 } },
+  stats: { template: 'mixedAttacker', tweaks: { spa: 5, spe: -5 } },
   moves: ['crushing-jaws', 'acidic-bile', 'rampage', 'regenerate'],
   signatureMove: phys('rampage', 'Rampage', 'Kinetic', 110, 80),
   ability: 'adaptive',
