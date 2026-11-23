@@ -36,8 +36,39 @@ describe('randomTeam', () => {
 describe('chooseAction', () => {
   it('attacks with the highest expected damage', () => {
     // 173 vs 914: Neck Snap (Kinetic, x2 on Mechanical) beats Blink and Crimson Residue.
+    // (Already boosted to the limit, so it attacks rather than Stalks.)
     const s = battle(['scp-173', 'scp-999', 'scp-914', 'scp-131'], ['scp-914', 'scp-999', 'scp-343', 'scp-131'])
+    activeOf(s, 0).stages = { atk: 2, def: 0, spa: 0, spd: 0, spe: 2 }
     expect(chooseAction(s, ROSTER, 0, rng())).toEqual({ kind: 'move', moveIndex: 0 })
+  })
+
+  describe('boosting', () => {
+    // 173 vs 914: 914's attacks barely scratch 173, and 173 can't knock it out in one hit.
+    const AI_TEAM = ['scp-173', 'scp-999', 'scp-914', 'scp-131']
+    const FOE = ['scp-914', 'scp-999', 'scp-343', 'scp-131']
+    const STALK = { kind: 'move', moveIndex: 3 }
+
+    it('boosts when it is safe', () => {
+      expect(chooseAction(battle(AI_TEAM, FOE), ROSTER, 0, rng())).toEqual(STALK)
+    })
+
+    it('boosts at most to +2', () => {
+      const s = battle(AI_TEAM, FOE)
+      activeOf(s, 0).stages.atk = 1
+      activeOf(s, 0).stages.spe = 1
+      expect(chooseAction(s, ROSTER, 0, rng())).toEqual(STALK)
+      activeOf(s, 0).stages.atk = 2
+      expect(chooseAction(s, ROSTER, 0, rng())).not.toEqual(STALK)
+    })
+
+    it("attacks instead when it's in danger or can finish the target", () => {
+      const low = battle(AI_TEAM, FOE)
+      activeOf(low, 0).hp = 20
+      expect(chooseAction(low, ROSTER, 0, rng())).not.toEqual(STALK)
+      const finish = battle(AI_TEAM, FOE)
+      activeOf(finish, 1).hp = 1
+      expect(chooseAction(finish, ROSTER, 0, rng())).not.toEqual(STALK)
+    })
   })
 
   describe('escaping a x4 weakness', () => {

@@ -15,6 +15,7 @@ import {
   isNeutralized,
   isStruggling,
   legalChoices,
+  speedOf,
   switchTargets,
   typeEffectiveness,
   validateTeam,
@@ -32,6 +33,10 @@ import {
 export const HEAL_THRESHOLD = 0.4
 /** Prefer a status move when no attack would do at least this share of the target's HP. */
 export const STATUS_DAMAGE_THRESHOLD = 0.35
+/** Only boost while the opponent's best hit takes less than this share of our current HP. */
+export const BOOST_SAFE_SHARE = 0.5
+/** Stop boosting a stat once it reaches this stage ("boost once or twice"). */
+export const BOOST_STAGE_LIMIT = 2
 
 // ---------------------------------------------------------------------------
 // Team building and Team Preview
@@ -92,7 +97,11 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
     if (heal >= 0) return { kind: 'move', moveIndex: heal }
   }
 
-  // 3. Inflict a status when attacks are weak against this target.
+  // 3. Boost when it's safe to spend a turn on it.
+  const boost = safeBoost(dex, me, opp, moves, usable, rng)
+  if (boost !== null) return { kind: 'move', moveIndex: boost }
+
+  // 4. Inflict a status when attacks are weak against this target.
   const attackScores = moves.map((m) => expectedShare(dex, me, opp, m))
   const usableScores = attackScores.filter((_, i) => usable(i))
   if (Math.max(0, ...usableScores) < STATUS_DAMAGE_THRESHOLD) {
@@ -106,7 +115,7 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
     if (statusMoves.length > 0) return { kind: 'move', moveIndex: pickBest(statusMoves, rng) }
   }
 
-  // 4. Otherwise, the attack with the highest expected damage.
+  // 5. Otherwise, the attack with the highest expected damage.
   return {
     kind: 'move',
     moveIndex: pickBest(
@@ -159,6 +168,43 @@ function bestShare(dex: Dex, user: Combatant, target: Combatant): number {
 /** Best share I deal minus best share I take. Higher is better for `me`. */
 export function matchupScore(dex: Dex, me: Combatant, opp: Combatant): number {
   return bestShare(dex, me, opp) - bestShare(dex, opp, me)
+}
+
+/** The stat changes a move makes to its user, if it only boosts the user (e.g. Stalk). */
+function selfBoost(m: MoveData) {
+  if (m.category !== 'Status' || !m.effects?.length) return null
+  const changes = m.effects.flatMap((e) => (e.kind === 'stages' && e.who === 'user' ? [e.changes] : []))
+  if (changes.length !== m.effects.length) return null
+  const all = changes.flatMap((c) => Object.entries(c) as [keyof Combatant['stages'], number][])
+  return all.length > 0 && all.every(([, n]) => n > 0) ? all : null
+}
+
+/**
+ * A boosting move to use now, or null. Boost only if every stat it raises is
+ * still below BOOST_STAGE_LIMIT, the opponent's best hit is well short of a
+ * knockout, the opponent isn't both faster and hitting harder, and we can't
+ * just knock it out instead.
+ */
+function safeBoost(
+  dex: Dex,
+  me: Combatant,
+  opp: Combatant,
+  moves: readonly MoveData[],
+  usable: (i: number) => boolean,
+  rng: Rng,
+): number | null {
+  const mine = bestShare(dex, me, opp)
+  if (mine >= 1) return null
+  const theirs = bestShare(dex, opp, me)
+  if (theirs >= BOOST_SAFE_SHARE) return null
+  if (speedOf(opp) > speedOf(me) && theirs > mine) return null
+  const options = moves.flatMap((m, i) => {
+    const raises = selfBoost(m)
+    if (!raises || !usable(i)) return []
+    if (!raises.every(([stat]) => me.stages[stat] < BOOST_STAGE_LIMIT)) return []
+    return [{ value: i, score: raises.reduce((sum, [, n]) => sum + n, 0) }]
+  })
+  return options.length > 0 ? pickBest(options, rng) : null
 }
 
 /** Switch to the best-matched teammate if our attacks fail against this opponent. */
