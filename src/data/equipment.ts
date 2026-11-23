@@ -31,7 +31,7 @@ const EQUIPMENT_LIST: EquipmentData[] = [
     id: 'hazmatSuit',
     name: 'Hazmat Suit',
     description: "Can't be made to Bleed.",
-    cost: 2,
+    cost: 1,
     rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
   },
   {
