@@ -331,6 +331,82 @@ const ABILITY_LIST: AbilityData[] = [
     description: 'Heals 1/16 of its max HP at the end of each turn.',
     rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
   },
+  // wave 5
+  {
+    id: 'nightmares',
+    name: 'Nightmares',
+    description: 'At the end of each turn, the opponent loses 1/16 of its max HP.',
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'momentum',
+    name: 'Momentum',
+    description: "Nothing slows it down: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'packHunter',
+    name: 'Pack Hunter',
+    description: 'Speed +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
+  {
+    id: 'guardConstructs',
+    name: 'Guard Constructs',
+    description: 'An attacker that damages it with a move loses 1/16 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'toothedMaw',
+    name: 'Toothed Maw',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to Bleed.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'stressed',
+    name: 'Stressed',
+    description: 'The first time a move hits it after it enters the field: Sp. Attack +1.',
+    rules: [{ kind: 'boostWhenHit', changes: { spa: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'searingTouch',
+    name: 'Searing Touch',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to Bleed.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'eyeOfTheStorm',
+    name: 'Eye of the Storm',
+    description: 'Takes 15% less damage from Physical and Special moves.',
+    rules: [
+      { kind: 'damageTaken', category: 'Physical', multiplier: 0.85 },
+      { kind: 'damageTaken', category: 'Special', multiplier: 0.85 },
+    ],
+  },
+  {
+    id: 'accretion',
+    name: 'Accretion',
+    description: 'Defense +1 each time a move hits it (at most twice each time it enters the field).',
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 2 }],
+  },
+  {
+    id: 'blindingContagion',
+    name: 'Blinding Contagion',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to become Amnesiac.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Amnesiac', chance: 30 }],
+  },
+  {
+    id: 'regrowingMagazine',
+    name: 'Regrowing Magazine',
+    description: 'Each of its moves has 50% more PP.',
+    rules: [{ kind: 'extraPp', fraction: 0.5 }],
+  },
+  {
+    id: 'holeForMomentum',
+    name: 'Hole for Momentum',
+    description: 'Speed +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

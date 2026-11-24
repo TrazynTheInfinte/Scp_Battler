@@ -13,7 +13,7 @@ export default {
   ability: 'miasma',
   eligibility: "A rune-carved skull that, when neglected, releases a gas rotting all organic matter in its sight.",
   dossier: {
-    nickname: "Skull of Decay",
+    nickname: "Rot Skull",
     authors: "Gabriel Jade, rewritten by Voct",
     images: [],
   },

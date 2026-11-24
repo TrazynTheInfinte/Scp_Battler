@@ -62,6 +62,42 @@ const EQUIPMENT_LIST: EquipmentData[] = [
     cost: 1,
     rules: [{ kind: 'extraPp', fraction: 0.5 }],
   },
+  // wave 5
+  {
+    id: 'earProtection',
+    name: 'Ear Protection',
+    description: "Can't be Stunned.",
+    cost: 1,
+    rules: [{ kind: 'statusImmunity', statuses: ['Stunned'] }],
+  },
+  {
+    id: 'boltCutters',
+    name: 'Bolt Cutters',
+    description: "Can't be Contained.",
+    cost: 1,
+    rules: [{ kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'tacticalVisor',
+    name: 'Tactical Visor',
+    description: 'Sp. Defense +1 whenever it enters the field.',
+    cost: 1,
+    rules: [{ kind: 'boostOnEntry', changes: { spd: 1 } }],
+  },
+  {
+    id: 'realityAnchor',
+    name: 'Scranton Reality Anchor',
+    description: "Opponents can't lower its stats.",
+    cost: 1,
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'combatKnife',
+    name: 'Combat Knife',
+    description: 'Attack +1 whenever it enters the field.',
+    cost: 2,
+    rules: [{ kind: 'boostOnEntry', changes: { atk: 1 } }],
+  },
 ]
 
 export const EQUIPMENT: Readonly<Record<string, EquipmentData>> = Object.fromEntries(
