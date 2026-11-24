@@ -7,11 +7,14 @@ function TeamGrid({
   equipment,
   selected,
   onSelect,
+  only,
 }: {
   team: readonly string[]
   equipment: readonly (string | null)[]
   selected?: number
   onSelect?: (i: number) => void
+  /** Tutorial: the one SCP that may be picked. */
+  only?: number
 }) {
   return (
     <div className="preview-grid">
@@ -33,7 +36,8 @@ function TeamGrid({
         return onSelect ? (
           <button
             key={id}
-            className={`preview-card${selected === i ? ' selected' : ''}`}
+            className={`preview-card${selected === i ? ' selected' : ''}${only === i && selected !== i ? ' guided' : ''}`}
+            disabled={only !== undefined && only !== i}
             onClick={() => onSelect(i)}
             aria-pressed={selected === i}
           >
@@ -58,6 +62,7 @@ export function TeamPreviewScreen({
   onBack,
   opponentLabel = 'HOSTILE SITE',
   backLabel = '← Back',
+  guide,
 }: {
   playerTeam: readonly string[]
   playerEquipment: readonly (string | null)[]
@@ -67,6 +72,8 @@ export function TeamPreviewScreen({
   onBack: () => void
   opponentLabel?: string
   backLabel?: string
+  /** Tutorial: a hint, and the one lead that may be picked. */
+  guide?: { text: string; lead: number }
 }) {
   const [lead, setLead] = useState<number | null>(null)
   return (
@@ -84,7 +91,18 @@ export function TeamPreviewScreen({
       </section>
       <section className="stack">
         <p className="section-label">YOUR TEAM — CHOOSE WHO DEPLOYS FIRST</p>
-        <TeamGrid team={playerTeam} equipment={playerEquipment} selected={lead ?? undefined} onSelect={setLead} />
+        {guide && (
+          <p className="guide-hint" role="status">
+            {guide.text}
+          </p>
+        )}
+        <TeamGrid
+          team={playerTeam}
+          equipment={playerEquipment}
+          selected={lead ?? undefined}
+          onSelect={setLead}
+          only={guide?.lead}
+        />
       </section>
       <button className="btn btn-primary" disabled={lead === null} onClick={() => lead !== null && onBegin(lead)}>
         {lead === null ? 'Choose a lead' : `Deploy ${ROSTER.species[playerTeam[lead]].name}`}

@@ -23,6 +23,13 @@ import { TeamBuilderScreen } from './ui/screens/TeamBuilderScreen'
 import { TeamPreviewScreen } from './ui/screens/TeamPreviewScreen'
 import { TitleScreen } from './ui/screens/TitleScreen'
 import { useTeamShelf } from './ui/teamShelf'
+import {
+  TUTORIAL_LEAD,
+  TUTORIAL_LEAD_HINT,
+  TUTORIAL_OPPONENT_TEAM,
+  TUTORIAL_PLAYER_TEAM,
+  tutorialDriver,
+} from './ui/tutorial'
 
 type Screen = 'title' | 'builder' | 'credits' | 'howto' | 'preview' | 'battle' | 'result' | 'online'
 
@@ -30,6 +37,8 @@ type Screen = 'title' | 'builder' | 'credits' | 'howto' | 'preview' | 'battle' |
 const newSeed = () => (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
 
 interface Match {
+  /** The Tutorial Battle (fixed teams, guided first turns; see src/ui/tutorial.ts). */
+  tutorial?: boolean
   aiTeam: string[]
   aiEquipment: (string | null)[]
   seed: number
@@ -105,37 +114,31 @@ export default function App() {
     setMatch(m)
     go('preview')
   }
+  const startTutorial = () => {
+    dismissHowToPrompt()
+    // The seed here only keys the screens; the tutorial battle uses its own fixed seed.
+    toPreview({ tutorial: true, aiTeam: [...TUTORIAL_OPPONENT_TEAM], aiEquipment: [], seed: newSeed() })
+  }
+  const title = (
+    <TitleScreen
+      account={account}
+      onPlay={() => go('builder')}
+      onPlayOnline={() => go('online')}
+      onTutorial={startTutorial}
+      onHowToPlay={() => {
+        dismissHowToPrompt()
+        go('howto')
+      }}
+      onCredits={() => go('credits')}
+    />
+  )
 
   switch (screen) {
     case 'title':
-      return (
-        <TitleScreen
-          account={account}
-          onPlay={() => go('builder')}
-          onPlayOnline={() => go('online')}
-          onHowToPlay={() => {
-            dismissHowToPrompt()
-            go('howto')
-          }}
-          onCredits={() => go('credits')}
-        />
-      )
+      return title
     case 'online':
       // Needs an Account with a Callsign; signing out mid-match lands on the title.
-      if (account.status !== 'signedIn' || !account.callsign) {
-        return (
-          <TitleScreen
-            account={account}
-            onPlay={() => go('builder')}
-            onPlayOnline={() => go('online')}
-            onHowToPlay={() => {
-              dismissHowToPrompt()
-              go('howto')
-            }}
-            onCredits={() => go('credits')}
-          />
-        )
-      }
+      if (account.status !== 'signedIn' || !account.callsign) return title
       return (
         <OnlineScreen
           uid={account.uid}
@@ -147,7 +150,7 @@ export default function App() {
     case 'credits':
       return <CreditsScreen onBack={() => go('title')} />
     case 'howto':
-      return <HowToPlayScreen onBack={() => go('title')} />
+      return <HowToPlayScreen onBack={() => go('title')} onTutorial={startTutorial} />
     case 'builder':
       return (
         <TeamBuilderScreen
@@ -162,6 +165,22 @@ export default function App() {
       )
     case 'preview':
       if (!match) return null
+      if (match.tutorial) {
+        return (
+          <TeamPreviewScreen
+            playerTeam={TUTORIAL_PLAYER_TEAM}
+            playerEquipment={[]}
+            aiTeam={match.aiTeam}
+            aiEquipment={[]}
+            guide={{ text: TUTORIAL_LEAD_HINT, lead: TUTORIAL_LEAD }}
+            onBack={() => go('title')}
+            onBegin={(lead) => {
+              setDriver(tutorialDriver(lead))
+              go('battle')
+            }}
+          />
+        )
+      }
       return (
         <TeamPreviewScreen
           playerTeam={team}
@@ -192,8 +211,8 @@ export default function App() {
       return (
         <ResultScreen
           final={result}
-          // Same opposing team, new seed, choose leads again.
-          onRematch={() => toPreview({ ...match, seed: newSeed() })}
+          // Same opposing team, new seed, choose leads again (the tutorial just starts over).
+          onRematch={() => (match.tutorial ? startTutorial() : toPreview({ ...match, seed: newSeed() }))}
           onBuilder={() => go('builder')}
           onTitle={() => go('title')}
         />

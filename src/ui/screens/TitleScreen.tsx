@@ -13,12 +13,14 @@ export function TitleScreen({
   account,
   onPlay,
   onPlayOnline,
+  onTutorial,
   onHowToPlay,
   onCredits,
 }: {
   account: AccountState
   onPlay: () => void
   onPlayOnline: () => void
+  onTutorial: () => void
   onHowToPlay: () => void
   onCredits: () => void
 }) {
@@ -36,6 +38,10 @@ export function TitleScreen({
         {prompt && (
           <p className="notice small" role="status">
             New here?{' '}
+            <button className="btn-link" onClick={onTutorial}>
+              Try the Tutorial Battle
+            </button>{' '}
+            ·{' '}
             <button className="btn-link" onClick={onHowToPlay}>
               Read How to Play
             </button>{' '}

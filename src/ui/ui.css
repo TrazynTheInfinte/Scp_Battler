@@ -872,3 +872,33 @@ button.preview-card {
 .howto li {
   line-height: 1.45;
 }
+
+/* ---------- tutorial ---------- */
+.guide-hint {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.guided {
+  outline: 2px solid var(--warn);
+  outline-offset: 1px;
+  animation: guided-pulse 1.4s ease-in-out infinite;
+}
+@keyframes guided-pulse {
+  50% {
+    outline-color: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guided {
+    animation: none;
+  }
+}
+button.preview-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

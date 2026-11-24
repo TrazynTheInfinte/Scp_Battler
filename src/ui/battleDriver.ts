@@ -16,6 +16,18 @@ export interface BattleDriver {
   choose(choice: Choice): void
   replace(teamIndex: number): void
   forfeit(): void
+  /** Tutorial only: the current hint and what the player may do (null: no hint, anything goes). */
+  guide?(): Guide | null
+}
+
+/** A tutorial step: a hint, and the one action it allows (or any). */
+export interface Guide {
+  text: string
+  allow:
+    | { kind: 'any' }
+    | { kind: 'move'; moveIndex: number }
+    /** Tap Switch, then this team member. */
+    | { kind: 'switch'; teamIndex: number }
 }
 
 export interface BattleView {

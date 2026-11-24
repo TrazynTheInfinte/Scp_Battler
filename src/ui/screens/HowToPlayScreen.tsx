@@ -47,7 +47,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-export function HowToPlayScreen({ onBack }: { onBack: () => void }) {
+export function HowToPlayScreen({ onBack, onTutorial }: { onBack: () => void; onTutorial: () => void }) {
   const example = TYPE_RING[0]
   const [a, b] = beats(example)
   return (
@@ -59,6 +59,13 @@ export function HowToPlayScreen({ onBack }: { onBack: () => void }) {
         <h2>HOW TO PLAY</h2>
         <TypeChartButton />
       </div>
+
+      <button className="btn btn-primary" onClick={onTutorial}>
+        Tutorial Battle
+      </button>
+      <p className="small muted" style={{ margin: 0 }}>
+        A short guided battle that walks you through the basics. Or read on:
+      </p>
 
       <Section title="1 · THE GOAL">
         <li>Each side brings a team of {TEAM_SIZE} SCPs. One at a time is on the field (the active); the rest wait on the bench.</li>
@@ -145,7 +152,7 @@ export function HowToPlayScreen({ onBack }: { onBack: () => void }) {
         <li>Your friend chooses Play Online, then joins with that code.</li>
       </Section>
 
-      <button className="btn btn-primary" onClick={onBack}>
+      <button className="btn" onClick={onBack}>
         Got it
       </button>
     </main>

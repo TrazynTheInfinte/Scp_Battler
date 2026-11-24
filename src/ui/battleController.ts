@@ -97,7 +97,7 @@ function continueWithAi(session: Session, steps: Step[]): Advance {
   }
 }
 
-function toStep(dex: Dex, before: BattleState, result: StepResult): Step {
+export function toStep(dex: Dex, before: BattleState, result: StepResult): Step {
   return { before, events: result.events, after: result.state, lines: formatEvents(before, result.events, dex) }
 }
 

@@ -86,14 +86,28 @@ function SideInfo({ state, side }: { state: BattleState; side: SideIndex }) {
 }
 
 /** The player's team, for switching or replacing; only legal targets are enabled. */
-function BenchList({ state, onPick }: { state: BattleState; onPick: (teamIndex: number) => void }) {
-  const options = switchTargets(state, PLAYER)
+function BenchList({
+  state,
+  onPick,
+  only,
+}: {
+  state: BattleState
+  onPick: (teamIndex: number) => void
+  /** Tutorial: the one team member that may be picked. */
+  only?: number
+}) {
+  const options = switchTargets(state, PLAYER).filter((i) => only === undefined || i === only)
   return (
     <div className="bench">
       {state.sides[PLAYER].team.map((c, i) => {
         const sp = ROSTER.species[c.speciesId]
         return (
-          <button key={i} className="bench-item" disabled={!options.includes(i)} onClick={() => onPick(i)}>
+          <button
+            key={i}
+            className={`bench-item${only === i ? ' guided' : ''}`}
+            disabled={!options.includes(i)}
+            onClick={() => onPick(i)}
+          >
             <span className="stack" style={{ gap: 4 }}>
               <span>
                 <strong>{sp.name}</strong>
@@ -158,6 +172,12 @@ export function BattleScreen({
   const contained = realActive.status?.name === 'Contained'
   const struggling = isStruggling(realActive)
   const benchOptions = switchTargets(real, PLAYER)
+  // Tutorial: the current hint, and the one action it allows.
+  const guide = !playing && !ended ? (driver.guide?.() ?? null) : null
+  const allow = guide?.allow ?? { kind: 'any' as const }
+  const moveAllowed = (i: number) => allow.kind === 'any' || (allow.kind === 'move' && allow.moveIndex === i)
+  const switchAllowed = allow.kind === 'any' || allow.kind === 'switch'
+  const switchOnly = allow.kind === 'switch' ? allow.teamIndex : undefined
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
@@ -297,6 +317,11 @@ export function BattleScreen({
             return.
           </p>
         )}
+        {guide && status.kind !== 'noContest' && (
+          <p className="guide-hint" role="status">
+            {guide.text}
+          </p>
+        )}
         {status.kind === 'noContest' ? (
           <div className="stack">
             <p className="result-banner">NO CONTEST</p>
@@ -330,16 +355,18 @@ export function BattleScreen({
         ) : switching ? (
           <div className="stack">
             <p className="section-label">SWITCH TO</p>
-            <BenchList state={real} onPick={(i) => act({ kind: 'switch', teamIndex: i })} />
+            <BenchList state={real} onPick={(i) => act({ kind: 'switch', teamIndex: i })} only={switchOnly} />
             <button className="btn" onClick={() => setSwitching(false)}>
               Cancel
             </button>
           </div>
         ) : (
           <div className="stack">
-            <p className="move-info small muted" aria-live="polite">
-              {info ?? 'Hold a move for details.'}
-            </p>
+            {(info || !guide) && (
+              <p className="move-info small muted" aria-live="polite">
+                {info ?? 'Hold a move for details.'}
+              </p>
+            )}
             {struggling && (
               <button className="btn btn-primary" onClick={() => act({ kind: 'move', moveIndex: 0 })}>
                 No PP left — {STRUGGLE.name}
@@ -353,9 +380,9 @@ export function BattleScreen({
                 return (
                   <button
                     key={id}
-                    className="move-btn"
+                    className={`move-btn${allow.kind === 'move' && moveAllowed(i) ? ' guided' : ''}`}
                     title={desc}
-                    disabled={realActive.pp[i] <= 0}
+                    disabled={realActive.pp[i] <= 0 || !moveAllowed(i)}
                     onPointerDown={() => startPress(desc)}
                     onPointerUp={endPress}
                     onPointerLeave={endPress}
@@ -382,8 +409,8 @@ export function BattleScreen({
               })}
             </div>
             <button
-              className="btn"
-              disabled={contained || benchOptions.length === 0}
+              className={`btn${allow.kind === 'switch' ? ' guided' : ''}`}
+              disabled={contained || benchOptions.length === 0 || !switchAllowed}
               onClick={() => setSwitching(true)}
             >
               {contained ? 'CONTAINED — CAN’T SWITCH' : `Switch (${benchOptions.length})`}
