@@ -1,0 +1,39 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "callsign": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 16"
+        },
+        "teams": {
+          "$i": {
+            ".validate": "$i.matches(/^[0-4]$/) && newData.hasChildren(['name', 'speciesIds', 'equipment'])",
+            "name": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 24"
+            },
+            "speciesIds": {
+              "$j": {
+                ".validate": "$j.matches(/^[0-5]$/) && newData.isString() && newData.val().length <= 32"
+              }
+            },
+            "equipment": {
+              "$j": {
+                ".validate": "$j.matches(/^[0-5]$/) && newData.isString() && newData.val().length <= 32"
+              }
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

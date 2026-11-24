@@ -3,7 +3,16 @@ import { ROSTER, ROSTER_ORDER } from '../data/roster'
 import { padTeam } from '../engine/testing/teams'
 import { artCredit, ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from './rosterFilter'
-import { MAX_SAVED_TEAMS, deleteTeam, loadTeams, saveTeam, type TeamStorage } from './savedTeams'
+import {
+  MAX_NAME_LENGTH,
+  MAX_SAVED_TEAMS,
+  deleteTeam,
+  loadTeams,
+  mergeTeams,
+  saveTeam,
+  type SavedTeam,
+  type TeamStorage,
+} from './savedTeams'
 import { describeMove, effectivenessTag } from './text'
 
 function fakeStorage(initial: Record<string, string> = {}): TeamStorage & { data: Record<string, string> } {
@@ -84,6 +93,38 @@ describe('saved teams', () => {
       ]),
     })
     expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok', 'pricey'])
+  })
+})
+
+describe('merging browser teams into an Account', () => {
+  const team = (name: string, ids = TEAM): SavedTeam => ({ name, speciesIds: ids, equipment: ids.map(() => null) })
+  const OTHER = padTeam(ROSTER, ['scp-682', 'scp-999', 'scp-914', 'scp-131'])
+
+  it("moves every team over when there is room, keeping the Account's first", () => {
+    const r = mergeTeams([team('A')], [team('B'), team('C')])
+    expect(r.teams.map((t) => t.name)).toEqual(['A', 'B', 'C'])
+    expect(r.uploaded.map((t) => t.name)).toEqual(['B', 'C'])
+    expect(r.leftover).toEqual([])
+  })
+
+  it('never overwrites: a clashing name gets a numbered suffix within the name limit', () => {
+    const long = 'X'.repeat(MAX_NAME_LENGTH)
+    const r = mergeTeams([team('A'), team('A (2)'), team(long)], [team('A', OTHER), team(long, OTHER)])
+    expect(r.teams.map((t) => t.name)).toEqual(['A', 'A (2)', long, 'A (3)', 'X'.repeat(MAX_NAME_LENGTH - 4) + ' (2)'])
+    expect(r.teams[3].speciesIds).toEqual(OTHER)
+  })
+
+  it('treats an exact copy already on the Account as uploaded', () => {
+    const r = mergeTeams([team('A')], [team('A')])
+    expect(r.teams).toHaveLength(1)
+    expect(r.uploaded.map((t) => t.name)).toEqual(['A'])
+  })
+
+  it(`leaves what doesn't fit under the cap of ${MAX_SAVED_TEAMS} in the browser`, () => {
+    const account = ['1', '2', '3', '4'].map((n) => team(n))
+    const r = mergeTeams(account, [team('B'), team('C'), team('D')])
+    expect(r.teams.map((t) => t.name)).toEqual(['1', '2', '3', '4', 'B'])
+    expect(r.leftover.map((t) => t.name)).toEqual(['C', 'D'])
   })
 })
 

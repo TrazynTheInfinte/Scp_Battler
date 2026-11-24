@@ -21,15 +21,8 @@ import { ROSTER, ROSTER_ORDER } from '../../data/roster'
 import { DossierCard, TypeChartButton } from '../components'
 import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from '../rosterFilter'
 import { useToggle } from '../hooks'
-import {
-  MAX_NAME_LENGTH,
-  MAX_SAVED_TEAMS,
-  browserStorage,
-  deleteTeam,
-  loadTeams,
-  saveTeam,
-  type SavedTeam,
-} from '../savedTeams'
+import { MAX_NAME_LENGTH, MAX_SAVED_TEAMS, type SavedTeam } from '../savedTeams'
+import type { TeamShelf } from '../teamShelf'
 
 /** Why an SCP can't be added right now, or null if it can. */
 function addBlocker(team: readonly string[], id: string): string | null {
@@ -106,7 +99,8 @@ const SAVE_ERRORS = {
   emptyName: 'Give the team a name first.',
   full: `All ${MAX_SAVED_TEAMS} save slots are used. Delete one or reuse a name.`,
   illegal: 'Only complete, legal teams can be saved.',
-  storage: "This browser isn't letting the game save (private mode?).",
+  storage: "Couldn't save. Check your connection, or this browser may be blocking storage (private mode?).",
+  offline: "You're offline, so saving is paused. Try again once you're connected.",
 } as const
 
 /** One slot's Equipment picker: pieces another slot carries, or that cost more than is left, are disabled. */
@@ -149,6 +143,7 @@ export function TeamBuilderScreen({
   setTeam,
   equipment: rawEquipment,
   setEquipment,
+  shelf,
   onBack,
   onBattle,
 }: {
@@ -157,6 +152,7 @@ export function TeamBuilderScreen({
   /** Aligned with `team`: each SCP's Equipment id, or null. */
   equipment: (string | null)[]
   setEquipment: (equipment: (string | null)[]) => void
+  shelf: TeamShelf
   onBack: () => void
   onBattle: () => void
 }) {
@@ -167,8 +163,7 @@ export function TeamBuilderScreen({
     import.meta.env.DEV ? new URLSearchParams(window.location.search).get('open') : null,
   )
   const [notice, setNotice] = useState<string | null>(null)
-  const storage = useMemo(() => browserStorage(), [])
-  const [saved, setSaved] = useState<SavedTeam[]>(() => loadTeams(storage, ROSTER))
+  const saved = shelf.teams
   const [showSaved, setShowSaved] = useState(false)
   const [name, setName] = useState('')
   const [filter, setFilter] = useState<RosterFilter>(NO_FILTER)
@@ -207,11 +202,9 @@ export function TeamBuilderScreen({
     setTeam(next)
     setEquipment(randomEquipment(ROSTER, rng, next))
   }
-  const save = () => {
-    const result = saveTeam(storage, ROSTER, name, team, equipment)
-    if (!result.ok) return setNotice(SAVE_ERRORS[result.reason])
-    setSaved(result.teams)
-    setNotice(`Saved "${name.trim().slice(0, MAX_NAME_LENGTH)}".`)
+  const save = async () => {
+    const result = await shelf.save(name, team, equipment)
+    setNotice(result.ok ? `Saved "${name.trim().slice(0, MAX_NAME_LENGTH)}".` : SAVE_ERRORS[result.reason])
   }
   const load = (t: SavedTeam) => {
     setTeam([...t.speciesIds])
@@ -224,9 +217,9 @@ export function TeamBuilderScreen({
         : `Loaded "${t.name}".`,
     )
   }
-  const del = (t: SavedTeam) => {
-    const result = deleteTeam(storage, ROSTER, t.name)
-    if (result.ok) setSaved(result.teams)
+  const del = async (t: SavedTeam) => {
+    const result = await shelf.remove(t.name)
+    if (!result.ok) setNotice(SAVE_ERRORS[result.reason])
   }
 
   return (
@@ -337,6 +330,9 @@ export function TeamBuilderScreen({
         )}
         {showSaved && (
           <div className="panel stack">
+            <p className="small muted">
+              {shelf.where === 'account' ? 'Saved to your Account, on every device you sign in on.' : 'Saved in this browser. Sign in on the title screen to keep them on your Account.'}
+            </p>
             <div className="row">
               <input
                 className="text-input"

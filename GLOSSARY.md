@@ -125,3 +125,29 @@ _Avoid_: Buff, debuff, modifier
 **Same-Type Bonus**:
 The extra damage a move deals when its type matches one of its user's types.
 _Avoid_: STAB
+
+## Online
+
+**Account**:
+A player's Google sign-in, which holds their Callsign and Saved Teams. Needed only for online play; single-player never asks for one.
+_Avoid_: Profile, login, user
+
+**Callsign**:
+The name a player chooses to show opponents online. Opponents never see the Account's real name, email, or photo.
+_Avoid_: Username, display name, handle, nickname (collides with an SCP's dossier nickname)
+
+**Saved Team**:
+A named team kept for reuse, up to five. Signed in, they belong to the Account and follow it across devices; signed out, they belong to the browser.
+_Avoid_: Preset, loadout, deck
+
+**Room**:
+A private meeting place for one online battle between two Accounts, created by one player and joined by the other. It disappears when the battle ends.
+_Avoid_: Lobby, lobby room, session, game
+
+**Room Code**:
+The short code that identifies a Room; the creator shares it so a friend can join.
+_Avoid_: Invite code, join code, room ID
+
+**No Contest**:
+How an online battle ends when the two players' games stop agreeing on what happened; nobody wins.
+_Avoid_: Desync, draw (a Draw is a real result)

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { chooseAction, chooseReplacement, randomEquipment, randomTeam } from './ai'
 import { ROSTER, ROSTER_ORDER } from './data/roster'
 import { createRng, type BattleState } from './engine'
+import { accountStore } from './online/account'
 import './ui/ui.css'
 import {
   playerMustReplace,
@@ -16,6 +17,7 @@ import { ResultScreen } from './ui/screens/ResultScreen'
 import { TeamBuilderScreen } from './ui/screens/TeamBuilderScreen'
 import { TeamPreviewScreen } from './ui/screens/TeamPreviewScreen'
 import { TitleScreen } from './ui/screens/TitleScreen'
+import { useTeamShelf } from './ui/teamShelf'
 
 type Screen = 'title' | 'builder' | 'credits' | 'preview' | 'battle' | 'result'
 
@@ -80,6 +82,8 @@ export default function App() {
   const [match, setMatch] = useState<Match | null>(dev.match)
   const [session, setSession] = useState<Session | null>(dev.session)
   const [result, setResult] = useState<BattleState | null>(dev.result)
+  const account = useSyncExternalStore(accountStore.subscribe, accountStore.getSnapshot)
+  const shelf = useTeamShelf(account)
 
   const go = (next: Screen) => {
     setScreen(next)
@@ -92,7 +96,7 @@ export default function App() {
 
   switch (screen) {
     case 'title':
-      return <TitleScreen onPlay={() => go('builder')} onCredits={() => go('credits')} />
+      return <TitleScreen account={account} onPlay={() => go('builder')} onCredits={() => go('credits')} />
     case 'credits':
       return <CreditsScreen onBack={() => go('title')} />
     case 'builder':
@@ -102,6 +106,7 @@ export default function App() {
           setTeam={setTeam}
           equipment={equipment}
           setEquipment={setEquipment}
+          shelf={shelf}
           onBack={() => go('title')}
           onBattle={() => toPreview(newMatch())}
         />
