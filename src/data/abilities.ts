@@ -258,6 +258,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: 'Speed +1 whenever it enters the field.',
     rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
   },
+  // wave 4
+  {
+    id: 'fascination',
+    name: 'Fascination',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to be Stunned.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Stunned', chance: 30 }],
+  },
+  {
+    id: 'resilient',
+    name: 'Resilient',
+    description: 'Takes 25% less damage from Physical moves.',
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'burningBody',
+    name: 'Burning Body',
+    description: 'An attacker that hits it with a Physical move has a 30% chance to Bleed.',
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'constantRefrain',
+    name: 'Constant Refrain',
+    description: 'Sp. Attack +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spa: 1 } }],
+  },
+  {
+    id: 'selfReplicating',
+    name: 'Self-Replicating',
+    description: 'Heals 1/16 of its max HP at the end of each turn.',
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'barbedChains',
+    name: 'Barbed Chains',
+    description: 'An attacker that damages it with a move loses 1/10 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 10 }],
+  },
+  {
+    id: 'sleepersPrey',
+    name: "Sleeper's Prey",
+    description: 'Deals 1.5x damage to targets that have a status condition.',
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.5 }],
+  },
+  {
+    id: 'markOfCain',
+    name: 'Mark of Cain',
+    description: 'An attacker that damages it with a move loses 1/8 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 8 }],
+  },
+  {
+    id: 'leapingPredator',
+    name: 'Leaping Predator',
+    description: 'Speed +1 whenever it enters the field.',
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
+  {
+    id: 'miasma',
+    name: 'Miasma',
+    description: 'At the end of each turn, the opponent loses 1/16 of its max HP.',
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'thickHide',
+    name: 'Thick Hide',
+    description: 'Takes 25% less damage from Physical moves.',
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'hibernation',
+    name: 'Hibernation',
+    description: 'Heals 1/16 of its max HP at the end of each turn.',
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

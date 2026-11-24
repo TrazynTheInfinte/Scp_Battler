@@ -5,8 +5,12 @@ import type { BalanceResult } from './simulate'
  * The balance limits (docs/adr/0003). A wave can't ship while any is broken;
  * the fix is a roster or rules change, not loosening these.
  */
-/** Battles each focused SCP is guaranteed. */
-export const BATTLES_PER_SCP = 300
+/**
+ * Battles each focused SCP is guaranteed. Raised from 300 in wave 4: at 300,
+ * the CI gate's few hundred battles per team makeup swung about ±2% between
+ * runs, enough to fail a makeup sitting near its limit on noise alone.
+ */
+export const BATTLES_PER_SCP = 600
 /** No SCP may Sweep (Neutralize half or more of the opposing team) in more than this share of its battles. */
 export const MAX_SWEEP_RATE = 0.15
 /** Every SCP's win rate must stay inside this band. */
