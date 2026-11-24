@@ -1,4 +1,4 @@
-import { getAbility, getEquipment, type Ability, type AbilityContext } from './abilities'
+import { equipmentFor, getAbility, getEquipment, type Ability, type AbilityContext } from './abilities'
 import { CRIT_CHANCE, MAX_ROLL, MIN_ROLL, computeDamage } from './damage'
 import type {
   BattleEvent,
@@ -388,7 +388,7 @@ function effectsOf(dex: Dex, c: Combatant): Ability[] {
   const out: Ability[] = []
   const ability = getAbility(dex, species(dex, c.speciesId).ability)
   if (ability) out.push(ability)
-  const equipment = getEquipment(dex, c.equipment)
+  const equipment = equipmentFor(dex, c.speciesId, c.equipment)
   if (equipment) out.push(equipment)
   return out
 }

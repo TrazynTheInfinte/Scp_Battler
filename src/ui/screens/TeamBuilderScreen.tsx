@@ -9,6 +9,7 @@ import {
   createRng,
   equipmentBudget,
   equipmentCost,
+  equipmentHasEffect,
   teamCost,
   validateTeam,
   ALL_TYPES,
@@ -106,11 +107,13 @@ const SAVE_ERRORS = {
 /** One slot's Equipment picker: pieces another slot carries, or that cost more than is left, are disabled. */
 function EquipmentSelect({
   slot,
+  speciesId,
   equipment,
   left,
   onChange,
 }: {
   slot: number
+  speciesId: string
   equipment: readonly (string | null)[]
   /** Points still free for Equipment, not counting this slot's own piece. */
   left: number
@@ -128,9 +131,10 @@ function EquipmentSelect({
       {EQUIPMENT_ORDER.map((id) => {
         const piece = ROSTER.equipment[id]
         const taken = id !== current && equipment.includes(id)
+        const useless = !equipmentHasEffect(ROSTER, speciesId, id)
         return (
-          <option key={id} value={id} disabled={taken || piece.cost > left}>
-            {piece.name} ({piece.cost})
+          <option key={id} value={id} disabled={taken || useless || piece.cost > left}>
+            {piece.name} ({piece.cost}){useless ? ' — no effect, already heals' : ''}
           </option>
         )
       })}
@@ -262,6 +266,7 @@ export function TeamBuilderScreen({
                 {id && (
                   <EquipmentSelect
                     slot={i}
+                    speciesId={id}
                     equipment={equipment}
                     left={gearBudget - gearCost + ownCost}
                     onChange={(e) => equip(i, e)}

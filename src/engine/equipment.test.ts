@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { equipmentHasEffect } from './abilities'
 import { activeOf, createBattle, resolveTurn } from './battle'
 import type { BattleEvent, Choice } from './model'
 import { FOCUS, HEX, JAB, dex } from './testing/fixtures'
@@ -22,6 +23,18 @@ describe('Equipment in battle', () => {
     const healed = Math.min(taken, Math.floor(fast.stats.hp / 16))
     expect(ofType(r.events, 'equipment')).toEqual([{ type: 'equipment', side: 0, equipmentId: 'medkit' }])
     expect(ofType(r.events, 'heal')).toEqual([{ type: 'heal', side: 0, amount: healed, hpAfter: fast.hp }])
+  })
+
+  it("Medkit doesn't stack with an ability that already heals each turn", () => {
+    const s = battle('regen', 'medkit', 'fast', null)
+    const r = resolveTurn(s, dex, [move(FOCUS), move(JAB)])
+    // One 1/16 heal, from the ability; the Medkit adds nothing and isn't announced.
+    expect(ofType(r.events, 'heal')).toHaveLength(1)
+    expect(ofType(r.events, 'equipment')).toEqual([])
+    expect(ofType(r.events, 'ability')).toEqual([{ type: 'ability', side: 0, abilityId: 'regen' }])
+    expect(equipmentHasEffect(dex, 'regen', 'medkit')).toBe(false)
+    expect(equipmentHasEffect(dex, 'fast', 'medkit')).toBe(true)
+    expect(equipmentHasEffect(dex, 'regen', 'plating')).toBe(true)
   })
 
   it('Reactive Plating hurts an attacker that damages it', () => {

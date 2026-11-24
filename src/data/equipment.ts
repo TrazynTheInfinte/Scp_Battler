@@ -9,7 +9,7 @@ const EQUIPMENT_LIST: EquipmentData[] = [
   {
     id: 'medkit',
     name: 'Medkit',
-    description: 'Heals 1/16 of its max HP at the end of each turn.',
+    description: "Heals 1/16 of its max HP at the end of each turn. No effect on an SCP whose Ability already heals each turn.",
     cost: 1,
     rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
   },

@@ -86,6 +86,7 @@ const abilities: Record<string, AbilityData> = {
     id: 'adaptive', name: 'Adaptive', description: 'Adapts.',
     rules: [{ kind: 'adaptive', multiplier: ADAPTIVE_MULTIPLIER }],
   },
+  regen: { id: 'regen', name: 'Regen', description: 'Heals.', rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }] },
 }
 
 const equipment: Record<string, EquipmentData> = {
@@ -116,6 +117,8 @@ export const dex: Dex = {
     eraser: sp('eraser', 'Safe', ['Antimemetic'], stats(80, 80, 80, 80, 80, 60), ['graze', 'zap', 'whiff', 'focus']),
     statue: sp('statue', 'Euclid', kinetic, stats(80, 100, 80, 50, 80, 5), STANDARD, 'unobserved'),
     lizard: sp('lizard', 'Keter', kinetic, stats(150, 100, 150, 100, 150, 20), STANDARD, 'adaptive'),
+    // Euclid so padTeam's Safe fillers are unchanged.
+    regen: sp('regen', 'Euclid', ['Biological'], stats(100, 80, 80, 80, 80, 10), STANDARD, 'regen'),
   },
 }
 

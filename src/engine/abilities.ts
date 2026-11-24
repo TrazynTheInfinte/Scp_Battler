@@ -44,6 +44,8 @@ interface AbilityHooks {
   frozenWhileWatched?: boolean
   /** Multiplier on each move's PP at the start of battle. */
   ppMultiplier?: number
+  /** Heals at the end of every turn. Equipment healing doesn't stack with an ability's (see equipmentFor). */
+  healsEachTurn?: boolean
 
   // --- Hooks ---
   /** Turn order: return true to move before a non-prioritized opponent. */
@@ -85,6 +87,7 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
   switch (rule.kind) {
     case 'healEachTurn':
       return {
+        healsEachTurn: true,
         onEndOfTurn(ctx) {
           if (ctx.self.hp >= ctx.self.stats.hp) return
           ctx.announce()
@@ -186,6 +189,7 @@ export function compileAbility(data: AbilityData, source: Ability['source'] = 'a
   if (parts.some((p) => p.blocksOpponentStatDrops)) ability.blocksOpponentStatDrops = true
   if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
   if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
+  if (parts.some((p) => p.healsEachTurn)) ability.healsEachTurn = true
   const pp = parts.reduce((m, p) => m * (p.ppMultiplier ?? 1), 1)
   if (pp !== 1) ability.ppMultiplier = pp
   const immunities = parts.flatMap((p) => p.statusImmunities ?? [])
@@ -221,6 +225,32 @@ export function getAbility(dex: Dex, id: string | undefined): Ability | null {
     compiled.set(data, ability)
   }
   return ability
+}
+
+const withoutHealing = new WeakMap<EquipmentData, Ability>()
+
+/**
+ * Equipment as it works on an SCP of `speciesId`. Healing doesn't stack: if
+ * the SCP's ability already heals every turn, the piece's own every-turn
+ * healing is dropped (its other rules still apply). Stops e.g. a Medkit
+ * doubling a healer's regeneration into a stall nobody can break.
+ */
+export function equipmentFor(dex: Dex, speciesId: string, id: string | null | undefined): Ability | null {
+  const equipment = getEquipment(dex, id)
+  if (!equipment?.healsEachTurn || !getAbility(dex, dex.species[speciesId]?.ability)?.healsEachTurn) return equipment
+  const data = dex.equipment[id as string]
+  let reduced = withoutHealing.get(data)
+  if (!reduced) {
+    reduced = compileAbility({ ...data, rules: data.rules.filter((r) => r.kind !== 'healEachTurn') }, 'equipment')
+    withoutHealing.set(data, reduced)
+  }
+  return reduced
+}
+
+/** False if Equipment `id` would do nothing at all on an SCP of `speciesId` (e.g. a Medkit on a healer). */
+export function equipmentHasEffect(dex: Dex, speciesId: string, id: string): boolean {
+  const data = dex.equipment[id]
+  return !data.rules.every((r) => r.kind === 'healEachTurn') || equipmentFor(dex, speciesId, id) === getEquipment(dex, id)
 }
 
 /** The Dex's Equipment `id`, compiled like an ability (built once, then cached). */

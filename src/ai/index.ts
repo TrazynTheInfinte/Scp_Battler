@@ -12,6 +12,7 @@ import {
   canReceiveStatus,
   createCombatant,
   equipmentBudget,
+  equipmentHasEffect,
   expectedDamage,
   isNeutralized,
   isStruggling,
@@ -76,7 +77,7 @@ export function randomEquipment(
   while (slots.length > 0) {
     const slot = slots.splice(rng.int(0, slots.length - 1), 1)[0]
     if (!rng.chance(share)) continue
-    const affordable = unused.filter((id) => dex.equipment[id].cost <= left)
+    const affordable = unused.filter((id) => dex.equipment[id].cost <= left && equipmentHasEffect(dex, team[slot], id))
     if (affordable.length === 0) break
     const pick = affordable[rng.int(0, affordable.length - 1)]
     unused.splice(unused.indexOf(pick), 1)

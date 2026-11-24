@@ -139,7 +139,7 @@ describe('text helpers', () => {
     )
     expect(describeMove(ROSTER.moves['stalk'])).toBe('Status · never misses · 16 PP. User: Atk +1, Speed +1.')
     expect(describeMove(ROSTER.moves['embrace'])).toBe(
-      'Status · never misses · 8 PP. Heals 33% of max HP. Cures its own status condition.',
+      'Status · never misses · 8 PP. Heals 25% of max HP. Cures its own status condition.',
     )
     expect(describeMove(ROSTER.moves['corrupt-file'])).toBe(
       'Special · 75 power · 100% accuracy · 16 PP. Target: Sp.Def −1 (30% chance).',

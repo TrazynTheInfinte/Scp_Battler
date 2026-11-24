@@ -9,7 +9,7 @@ export default {
   types: ['Biological'],
   stats: { template: 'support', tweaks: { hp: 4, atk: 6, def: -2, spa: 8, spd: -6, spe: -10 } },
   moves: ['embrace', 'tickle', 'contagious-joy', 'calming-ooze'],
-  signatureMove: status('embrace', 'Embrace', 'Biological', null, [heal(33), cure]),
+  signatureMove: status('embrace', 'Embrace', 'Biological', null, [heal(25), cure]),
   ability: 'jovial',
   eligibility: 'A living, mobile entity that actively soothes and heals.',
   dossier: {
