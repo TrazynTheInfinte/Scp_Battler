@@ -94,10 +94,17 @@ function BenchList({ state, onPick }: { state: BattleState; onPick: (teamIndex: 
         const sp = ROSTER.species[c.speciesId]
         return (
           <button key={i} className="bench-item" disabled={!options.includes(i)} onClick={() => onPick(i)}>
-            <span>
-              <strong>{sp.name}</strong>
-              {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
-              {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+            <span className="stack" style={{ gap: 4 }}>
+              <span>
+                <strong>{sp.name}</strong>
+                {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
+                {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+              </span>
+              <span className="row" style={{ gap: 4 }}>
+                {sp.types.map((t) => (
+                  <TypeBadge key={t} type={t} />
+                ))}
+              </span>
             </span>
             <span className={c.hp > 0 ? 'small' : 'small muted'}>
               {c.hp > 0 ? `${c.hp}/${c.stats.hp}` : 'NEUTRALIZED'}
