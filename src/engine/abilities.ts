@@ -26,6 +26,10 @@ export interface AbilityContext {
   heal(who: 'self' | 'opponent', fraction: number): boolean
   /** Deal a fraction of max HP as damage (min 1); returns true if any was dealt. */
   damage(who: 'self' | 'opponent', fraction: number): boolean
+  /** True if `withdraw` would succeed right now. */
+  canWithdraw(): boolean
+  /** The owner leaves the field at the end of this turn; its side picks who comes in. */
+  withdraw(): boolean
 }
 
 /** The hooks and flags the engine checks at fixed points. Rules fill these in. */
@@ -92,6 +96,15 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
           if (ctx.self.hp >= ctx.self.stats.hp) return
           ctx.announce()
           ctx.heal('self', rule.fraction)
+        },
+      }
+    case 'randomWithdraw':
+      return {
+        onEndOfTurn(ctx) {
+          // Roll only when it could happen, so the RNG stream doesn't depend on a failed attempt.
+          if (!ctx.canWithdraw() || !ctx.rng.chance(rule.chance / 100)) return
+          ctx.announce()
+          ctx.withdraw()
         },
       }
     case 'blockStatDrops':

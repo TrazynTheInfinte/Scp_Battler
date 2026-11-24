@@ -43,12 +43,16 @@ A numbered anomaly from the SCP Foundation wiki, as a battling unit on the roste
 _Avoid_: Anomaly, monster, creature, unit
 
 **Eligibility**:
-The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible. The one exception is Operatives, added only when explicitly chosen.
+The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible. The exceptions are Operatives and Friend's Picks, each added only when explicitly chosen.
 _Avoid_: Canon, whitelist
 
 **Operative**:
 A named or generic human (Foundation staff, an MTF operative, or a Group of Interest member) on the roster as a rare, hand-picked exception to Eligibility. Battles exactly like an SCP, with a game object class chosen by power.
 _Avoid_: Character, hero, personnel, agent
+
+**Friend's Pick**:
+An SCP that misses Eligibility (e.g. a place) but joins the roster anyway because a playtester designed a kit for it that fits its article. Rare and hand-picked, like Operatives.
+_Avoid_: Fan pick, custom SCP, guest SCP
 
 **Wave**:
 A batch of about twelve new SCPs added to the roster together and balanced as a group, most popular eligible SCPs first.

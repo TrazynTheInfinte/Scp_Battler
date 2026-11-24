@@ -47,7 +47,7 @@ describe('attackAndDefense', () => {
     stages: { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, ...stages },
     pp: [16, 16, 16, 16],
     status: null,
-    volatiles: { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0 },
+    volatiles: { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0, withdrawing: false },
   })
   const physical: MoveData = {
     id: 'p', name: 'p', type: 'Kinetic', category: 'Physical', power: 50, accuracy: null, pp: 16,

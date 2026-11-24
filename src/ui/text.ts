@@ -60,6 +60,10 @@ export function describeEffect(e: MoveEffect): string {
       return `Heals ${e.percent}% of max HP.`
     case 'cure':
       return 'Cures its own status condition.'
+    case 'resetSelf':
+      return 'Clears its own status condition and stat changes.'
+    case 'withdraw':
+      return 'Then withdraws at the end of the turn, and you choose who comes in.'
   }
 }
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { chooseAction, chooseReplacement, randomEquipment, randomTeam } from '../ai'
 import { ROSTER, ROSTER_ORDER } from '../data/roster'
 import { createRng, type BattleState } from '../engine'
+import { padTeam } from '../engine/testing/teams'
 import {
   Match,
   decodeDecision,
@@ -103,7 +104,8 @@ describe('lockstep', () => {
   })
 
   it('replays from the start if an abandon lands before steps already shown', () => {
-    const setup = setupFor(5)
+    // Fixed teams: random ones may include an SCP that withdraws, which would change what a valid decision is.
+    const setup: MatchSetup = { seed: 5, teams: [padTeam(ROSTER, ['scp-682']), padTeam(ROSTER, ['scp-999'])], equipment: [[], []], leads: [0, 0] }
     const m = new Match(ROSTER, setup)
     m.sync({ decisions: [['m0', 'm0'], ['m0', 'm0']], outcome: null })
     const r = m.sync({ decisions: [['m0', 'm0'], ['m0', 'm0']], outcome: { kind: 'abandoned', seat: 0, atStep: 1 } })

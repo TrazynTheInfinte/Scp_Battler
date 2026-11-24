@@ -48,7 +48,7 @@ export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
-const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0 }
+const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0, withdrawing: false }
 
 /**
  * Used automatically once an SCP has no PP left in any move: always x1
@@ -612,9 +612,44 @@ function applyEffects(
         changed = true
         break
       }
+      case 'resetSelf': {
+        const user = activeOf(s, side)
+        if (user.status) {
+          events.push({ type: 'statusEnded', side, status: user.status.name })
+          user.status = null
+          changed = true
+        }
+        for (const stat of STAGEABLE) {
+          if (user.stages[stat] === 0) continue
+          events.push({ type: 'stage', side, stat, delta: -user.stages[stat] })
+          user.stages[stat] = 0
+          changed = true
+        }
+        break
+      }
+      case 'withdraw': {
+        if (withdraw(s, side, events)) changed = true
+        break
+      }
     }
   }
   return changed
+}
+
+/**
+ * Mark `side`'s active to leave at the end of the turn. Not possible while
+ * Contained (it can't switch), Neutralized, or with nobody healthy to send in.
+ */
+function canWithdraw(s: BattleState, side: SideIndex): boolean {
+  const c = activeOf(s, side)
+  return !isNeutralized(c) && c.status?.name !== 'Contained' && !c.volatiles.withdrawing && switchTargets(s, side).length > 0
+}
+
+function withdraw(s: BattleState, side: SideIndex, events: BattleEvent[]): boolean {
+  if (!canWithdraw(s, side)) return false
+  activeOf(s, side).volatiles.withdrawing = true
+  events.push({ type: 'withdraw', side })
+  return true
 }
 
 /**
@@ -773,6 +808,8 @@ function abilityContext(
       return changed
     },
     canInflict: (who, status) => canInflict(s, dex, sideOf(who), status),
+    canWithdraw: () => canWithdraw(s, side),
+    withdraw: () => withdraw(s, side, events),
     inflictStatus: (who, status) => inflictStatus(s, dex, sideOf(who), status, rng, events),
     heal: (who, fraction) => heal(s, sideOf(who), fraction, events),
     damage(who, fraction) {
@@ -884,10 +921,12 @@ function finishStep(s: BattleState, events: BattleEvent[]): void {
     events.push({ type: 'end', winner: outcome })
     return
   }
-  const needs: [boolean, boolean] = [
-    isNeutralized(activeOf(s, 0)),
-    isNeutralized(activeOf(s, 1)),
-  ]
+  // A Neutralized active must be replaced; a withdrawing one leaves if it still can.
+  const leaving = (side: SideIndex) => {
+    const c = activeOf(s, side)
+    return isNeutralized(c) || (c.volatiles.withdrawing && switchTargets(s, side).length > 0)
+  }
+  const needs: [boolean, boolean] = [leaving(0), leaving(1)]
   if (needs[0] || needs[1]) {
     s.phase = 'replace'
     s.needsReplacement = needs

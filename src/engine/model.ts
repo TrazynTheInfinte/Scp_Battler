@@ -35,6 +35,10 @@ export type MoveEffect =
   | { kind: 'heal'; percent: number }
   /** Remove the user's status condition. */
   | { kind: 'cure' }
+  /** Clear the user's status condition and every stat stage, up or down. */
+  | { kind: 'resetSelf' }
+  /** The user withdraws at the end of the turn, and its side chooses who comes in (see Volatiles.withdrawing). */
+  | { kind: 'withdraw' }
 
 export interface MoveData {
   id: string
@@ -88,6 +92,8 @@ export type AbilityRule =
   | { kind: 'drainOpponentEachTurn'; fraction: number }
   /** Each of its moves gets `fraction` more PP (rounded down). */
   | { kind: 'extraPp'; fraction: number }
+  /** At end of turn, `chance`% to withdraw (as the 'withdraw' move effect does). */
+  | { kind: 'randomWithdraw'; chance: number }
 
 export interface AbilityData {
   id: string
@@ -152,6 +158,12 @@ export interface Volatiles {
   enteredTurn: number
   /** boostWhenHit: boosts gained since entering (capped, so it can't snowball forever). */
   hitBoosts: number
+  /**
+   * Leaves the field at the end of this turn: its side then picks a
+   * replacement, the same way as after a Neutralization, but it stays healthy
+   * on the bench. Set by the 'withdraw' move effect or 'randomWithdraw' rule.
+   */
+  withdrawing: boolean
 }
 
 export interface Combatant {
@@ -238,6 +250,8 @@ export type BattleEvent =
   | { type: 'equipment'; side: SideIndex; equipmentId: string }
   | { type: 'neutralized'; side: SideIndex; teamIndex: number }
   | { type: 'forfeit'; side: SideIndex }
+  /** Will leave the field at the end of the turn (its side then picks a replacement). */
+  | { type: 'withdraw'; side: SideIndex }
   /** The turn limit was reached; the following 'end' is decided by remaining HP. */
   | { type: 'timeout' }
   | { type: 'end'; winner: SideIndex | 'draw' }

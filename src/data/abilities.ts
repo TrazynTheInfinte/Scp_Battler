@@ -401,6 +401,13 @@ const ABILITY_LIST: AbilityData[] = [
     description: 'Each of its moves has 50% more PP.',
     rules: [{ kind: 'extraPp', fraction: 0.5 }],
   },
+  // SCP-970 (Friend's Pick)
+  {
+    id: 'randomManifestation',
+    name: 'Random Manifestation',
+    description: 'At the end of each turn, a 10% chance it slips into another iteration: it withdraws, and you choose who comes in.',
+    rules: [{ kind: 'randomWithdraw', chance: 10 }],
+  },
   {
     id: 'holeForMomentum',
     name: 'Hole for Momentum',

@@ -112,6 +112,9 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
       case 'forfeit':
         lines.push(e.side === PLAYER ? 'You forfeited.' : 'The hostile site forfeited.')
         break
+      case 'withdraw':
+        lines.push(`${name(e.side)} will withdraw at the end of the turn.`)
+        break
       case 'timeout':
         lines.push('CONTAINMENT TIMEOUT — decided by remaining HP.')
         break

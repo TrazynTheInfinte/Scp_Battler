@@ -1,6 +1,5 @@
 import { chooseAction, chooseLead, chooseReplacement, randomEquipment, randomTeam } from '../ai'
 import {
-  activeOf,
   createRng,
   equipmentCost,
   EQUIPMENT_ALLOWANCE,
@@ -88,9 +87,7 @@ function playBattle(
   while (s.phase !== 'ended') {
     if (s.phase === 'replace') {
       const picks = ([0, 1] as const).map((side) =>
-        isNeutralized(activeOf(s, side)) && s.sides[side].team.some((c) => !isNeutralized(c))
-          ? chooseReplacement(s, dex, side, rng)
-          : null,
+        s.needsReplacement[side] ? chooseReplacement(s, dex, side, rng) : null,
       ) as [number | null, number | null]
       s = resolveReplacements(s, dex, picks).state
       continue

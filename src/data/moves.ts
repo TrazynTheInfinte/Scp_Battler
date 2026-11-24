@@ -49,6 +49,10 @@ export const foe = (changes: Partial<StatStages>, chance = 100): MoveEffect => (
 export const heal = (percent: number): MoveEffect => ({ kind: 'heal', percent })
 /** The user's status condition is removed. */
 export const cure: MoveEffect = { kind: 'cure' }
+/** The user's status and stat stages are cleared. */
+export const resetSelf: MoveEffect = { kind: 'resetSelf' }
+/** The user withdraws at the end of the turn; its side picks who comes in. */
+export const withdraw: MoveEffect = { kind: 'withdraw' }
 
 // --- the pool ----------------------------------------------------------------
 
@@ -96,4 +100,7 @@ export const MOVE_POOL: readonly MoveData[] = [
   phys('strike', 'Strike', 'Mundane', 70, 100),
   phys('gunfire', 'Gunfire', 'Mundane', 80, 90),
   spec('flare', 'Flare', 'Mundane', 70, 100),
+  // SCP-970 (Friend's Pick): an escape that also sheds statuses and stat drops.
+  // Limited PP, like a heal, so it can't be used to stall.
+  { ...status('demanifest', 'Demanifest', 'Kinetic', null, [resetSelf, withdraw]), pp: PP_LIMITED },
 ]
