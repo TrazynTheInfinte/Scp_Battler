@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compileAbility, type Stats } from '../engine'
 import { ABILITIES, COUNTER_RULE_KINDS } from './abilities'
 import { MOVE_POOL } from './moves'
-import { ROSTER, SCP_FILES, SCPS, isOperative } from './roster'
+import { ROSTER, SCP_FILES, SCPS, isExplained, isOperative } from './roster'
 import { CLASS_STAT_TOTAL, MAX_STAT_TWEAK, STAT_TEMPLATES, scaleTemplate, type StatTemplateId } from './statTemplates'
 
 const total = (s: Stats) => Object.values(s).reduce((a, b) => a + b, 0)
@@ -16,7 +16,7 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
       expect(scp.name.trim()).not.toBe('')
       expect(scp.dossier.wikiUrl, 'Operatives have no SCP article, so need a wiki link').toBeDefined()
     } else {
-      expect(id).toMatch(/^scp-\d{3,4}$/)
+      expect(id).toMatch(/^scp-\d{3,4}(-ex)?$/)
       expect(scp.name).toBe(id.toUpperCase())
     }
     const file = Object.entries(SCP_FILES).find(([, s]) => s === scp)?.[0]
@@ -53,6 +53,12 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     expect(scp.dossier.authors.trim()).not.toBe('')
     for (const img of scp.dossier.images) expect(img.license.trim()).not.toBe('')
     if (scp.dossier.art) expect(scp.dossier.images.map((i) => i.file)).toContain(scp.dossier.art)
+  })
+
+  it('is Mundane exactly when it is an SCP-EX entry (Operatives may be Mundane too)', () => {
+    const mundane = (scp.types as readonly string[]).includes('Mundane')
+    if (isExplained(id)) expect(scp.types).toEqual(['Mundane'])
+    else if (!isOperative(id)) expect(mundane, 'only SCP-EX entries and Operatives are Mundane').toBe(false)
   })
 
   it('uses Mundane moves only if it is Mundane', () => {

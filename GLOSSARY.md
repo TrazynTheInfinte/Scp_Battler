@@ -43,7 +43,7 @@ A numbered anomaly from the SCP Foundation wiki, as a battling unit on the roste
 _Avoid_: Anomaly, monster, creature, unit
 
 **Eligibility**:
-The rule for which SCPs may join the roster: English main-list SCPs (no -J, -EX, international-branch, or Tale entries) whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible. The exceptions are Operatives and Friend's Picks, each added only when explicitly chosen.
+The rule for which SCPs may join the roster: English main-list SCPs, plus SCP-EX (Explained) entries, which are always Mundane (no -J, international-branch, or Tale entries), whose concept suggests how it would fight. Static objects and places are skipped unless iconic. Of the SCP-001 proposals, only the Gate Guardian is eligible. The exceptions are Operatives and Friend's Picks, each added only when explicitly chosen.
 _Avoid_: Canon, whitelist
 
 **Operative**:
@@ -91,7 +91,7 @@ The fixed circular order of the eight types; each type is super effective agains
 _Avoid_: Type wheel, type triangle
 
 **Mundane**:
-The one type outside the type ring: non-anomalous force. Mundane moves are never super effective or resisted, and Mundane SCPs are never weak to or resistant against anything. Only Mundane SCPs may use Mundane moves.
+The one type outside the type ring: non-anomalous force. Mundane moves are never super effective or resisted, and Mundane SCPs are never weak to or resistant against anything. Only Mundane SCPs may use Mundane moves. Every SCP-EX entry is Mundane (and only Mundane); otherwise only Operatives may be.
 _Avoid_: Normal, neutral type, typeless
 
 **Move**:

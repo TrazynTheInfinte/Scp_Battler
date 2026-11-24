@@ -19,9 +19,13 @@ export const SCP_FILES: Readonly<Record<string, ScpDefinition>> = Object.fromEnt
   Object.entries(files).map(([path, mod]) => [path, mod.default]),
 )
 
-/** Operatives (see GLOSSARY.md) have ids starting `op-`; every other id is `scp-<number>`. */
+/**
+ * Operatives (see GLOSSARY.md) have ids starting `op-`; SCP-EX entries end
+ * `-ex` (`scp-<number>-ex`); every other id is `scp-<number>`.
+ */
 export const isOperative = (id: string) => id.startsWith('op-')
-const number = (id: string) => Number(id.replace(/^scp-/, ''))
+export const isExplained = (id: string) => id.endsWith('-ex')
+const number = (id: string) => parseInt(id.replace(/^scp-/, ''), 10)
 
 /**
  * Every SCP definition, in display order: cheapest object class first; within
@@ -31,7 +35,9 @@ export const SCPS: readonly ScpDefinition[] = Object.values(SCP_FILES).sort(
   (a, b) =>
     OBJECT_CLASS_COST[a.objectClass] - OBJECT_CLASS_COST[b.objectClass] ||
     Number(isOperative(a.id)) - Number(isOperative(b.id)) ||
-    (isOperative(a.id) ? a.name.localeCompare(b.name) : number(a.id) - number(b.id)),
+    (isOperative(a.id)
+      ? a.name.localeCompare(b.name)
+      : number(a.id) - number(b.id) || Number(isExplained(a.id)) - Number(isExplained(b.id))),
 )
 
 function toSpecies(scp: ScpDefinition): SpeciesData {

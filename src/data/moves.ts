@@ -100,6 +100,12 @@ export const MOVE_POOL: readonly MoveData[] = [
   phys('strike', 'Strike', 'Mundane', 70, 100),
   phys('gunfire', 'Gunfire', 'Mundane', 80, 90),
   spec('flare', 'Flare', 'Mundane', 70, 100),
+  // wave 6: more Mundane moves, for the SCP-EX entries.
+  phys('bludgeon', 'Bludgeon', 'Mundane', 90, 85),
+  phys('quick-jab', 'Quick Jab', 'Mundane', 50, 100, [self({ spe: 1 })]),
+  spec('blast', 'Blast', 'Mundane', 85, 90),
+  status('pepper-spray', 'Pepper Spray', 'Mundane', 85, [inflict('Stunned')]),
+  status('brace', 'Brace', 'Mundane', null, [self({ def: 1, spd: 1 })]),
   // SCP-970 (Friend's Pick): an escape that also sheds statuses and stat drops.
   // Limited PP, like a heal, so it can't be used to stall.
   { ...status('demanifest', 'Demanifest', 'Kinetic', null, [resetSelf, withdraw]), pp: PP_LIMITED },

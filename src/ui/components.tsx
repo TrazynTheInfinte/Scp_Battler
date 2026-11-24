@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
-import { ROSTER, isOperative } from '../data/roster'
+import { ROSTER, isExplained, isOperative } from '../data/roster'
 import { STAT_LABEL, TYPE_ABBR, describeMove } from './text'
 
 export function ClassBadge({ objectClass }: { objectClass: ObjectClass }) {
@@ -39,7 +39,9 @@ export function ContainmentCard({ speciesId }: { speciesId: string }) {
       {!hasArt && (
         <div className="card-body">
           <div className="card-label">{operative ? 'OPERATIVE' : 'SCP'}</div>
-          <div className={`card-number${operative ? ' card-name' : ''}`}>{sp.name.replace('SCP-', '')}</div>
+          <div className={`card-number${operative || isExplained(speciesId) ? ' card-name' : ''}`}>
+            {sp.name.replace('SCP-', '')}
+          </div>
           <div className="card-types">{sp.types.map((t) => TYPE_ABBR[t]).join(' · ')}</div>
         </div>
       )}
