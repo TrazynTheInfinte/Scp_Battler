@@ -19,7 +19,8 @@ import {
 import { DOSSIERS } from '../../data/dossiers'
 import { EQUIPMENT_ORDER } from '../../data/equipment'
 import { ROSTER, ROSTER_ORDER } from '../../data/roster'
-import { DossierCard, TypeChartButton } from '../components'
+import { DossierCard, ScreenGuideButton, TypeChartButton } from '../components'
+import { TEAM_BUILDER_GUIDE } from '../screenGuides'
 import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from '../rosterFilter'
 import { useToggle } from '../hooks'
 import { MAX_NAME_LENGTH, MAX_SAVED_TEAMS, type SavedTeam } from '../savedTeams'
@@ -104,6 +105,23 @@ function FilterPanel({
   )
 }
 
+/** Whether the team panel is hidden down to one line; remembered per browser. */
+const COLLAPSED_KEY = 'scp-battler:builder-collapsed:v1'
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+function writeCollapsed(collapsed: boolean) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0')
+  } catch {
+    // Storage blocked: it just won't be remembered.
+  }
+}
+
 const SAVE_ERRORS = {
   emptyName: 'Give the team a name first.',
   full: `All ${MAX_SAVED_TEAMS} save slots are used. Delete one or reuse a name.`,
@@ -180,6 +198,11 @@ export function TeamBuilderScreen({
   const [name, setName] = useState('')
   const [filter, setFilter] = useState<RosterFilter>(NO_FILTER)
   const [showFilters, setShowFilters] = useState(false)
+  const [collapsed, setCollapsedState] = useState(readCollapsed)
+  const setCollapsed = (c: boolean) => {
+    setCollapsedState(c)
+    writeCollapsed(c)
+  }
   const shown = useMemo(() => filterRoster(ROSTER, ROSTER_ORDER, DOSSIERS, filter), [filter])
   const activeFilters = filter.types.size + filter.classes.size
 
@@ -237,13 +260,14 @@ export function TeamBuilderScreen({
   }
 
   return (
-    <main className="screen builder-screen">
+    <main className={`screen builder-screen${collapsed ? ' team-collapsed' : ''}`}>
       <div className="screen-head wrap">
         <button className="btn btn-small" onClick={onBack}>
           ← Back
         </button>
         <h2>TEAM BUILDER</h2>
         <span className="row" style={{ flexWrap: 'nowrap', gap: 6 }}>
+          <ScreenGuideButton guide={TEAM_BUILDER_GUIDE} />
           <TypeChartButton />
           <button className="btn btn-small" onClick={randomize}>
             Random
@@ -251,143 +275,167 @@ export function TeamBuilderScreen({
         </span>
       </div>
 
-      <div className="builder-pinned">
-        <div className="slots">
-          {Array.from({ length: TEAM_SIZE }, (_, i) => {
-            const id = team[i]
-            const ownCost = equipment[i] ? ROSTER.equipment[equipment[i]].cost : 0
-            return (
-              <div key={i} className="slot-cell">
-                <button
-                  className={`slot${id ? ' filled' : ''}`}
-                  onClick={() => id && remove(id)}
-                  aria-label={id ? `Remove ${ROSTER.species[id].name}` : `Empty slot ${i + 1}`}
-                >
-                  {id ? (
-                    <span className={`class-${ROSTER.species[id].objectClass}`}>
-                      {ROSTER.species[id].name.replace('SCP-', '')}
-                      <br />
-                      <span className="muted">✕</span>
-                    </span>
-                  ) : (
-                    `SLOT ${i + 1}`
-                  )}
-                </button>
-                {id && (
-                  <EquipmentSelect
-                    slot={i}
-                    speciesId={id}
-                    equipment={equipment}
-                    left={gearBudget - gearCost + ownCost}
-                    onChange={(e) => equip(i, e)}
-                  />
-                )}
-              </div>
-            )
-          })}
-        </div>
-        <div className="budget">
-          <span>BUDGET</span>
-          <div className="meter" aria-hidden>
-            <span style={{ width: `${Math.min(100, (cost / TEAM_BUDGET) * 100)}%` }} />
+      {collapsed ? (
+        <div className="builder-pinned">
+          <div className="row" style={{ flexWrap: 'nowrap' }}>
+            <button className="btn btn-small" onClick={() => setCollapsed(false)} aria-expanded={false}>
+              ▾ Show
+            </button>
+            <span className="small" style={{ flex: 1 }}>
+              {team.length}/{TEAM_SIZE} SCPs · {cost}/{TEAM_BUDGET} pts
+            </span>
+            <button className="btn btn-small btn-primary" disabled={!legal} onClick={onBattle}>
+              Battle
+            </button>
           </div>
-          <span>
-            {cost}/{TEAM_BUDGET}
-          </span>
-        </div>
-        {team.length > 0 && (
-        <div className="budget">
-          <span>EQUIPMENT</span>
-          <div className={`meter${gearOverBudget ? ' over' : ''}`} aria-hidden>
-            <span style={{ width: `${Math.min(100, (gearCost / gearBudget) * 100)}%` }} />
-          </div>
-          <span>
-            {gearCost}/{gearBudget}
-          </span>
-        </div>
-        )}
-        <p className="notice" role="status">
-          {notice ??
-            (legal
-              ? 'Team ready.'
-              : overBudget
-                ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
-                : classProblem
-                  ? `Only ${CLASS_LIMIT[classProblem.objectClass]} ${classProblem.objectClass} per team. Remove one to fix it.`
-                : gearOverBudget
-                  ? `Equipment over budget (${gearCost}/${gearBudget}). Remove a piece to fix it.`
-                  : `Pick ${TEAM_SIZE - team.length} more. ${COST_HINT}.`)}
-        </p>
-        <div className="row">
-          <button className="btn btn-primary" style={{ flex: 1 }} disabled={!legal} onClick={onBattle}>
-            Battle
-          </button>
-          <button className="btn" onClick={() => setShowEquipment((v) => !v)} aria-expanded={showEquipment}>
-            Equipment
-          </button>
-          <button className="btn" onClick={() => setShowSaved((s) => !s)} aria-expanded={showSaved}>
-            Saved ({saved.length}/{MAX_SAVED_TEAMS})
-          </button>
-        </div>
-        {showEquipment && (
-          <div className="panel stack">
-            <p className="small muted">
-              Each SCP can carry one piece; each piece once per team. You get {EQUIPMENT_ALLOWANCE} points for
-              Equipment only, plus whatever your SCPs leave of the {TEAM_BUDGET}-point budget.
+          {notice && (
+            <p className="notice" role="status">
+              {notice}
             </p>
-            {EQUIPMENT_ORDER.map((id) => {
-              const piece = ROSTER.equipment[id]
+          )}
+        </div>
+      ) : (
+        <div className="builder-pinned">
+          <div className="slots">
+            {Array.from({ length: TEAM_SIZE }, (_, i) => {
+              const id = team[i]
+              const ownCost = equipment[i] ? ROSTER.equipment[equipment[i]].cost : 0
               return (
-                <div key={id} className="small">
-                  <strong>{piece.name}</strong> <span className="muted">· {piece.cost}</span> — {piece.description}
+                <div key={i} className="slot-cell">
+                  <button
+                    className={`slot${id ? ' filled' : ''}`}
+                    onClick={() => id && remove(id)}
+                    aria-label={id ? `Remove ${ROSTER.species[id].name}` : `Empty slot ${i + 1}`}
+                  >
+                    {id ? (
+                      <span className={`class-${ROSTER.species[id].objectClass}`}>
+                        {ROSTER.species[id].name.replace('SCP-', '')}
+                        <br />
+                        <span className="muted">✕</span>
+                      </span>
+                    ) : (
+                      `SLOT ${i + 1}`
+                    )}
+                  </button>
+                  {id && (
+                    <EquipmentSelect
+                      slot={i}
+                      speciesId={id}
+                      equipment={equipment}
+                      left={gearBudget - gearCost + ownCost}
+                      onChange={(e) => equip(i, e)}
+                    />
+                  )}
                 </div>
               )
             })}
           </div>
-        )}
-        {showSaved && (
-          <div className="panel stack">
-            <p className="small muted">
-              {shelf.where === 'account' ? 'Saved to your Account, on every device you sign in on.' : 'Saved in this browser. Sign in on the title screen to keep them on your Account.'}
-            </p>
-            <div className="row">
-              <input
-                className="text-input"
-                value={name}
-                maxLength={MAX_NAME_LENGTH}
-                placeholder="Team name"
-                onChange={(e) => setName(e.target.value)}
-                aria-label="Team name"
-              />
-              <button className="btn btn-small" onClick={save} disabled={!legal}>
-                Save
-              </button>
+          <div className="budget">
+            <span>BUDGET</span>
+            <div className="meter" aria-hidden>
+              <span style={{ width: `${Math.min(100, (cost / TEAM_BUDGET) * 100)}%` }} />
             </div>
-            {saved.length === 0 && <p className="muted small">No saved teams yet.</p>}
-            {saved.map((t) => (
-              <div className="saved-row" key={t.name}>
-                <div>
-                  <strong>{t.name}</strong>
-                  {savedTeamProblem(t) && (
-                    <span className="badge status-badge">{savedTeamProblem(t)!.toUpperCase()}</span>
-                  )}
-                  <div className="muted small">
-                    {t.speciesIds.map((id) => ROSTER.species[id].name.replace('SCP-', '')).join(' · ')}
+            <span>
+              {cost}/{TEAM_BUDGET}
+            </span>
+            <button className="btn btn-small" onClick={() => setCollapsed(true)} aria-expanded title="Shrink the team panel to one line">
+              ▴ Hide
+            </button>
+          </div>
+          {team.length > 0 && (
+          <div className="budget">
+            <span>EQUIPMENT</span>
+            <div className={`meter${gearOverBudget ? ' over' : ''}`} aria-hidden>
+              <span style={{ width: `${Math.min(100, (gearCost / gearBudget) * 100)}%` }} />
+            </div>
+            <span>
+              {gearCost}/{gearBudget}
+            </span>
+          </div>
+          )}
+          <p className="notice" role="status">
+            {notice ??
+              (legal
+                ? 'Team ready.'
+                : overBudget
+                  ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
+                  : classProblem
+                    ? `Only ${CLASS_LIMIT[classProblem.objectClass]} ${classProblem.objectClass} per team. Remove one to fix it.`
+                  : gearOverBudget
+                    ? `Equipment over budget (${gearCost}/${gearBudget}). Remove a piece to fix it.`
+                    : `Pick ${TEAM_SIZE - team.length} more. ${COST_HINT}.`)}
+          </p>
+          <div className="row">
+            <button className="btn btn-primary battle-btn" disabled={!legal} onClick={onBattle}>
+              Battle
+            </button>
+            <button className="btn" onClick={() => setShowEquipment((v) => !v)} aria-expanded={showEquipment}>
+              Equipment
+            </button>
+            <button className="btn" onClick={() => setShowSaved((s) => !s)} aria-expanded={showSaved}>
+              Saved ({saved.length}/{MAX_SAVED_TEAMS})
+            </button>
+          </div>
+          {showEquipment && (
+            <div className="panel stack">
+              <p className="small muted">
+                Each SCP can carry one piece; each piece once per team. You get {EQUIPMENT_ALLOWANCE} points for
+                Equipment only, plus whatever your SCPs leave of the {TEAM_BUDGET}-point budget.
+              </p>
+              {EQUIPMENT_ORDER.map((id) => {
+                const piece = ROSTER.equipment[id]
+                return (
+                  <div key={id} className="small">
+                    <strong>{piece.name}</strong> <span className="muted">· {piece.cost}</span> — {piece.description}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          {showSaved && (
+            <div className="panel stack">
+              <p className="small muted">
+                {shelf.where === 'account' ? 'Saved to your Account, on every device you sign in on.' : 'Saved in this browser. Sign in on the title screen to keep them on your Account.'}
+              </p>
+              <div className="row">
+                <input
+                  className="text-input"
+                  value={name}
+                  maxLength={MAX_NAME_LENGTH}
+                  placeholder="Team name"
+                  onChange={(e) => setName(e.target.value)}
+                  aria-label="Team name"
+                />
+                <button className="btn btn-small" onClick={save} disabled={!legal}>
+                  Save
+                </button>
+              </div>
+              {saved.length === 0 && <p className="muted small">No saved teams yet.</p>}
+              {saved.map((t) => (
+                <div className="saved-row" key={t.name}>
+                  <div>
+                    <strong>{t.name}</strong>
+                    {savedTeamProblem(t) && (
+                      <span className="badge status-badge">{savedTeamProblem(t)!.toUpperCase()}</span>
+                    )}
+                    <div className="muted small">
+                      {t.speciesIds.map((id) => ROSTER.species[id].name.replace('SCP-', '')).join(' · ')}
+                    </div>
+                  </div>
+                  <div className="row" style={{ flexWrap: 'nowrap' }}>
+                    <button className="btn btn-small" onClick={() => load(t)}>
+                      Load
+                    </button>
+                    <button className="btn-link" onClick={() => del(t)}>
+                      delete
+                    </button>
                   </div>
                 </div>
-                <div className="row" style={{ flexWrap: 'nowrap' }}>
-                  <button className="btn btn-small" onClick={() => load(t)}>
-                    Load
-                  </button>
-                  <button className="btn-link" onClick={() => del(t)}>
-                    delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="builder-body">
         <div className="row builder-search" style={{ flexWrap: 'nowrap' }}>

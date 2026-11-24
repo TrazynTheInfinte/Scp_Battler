@@ -14,7 +14,8 @@ import { ROSTER } from '../../data/roster'
 import { HOSTILE, PLAYER } from '../battleLog'
 import { playerMustReplace, type Step } from '../battleController'
 import type { BattleDriver, BattleView, DriverStatus } from '../battleDriver'
-import { ClassBadge, ContainmentCard, EquipmentTag, TypeBadge, TypeChartButton } from '../components'
+import { ClassBadge, ContainmentCard, EquipmentTag, ScreenGuideButton, TypeBadge, TypeChartButton } from '../components'
+import { BATTLE_GUIDE } from '../screenGuides'
 import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
 
@@ -260,6 +261,7 @@ export function BattleScreen({
       <div className="screen-head">
         <span className="muted small">TURN {state.turn}</span>
         <span className="row" style={{ flexWrap: 'nowrap', gap: 6 }}>
+          {!playing && <ScreenGuideButton guide={BATTLE_GUIDE} />}
           {!playing && <TypeChartButton />}
           {!ended &&
             !playing &&

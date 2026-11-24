@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { ROSTER, isExplained, isOperative } from '../data/roster'
+import type { ScreenGuide } from './screenGuides'
 import { STAT_LABEL, TYPE_ABBR, describeMove } from './text'
 
 export function ClassBadge({ objectClass }: { objectClass: ObjectClass }) {
@@ -144,72 +145,113 @@ export function DossierCard({
 }
 
 /** "Type Chart" button that opens the attacker-vs-defender grid in a popup. */
-export function TypeChartButton() {
-  const [open, setOpen] = useState(false)
+/** A dialog over the screen; Escape, ✕ or a click outside closes it. */
+function Overlay({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
-    if (!open) return
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open])
+  }, [onClose])
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div
+        className="overlay-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="screen-head">
+          <h2>{title.toUpperCase()}</h2>
+          <button className="btn btn-small" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/** A screen's parts and what each does, as a list. */
+export function ScreenGuideList({ guide }: { guide: ScreenGuide }) {
+  return (
+    <dl className="screen-guide">
+      {guide.parts.map(([part, what]) => (
+        <div key={part}>
+          <dt>{part}</dt>
+          <dd>{what}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+/** The ? button: explains each part of the current screen. */
+export function ScreenGuideButton({ guide }: { guide: ScreenGuide }) {
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
+  return (
+    <>
+      <button className="btn btn-small" onClick={() => setOpen(true)} aria-label={`What's on the ${guide.title} screen`} title="Screen guide">
+        ?
+      </button>
+      {open && (
+        <Overlay title={`${guide.title} guide`} onClose={close}>
+          <ScreenGuideList guide={guide} />
+        </Overlay>
+      )}
+    </>
+  )
+}
+
+export function TypeChartButton() {
+  const [open, setOpen] = useState(false)
+  const close = useCallback(() => setOpen(false), [])
   return (
     <>
       <button className="btn btn-small" onClick={() => setOpen(true)}>
         Type Chart
       </button>
       {open && (
-        <div className="overlay" onClick={() => setOpen(false)}>
-          <div
-            className="overlay-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Type chart"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="screen-head">
-              <h2>TYPE CHART</h2>
-              <button className="btn btn-small" onClick={() => setOpen(false)} aria-label="Close">
-                ✕
-              </button>
-            </div>
-            <table className="type-chart">
-              <thead>
-                <tr>
-                  <th className="corner">ATK ↓ DEF →</th>
-                  {ALL_TYPES.map((d) => (
-                    <th key={d} className={`type-${d}${d === MUNDANE ? ' off-ring' : ''}`} scope="col" title={d}>
-                      {TYPE_ABBR[d]}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {ALL_TYPES.map((a) => (
-                  <tr key={a} className={a === MUNDANE ? 'off-ring' : undefined}>
-                    <th className={`type-${a}`} scope="row">
-                      {a}
-                    </th>
-                    {ALL_TYPES.map((d) => {
-                      const m = matchup(a, d)
-                      const cls = [m === 2 ? 'super' : m === 0.5 ? 'resist' : '', d === MUNDANE ? 'off-ring' : '']
-                      return (
-                        <td key={d} className={cls.filter(Boolean).join(' ') || undefined}>
-                          {m === 2 ? '2' : m === 0.5 ? '½' : ''}
-                        </td>
-                      )
-                    })}
-                  </tr>
+        <Overlay title="Type chart" onClose={close}>
+          <table className="type-chart">
+            <thead>
+              <tr>
+                <th className="corner">ATK ↓ DEF →</th>
+                {ALL_TYPES.map((d) => (
+                  <th key={d} className={`type-${d}${d === MUNDANE ? ' off-ring' : ''}`} scope="col" title={d}>
+                    {TYPE_ABBR[d]}
+                  </th>
                 ))}
-              </tbody>
-            </table>
-            <p className="small muted">
-              Row = the move's type, column = the defender's type. Blank is ×1. Against an SCP with two types, both
-              numbers multiply (up to ×4 or ×¼). Mundane is outside the ring: always ×1.
-            </p>
-          </div>
-        </div>
+              </tr>
+            </thead>
+            <tbody>
+              {ALL_TYPES.map((a) => (
+                <tr key={a} className={a === MUNDANE ? 'off-ring' : undefined}>
+                  <th className={`type-${a}`} scope="row">
+                    {a}
+                  </th>
+                  {ALL_TYPES.map((d) => {
+                    const m = matchup(a, d)
+                    const cls = [m === 2 ? 'super' : m === 0.5 ? 'resist' : '', d === MUNDANE ? 'off-ring' : '']
+                    return (
+                      <td key={d} className={cls.filter(Boolean).join(' ') || undefined}>
+                        {m === 2 ? '2' : m === 0.5 ? '½' : ''}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="small muted">
+            Row = the move's type, column = the defender's type. Blank is ×1. Against an SCP with two types, both
+            numbers multiply (up to ×4 or ×¼). Mundane is outside the ring: always ×1.
+          </p>
+        </Overlay>
       )}
     </>
   )

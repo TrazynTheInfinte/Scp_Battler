@@ -19,7 +19,8 @@ import {
   matchup,
   type ObjectClass,
 } from '../../engine'
-import { TypeBadge, TypeChartButton } from '../components'
+import { ScreenGuideList, TypeBadge, TypeChartButton } from '../components'
+import { SCREEN_GUIDES } from '../screenGuides'
 
 /**
  * The basics, for new players (playtester request). Every number comes from
@@ -152,6 +153,19 @@ export function HowToPlayScreen({ onBack, onTutorial }: { onBack: () => void; on
         <li>Choose Play Online, pick a saved team, and Create Room. Send the 6-character Room Code to a friend.</li>
         <li>Your friend chooses Play Online, then joins with that code.</li>
       </Section>
+
+      <section className="panel stack howto">
+        <p className="section-label">10 · SCREENS</p>
+        <p className="small muted" style={{ margin: 0 }}>
+          What each part of a screen does. The ? button on that screen shows the same list.
+        </p>
+        {SCREEN_GUIDES.map((g) => (
+          <div key={g.title} className="stack">
+            <strong>{g.title}</strong>
+            <ScreenGuideList guide={g} />
+          </div>
+        ))}
+      </section>
 
       <button className="btn" onClick={onBack}>
         Got it
