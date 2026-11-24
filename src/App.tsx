@@ -11,6 +11,9 @@ import {
   startSession,
   type Session,
 } from './ui/battleController'
+import { aiDriver, type BattleDriver } from './ui/battleDriver'
+import { rememberedRoom } from './online/room'
+import { OnlineScreen } from './ui/screens/OnlineScreen'
 import { BattleScreen } from './ui/screens/BattleScreen'
 import { CreditsScreen } from './ui/screens/CreditsScreen'
 import { ResultScreen } from './ui/screens/ResultScreen'
@@ -19,7 +22,7 @@ import { TeamPreviewScreen } from './ui/screens/TeamPreviewScreen'
 import { TitleScreen } from './ui/screens/TitleScreen'
 import { useTeamShelf } from './ui/teamShelf'
 
-type Screen = 'title' | 'builder' | 'credits' | 'preview' | 'battle' | 'result'
+type Screen = 'title' | 'builder' | 'credits' | 'preview' | 'battle' | 'result' | 'online'
 
 /** A fresh battle seed; battles only need to differ, not be secret. */
 const newSeed = () => (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
@@ -49,7 +52,14 @@ function devStart(): {
   session: Session | null
   result: BattleState | null
 } {
-  const none = { screen: 'title' as Screen, team: [], match: null, session: null, result: null }
+  // A reload during an online match goes straight back to it (the Online screen rejoins).
+  const none = {
+    screen: (rememberedRoom() && accountStore.getSnapshot().status === 'signedIn' ? 'online' : 'title') as Screen,
+    team: [],
+    match: null,
+    session: null,
+    result: null,
+  }
   if (!import.meta.env.DEV) return none
   const q = new URLSearchParams(window.location.search)
   const screen = (q.get('screen') as Screen | null) ?? 'title'
@@ -80,7 +90,7 @@ export default function App() {
   // Aligned with `team`: each SCP's Equipment id, or null.
   const [equipment, setEquipment] = useState<(string | null)[]>([])
   const [match, setMatch] = useState<Match | null>(dev.match)
-  const [session, setSession] = useState<Session | null>(dev.session)
+  const [driver, setDriver] = useState<BattleDriver | null>(() => dev.session && aiDriver(dev.session))
   const [result, setResult] = useState<BattleState | null>(dev.result)
   const account = useSyncExternalStore(accountStore.subscribe, accountStore.getSnapshot)
   const shelf = useTeamShelf(account)
@@ -96,7 +106,34 @@ export default function App() {
 
   switch (screen) {
     case 'title':
-      return <TitleScreen account={account} onPlay={() => go('builder')} onCredits={() => go('credits')} />
+      return (
+        <TitleScreen
+          account={account}
+          onPlay={() => go('builder')}
+          onPlayOnline={() => go('online')}
+          onCredits={() => go('credits')}
+        />
+      )
+    case 'online':
+      // Needs an Account with a Callsign; signing out mid-match lands on the title.
+      if (account.status !== 'signedIn' || !account.callsign) {
+        return (
+          <TitleScreen
+            account={account}
+            onPlay={() => go('builder')}
+            onPlayOnline={() => go('online')}
+            onCredits={() => go('credits')}
+          />
+        )
+      }
+      return (
+        <OnlineScreen
+          uid={account.uid}
+          callsign={account.callsign}
+          teams={shelf.teams}
+          onExit={() => go('title')}
+        />
+      )
     case 'credits':
       return <CreditsScreen onBack={() => go('title')} />
     case 'builder':
@@ -121,17 +158,17 @@ export default function App() {
           aiEquipment={match.aiEquipment}
           onBack={() => go('builder')}
           onBegin={(lead) => {
-            setSession(startSession(ROSTER, team, match.aiTeam, lead, match.seed, [equipment, match.aiEquipment]).session)
+            setDriver(aiDriver(startSession(ROSTER, team, match.aiTeam, lead, match.seed, [equipment, match.aiEquipment]).session))
             go('battle')
           }}
         />
       )
     case 'battle':
-      if (!session || !match) return null
+      if (!driver || !match) return null
       return (
         <BattleScreen
           key={match.seed}
-          initial={session}
+          driver={driver}
           onFinished={(final) => {
             setResult(final)
             go('result')

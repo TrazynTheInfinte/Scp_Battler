@@ -11,12 +11,15 @@ import {
 export function TitleScreen({
   account,
   onPlay,
+  onPlayOnline,
   onCredits,
 }: {
   account: AccountState
   onPlay: () => void
+  onPlayOnline: () => void
   onCredits: () => void
 }) {
+  const canPlayOnline = account.status === 'signedIn' && account.callsign !== null
   return (
     <main className="screen">
       <div className="title-hero">
@@ -30,6 +33,14 @@ export function TitleScreen({
           <button className="btn btn-primary" onClick={onPlay}>
             New Battle
           </button>
+          <button className="btn" disabled={!canPlayOnline} onClick={onPlayOnline}>
+            Play Online
+          </button>
+          {!canPlayOnline && (
+            <p className="small muted" style={{ margin: 0 }}>
+              {account.status === 'signedIn' ? 'Choose a Callsign below to play online.' : 'Sign in below to play online with friends.'}
+            </p>
+          )}
           <button className="btn" onClick={onCredits}>
             Credits
           </button>
@@ -81,7 +92,7 @@ function AccountPanel({ account }: { account: AccountState }) {
         <button className="btn" disabled={busy} onClick={() => run(signIn)}>
           {busy ? 'Signing in…' : 'Sign in with Google'}
         </button>
-        <p className="small muted">Optional. Keeps your Saved Teams on every device you sign in on.</p>
+        <p className="small muted">Keeps your Saved Teams on every device you sign in on. Not needed for New Battle.</p>
         {errorLine}
         {notice}
       </div>

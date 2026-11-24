@@ -12,14 +12,8 @@ import {
 } from '../../engine'
 import { ROSTER } from '../../data/roster'
 import { HOSTILE, PLAYER } from '../battleLog'
-import {
-  playerForfeit,
-  playerMustReplace,
-  playerReplace,
-  playerTurn,
-  type Advance,
-  type Session,
-} from '../battleController'
+import { playerMustReplace, type Step } from '../battleController'
+import type { BattleDriver, BattleView, DriverStatus } from '../battleDriver'
 import { ClassBadge, ContainmentCard, EquipmentTag, TypeBadge, TypeChartButton } from '../components'
 import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
@@ -31,6 +25,21 @@ const FRAME_MS = 600
 interface Shown {
   view: BattleState
   log: string[]
+}
+
+/** "1:45" until `deadline`, ticking each second. */
+function Countdown({ deadline }: { deadline: number }) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(t)
+  }, [])
+  const left = Math.max(0, Math.ceil((deadline - now) / 1000))
+  return (
+    <>
+      {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
+    </>
+  )
 }
 
 function hpClass(hp: number, max: number): string {
@@ -101,16 +110,20 @@ function BenchList({ state, onPick }: { state: BattleState; onPick: (teamIndex: 
 }
 
 export function BattleScreen({
-  initial,
+  driver,
   onFinished,
+  onExit,
 }: {
-  initial: Session
+  driver: BattleDriver
   onFinished: (final: BattleState) => void
+  /** Leave a battle that was called off (No Contest). */
+  onExit?: () => void
 }) {
-  // `session` is the true battle; `display` is what's on screen, which lags
+  // `real` is the true battle; `display` is what's on screen, which lags
   // behind while a turn's events play back one frame at a time.
-  const [session, setSession] = useState(initial)
-  const [display, setDisplay] = useState<Shown>({ view: initial.state, log: initial.log })
+  const [real_, setReal] = useState<BattleView>(driver.initial)
+  const [status, setStatus] = useState<DriverStatus>({ kind: 'ready' })
+  const [display, setDisplay] = useState<Shown>({ view: driver.initial.state, log: driver.initial.log })
   const [playing, setPlaying] = useState(false)
   const [tick, setTick] = useState(0)
   const [hit, setHit] = useState<{ side: SideIndex; n: number } | null>(null)
@@ -130,7 +143,8 @@ export function BattleScreen({
   const mySpecies = ROSTER.species[me.speciesId]
   const foeTypes = ROSTER.species[foe.speciesId].types
   // Controls act on the real state, and only once playback has caught up.
-  const real = session.state
+  const real = real_.state
+  const waiting = status.kind === 'waiting'
   const ended = real.phase === 'ended'
   const mustReplace = playerMustReplace(real)
   const realActive = activeOf(real, PLAYER)
@@ -160,13 +174,19 @@ export function BattleScreen({
     return () => window.clearTimeout(t)
   }, [playing, tick])
 
-  const play = (adv: Advance) => {
-    setSession(adv.session)
-    final.current = { view: adv.session.state, log: adv.session.log }
-    queue.current = framesFor(adv.steps, ROSTER)
+  const play = (steps: Step[], view: BattleView) => {
+    setReal(view)
+    final.current = { view: view.state, log: view.log }
+    queue.current = [...queue.current, ...framesFor(steps, ROSTER)]
     setPlaying(true)
     setTick((n) => n + 1)
   }
+  const playRef = useRef(play)
+  playRef.current = play
+  useEffect(
+    () => driver.listen({ advance: (steps, view) => playRef.current(steps, view), status: setStatus }),
+    [driver],
+  )
   const skip = () => {
     if (!playing) return
     queue.current = []
@@ -177,9 +197,9 @@ export function BattleScreen({
   const act = (choice: Choice) => {
     setSwitching(false)
     setInfo(null)
-    play(playerTurn(session, choice))
+    driver.choose(choice)
   }
-  const replace = (i: number) => play(playerReplace(session, i))
+  const replace = (i: number) => driver.replace(i)
 
   // Dev-only: ?demo=1 uses the first move automatically, to check playback in
   // headless screenshots. Stripped from production builds.
@@ -187,13 +207,13 @@ export function BattleScreen({
   useEffect(() => {
     if (!import.meta.env.DEV) return
     if (!new URLSearchParams(window.location.search).get('demo')) return
-    const t = window.setTimeout(() => play(playerTurn(initial, { kind: 'move', moveIndex: 0 })), 300)
+    const t = window.setTimeout(() => driver.choose({ kind: 'move', moveIndex: 0 }), 300)
     return () => window.clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, [])
   const doForfeit = () => {
     setConfirmForfeit(false)
-    play(playerForfeit(session))
+    driver.forfeit()
   }
 
   const startPress = (text: string) => {
@@ -216,6 +236,8 @@ export function BattleScreen({
           {!playing && <TypeChartButton />}
           {!ended &&
             !playing &&
+            !waiting &&
+            status.kind !== 'noContest' &&
             (confirmForfeit ? (
               <span className="row" style={{ flexWrap: 'nowrap' }}>
                 <span className="small">Forfeit?</span>
@@ -262,7 +284,21 @@ export function BattleScreen({
       </div>
 
       <section className="controls">
-        {playing ? (
+        {status.kind === 'opponentAway' && !ended && (
+          <p className="notice small" role="status">
+            {driver.opponent} lost connection. You win in <Countdown deadline={status.deadline} /> unless they
+            return.
+          </p>
+        )}
+        {status.kind === 'noContest' ? (
+          <div className="stack">
+            <p className="result-banner">NO CONTEST</p>
+            <p className="small muted">{status.reason}</p>
+            <button className="btn btn-primary" onClick={onExit}>
+              Leave
+            </button>
+          </div>
+        ) : playing ? (
           <button className="btn" onClick={skip}>
             ▸▸ Tap to skip
           </button>
@@ -275,6 +311,10 @@ export function BattleScreen({
               View incident report
             </button>
           </div>
+        ) : waiting ? (
+          <p className="notice" role="status">
+            Waiting for {driver.opponent}…
+          </p>
         ) : mustReplace ? (
           <div className="stack">
             <p className="section-label">DEPLOY A REPLACEMENT</p>

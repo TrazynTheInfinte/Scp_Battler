@@ -27,12 +27,17 @@ function TeamReport({ state, side }: { state: BattleState; side: SideIndex }) {
 
 export function ResultScreen({
   final,
+  opponent,
   onRematch,
+  builderLabel = 'Change team',
   onBuilder,
   onTitle,
 }: {
   final: BattleState
-  onRematch: () => void
+  /** The opponent's Callsign online; the AI is "the hostile site". */
+  opponent?: string
+  onRematch?: () => void
+  builderLabel?: string
   onBuilder: () => void
   onTitle: () => void
 }) {
@@ -56,15 +61,17 @@ export function ResultScreen({
         <TeamReport state={final} side={PLAYER} />
       </section>
       <section className="panel">
-        <p className="section-label">HOSTILE SITE</p>
+        <p className="section-label">{opponent?.toUpperCase() ?? 'HOSTILE SITE'}</p>
         <TeamReport state={final} side={HOSTILE} />
       </section>
       <div className="stack">
-        <button className="btn btn-primary" onClick={onRematch}>
-          Rematch (same teams)
-        </button>
-        <button className="btn" onClick={onBuilder}>
-          Change team
+        {onRematch && (
+          <button className="btn btn-primary" onClick={onRematch}>
+            Rematch (same teams)
+          </button>
+        )}
+        <button className={onRematch ? 'btn' : 'btn btn-primary'} onClick={onBuilder}>
+          {builderLabel}
         </button>
         <button className="btn" onClick={onTitle}>
           Title screen

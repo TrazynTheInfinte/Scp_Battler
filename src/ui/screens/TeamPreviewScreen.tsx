@@ -56,6 +56,8 @@ export function TeamPreviewScreen({
   aiEquipment,
   onBegin,
   onBack,
+  opponentLabel = 'HOSTILE SITE',
+  backLabel = '← Back',
 }: {
   playerTeam: readonly string[]
   playerEquipment: readonly (string | null)[]
@@ -63,19 +65,21 @@ export function TeamPreviewScreen({
   aiEquipment: readonly (string | null)[]
   onBegin: (lead: number) => void
   onBack: () => void
+  opponentLabel?: string
+  backLabel?: string
 }) {
   const [lead, setLead] = useState<number | null>(null)
   return (
     <main className="screen">
       <div className="screen-head">
         <button className="btn btn-small" onClick={onBack}>
-          ← Back
+          {backLabel}
         </button>
         <h2>TEAM PREVIEW</h2>
         <TypeChartButton />
       </div>
       <section className="stack">
-        <p className="section-label">HOSTILE SITE</p>
+        <p className="section-label">{opponentLabel}</p>
         <TeamGrid team={aiTeam} equipment={aiEquipment} />
       </section>
       <section className="stack">

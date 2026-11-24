@@ -564,6 +564,42 @@
   border-bottom: none;
 }
 
+/* ---------- online ---------- */
+.team-pick {
+  width: 100%;
+  text-align: left;
+  background: var(--panel);
+  color: var(--fg);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.team-pick:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.team-pick.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset;
+}
+.room-code {
+  font-size: 40px;
+  letter-spacing: 0.2em;
+  text-align: center;
+  margin: 8px 0;
+  user-select: all;
+}
+.room-code-input {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  flex: 1;
+  min-width: 0;
+}
+.online-wait p {
+  margin: 0;
+}
+
 /* ---------- credits ---------- */
 .credit {
   border-bottom: 1px solid var(--line);
