@@ -81,7 +81,7 @@ describe('saved teams', () => {
     expect(loadTeams(old, ROSTER)).toEqual([{ name: 'Old', speciesIds: TEAM }])
   })
 
-  it('drops malformed saved teams but keeps ones that are only over budget', () => {
+  it('drops malformed saved teams but keeps ones that only break a budget or class limit', () => {
     const st = fakeStorage({
       'scp-battler:teams:v1': JSON.stringify([
         { name: 'ok', speciesIds: TEAM },
@@ -90,9 +90,11 @@ describe('saved teams', () => {
         { name: 'bad gear', speciesIds: TEAM, equipment: ['no-such-thing'] },
         // Six Euclids: a full team, but 18 points (over the budget of 15).
         { name: 'pricey', speciesIds: ['scp-173', 'scp-096', 'scp-049', 'scp-079', 'scp-012', 'scp-008'] },
+        // Three Keters: on budget, but over the Keter limit (saved before it existed).
+        { name: 'keters', speciesIds: ['scp-016', 'scp-017', 'scp-019', 'scp-042', 'scp-044', 'scp-054'] },
       ]),
     })
-    expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok', 'pricey'])
+    expect(loadTeams(st, ROSTER).map((t) => t.name)).toEqual(['ok', 'pricey', 'keters'])
   })
 })
 

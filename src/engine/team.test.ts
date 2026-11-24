@@ -16,15 +16,22 @@ describe('validateTeam', () => {
   })
 
   it('accepts a team exactly at the budget', () => {
-    // Keter 4 x3 + Safe 1 x3 = 15
-    const team = ['keterA', 'keterB', 'lizard', 'slow', 'gear', 'warder']
+    // Keter 4 x2 + Thaumiel 4 + Safe 1 x3 = 15
+    const team = ['keterA', 'keterB', 'thaumiel', 'slow', 'gear', 'warder']
     expect(teamCost(dex, team)).toBe(15)
     expect(validateTeam(dex, team)).toEqual([])
   })
 
+  it('allows at most two Keters, even within budget', () => {
+    // Keter 4 x3 + Safe 1 x3 = 15: on budget, but one Keter too many.
+    expect(validateTeam(dex, ['keterA', 'keterB', 'lizard', 'slow', 'gear', 'warder'])).toEqual([
+      { kind: 'classLimit', objectClass: 'Keter', count: 3 },
+    ])
+  })
+
   it('rejects teams over budget', () => {
-    // Keter 4 x3 + Euclid 3 x2 + Safe 1 = 19
-    expect(validateTeam(dex, ['keterA', 'keterB', 'lizard', 'fast', 'twin', 'slow'])).toEqual([
+    // Keter 4 x2 + Thaumiel 4 + Euclid 3 x2 + Safe 1 = 19
+    expect(validateTeam(dex, ['keterA', 'keterB', 'thaumiel', 'fast', 'twin', 'slow'])).toEqual([
       { kind: 'overBudget', cost: 19 },
     ])
   })
@@ -78,8 +85,8 @@ describe('class limits', () => {
 
 // Fixture Equipment costs: medkit 1, pouch 1, plating 2, hazmat 2.
 describe('equipment', () => {
-  // Keter 4 x3 + Safe 1 x3 = 15: the whole Team Budget, so only the allowance is left.
-  const FULL = ['keterA', 'keterB', 'lizard', 'slow', 'gear', 'warder']
+  // Keter 4 x2 + Thaumiel 4 + Safe 1 x3 = 15: the whole Team Budget, so only the allowance is left.
+  const FULL = ['keterA', 'keterB', 'thaumiel', 'slow', 'gear', 'warder']
   // Keter 4 + Euclid 3 + Safe 1 x4 = 11: 4 points left over.
   const CHEAP = ['keterA', 'fast', 'slow', 'gear', 'warder', 'hexer']
 

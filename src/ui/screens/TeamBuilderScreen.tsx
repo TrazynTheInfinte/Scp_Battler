@@ -25,6 +25,14 @@ import { useToggle } from '../hooks'
 import { MAX_NAME_LENGTH, MAX_SAVED_TEAMS, type SavedTeam } from '../savedTeams'
 import type { TeamShelf } from '../teamShelf'
 
+/** What a saved team breaks under the current rules (it still loads, so it can be fixed), or null. */
+function savedTeamProblem(t: SavedTeam): string | null {
+  const p = validateTeam(ROSTER, t.speciesIds, t.equipment)[0]
+  if (!p) return null
+  if (p.kind === 'classLimit') return `too many ${p.objectClass}`
+  return 'over budget'
+}
+
 /** Why an SCP can't be added right now, or null if it can. */
 function addBlocker(team: readonly string[], id: string): string | null {
   if (team.includes(id)) return 'Already on your team.'
@@ -181,6 +189,7 @@ export function TeamBuilderScreen({
   const legal = validateTeam(ROSTER, team, equipment).length === 0
   const overBudget = cost > TEAM_BUDGET
   const gearOverBudget = gearCost > gearBudget
+  const classProblem = validateTeam(ROSTER, team, equipment).find((p) => p.kind === 'classLimit')
 
   const add = (id: string) => {
     const blocker = addBlocker(team, id)
@@ -215,9 +224,10 @@ export function TeamBuilderScreen({
     setEquipment(t.speciesIds.map((_, i) => t.equipment?.[i] ?? null))
     setName(t.name)
     setShowSaved(false)
+    const problem = savedTeamProblem(t)
     setNotice(
-      validateTeam(ROSTER, t.speciesIds, t.equipment).length > 0
-        ? `Loaded "${t.name}", but it's over budget since costs changed. Swap an SCP or Equipment out.`
+      problem
+        ? `Loaded "${t.name}", but the rules changed since you saved it: ${problem}. Swap something out to fix it.`
         : `Loaded "${t.name}".`,
     )
   }
@@ -302,6 +312,8 @@ export function TeamBuilderScreen({
               ? 'Team ready.'
               : overBudget
                 ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
+                : classProblem
+                  ? `Only ${CLASS_LIMIT[classProblem.objectClass]} ${classProblem.objectClass} per team. Remove one to fix it.`
                 : gearOverBudget
                   ? `Equipment over budget (${gearCost}/${gearBudget}). Remove a piece to fix it.`
                   : `Pick ${TEAM_SIZE - team.length} more. ${COST_HINT}.`)}
@@ -356,8 +368,8 @@ export function TeamBuilderScreen({
               <div className="saved-row" key={t.name}>
                 <div>
                   <strong>{t.name}</strong>
-                  {validateTeam(ROSTER, t.speciesIds, t.equipment).length > 0 && (
-                    <span className="badge status-badge">OVER BUDGET</span>
+                  {savedTeamProblem(t) && (
+                    <span className="badge status-badge">{savedTeamProblem(t)!.toUpperCase()}</span>
                   )}
                   <div className="muted small">
                     {t.speciesIds.map((id) => ROSTER.species[id].name.replace('SCP-', '')).join(' · ')}

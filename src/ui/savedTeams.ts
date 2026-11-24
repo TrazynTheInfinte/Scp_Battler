@@ -19,8 +19,8 @@ export interface SavedTeam {
   equipment?: (string | null)[]
 }
 
-/** Problems a saved team may have and still load, so the player can see and fix them (e.g. after a cost change). */
-const FIXABLE = new Set(['overBudget', 'equipmentOverBudget'])
+/** Problems a saved team may have and still load, so the player can see and fix them (e.g. after a cost or rules change). */
+const FIXABLE = new Set(['overBudget', 'equipmentOverBudget', 'classLimit'])
 
 /** Keep only well-formed, loadable teams (at most MAX_SAVED_TEAMS), silently dropping the rest. */
 export function parseTeams(raw: unknown, dex: Dex): SavedTeam[] {

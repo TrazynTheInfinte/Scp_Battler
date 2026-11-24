@@ -30,7 +30,8 @@ const fraction = (f: number) => `1/${Math.round(1 / f)}`
 const percent = (f: number) => `${Math.round(f * 100)}%`
 
 const CLASSES = (Object.keys(OBJECT_CLASS_COST) as ObjectClass[]).map((c) => `${c} ${OBJECT_CLASS_COST[c]}`).join(' · ')
-const LIMITED = (Object.keys(CLASS_LIMIT) as ObjectClass[]).map((c) => `${CLASS_LIMIT[c]} ${c}`).join(' and ')
+const LIMITS = (Object.keys(CLASS_LIMIT) as ObjectClass[]).map((c) => `${CLASS_LIMIT[c]} ${c}`)
+const LIMITED = LIMITS.length > 1 ? `${LIMITS.slice(0, -1).join(', ')} and ${LIMITS.at(-1)}` : LIMITS[0]
 const IMMUNE = Object.entries(STATUS_IMMUNITIES)
   .map(([type, status]) => `${type} SCPs can't be ${status === 'Bleeding' ? 'made to Bleed' : `made ${status}`}`)
   .join('; ')

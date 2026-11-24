@@ -67,7 +67,7 @@ The maximum total object-class cost a team may have.
 _Avoid_: Point cap, points limit, cost limit
 
 **Class Limit**:
-The most SCPs of one object class a team may include, on top of the team budget. Only the rarest classes (Thaumiel, Apollyon) have one.
+The most SCPs of one object class a team may include, on top of the team budget: one Thaumiel, one Apollyon, and two Keters.
 _Avoid_: Unique clause, class cap
 
 **Equipment**:

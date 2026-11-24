@@ -21,6 +21,11 @@ export const OBJECT_CLASS_COST: Readonly<Record<ObjectClass, number>> = {
 export const CLASS_LIMIT: Readonly<Partial<Record<ObjectClass, number>>> = {
   Thaumiel: 1,
   Apollyon: 1,
+  /**
+   * Added in wave 6: three Keters plus three Safes was the one makeup that
+   * kept breaking the 70% limit as the roster grew (see docs/adr/0003).
+   */
+  Keter: 2,
 }
 
 export type TeamProblem =
