@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { dismissHowToPrompt, howToPromptShown } from '../howToPrompt'
 import { CALLSIGN_MAX } from '../../online/accountData'
 import {
   dismissAccountNotice,
@@ -12,13 +13,16 @@ export function TitleScreen({
   account,
   onPlay,
   onPlayOnline,
+  onHowToPlay,
   onCredits,
 }: {
   account: AccountState
   onPlay: () => void
   onPlayOnline: () => void
+  onHowToPlay: () => void
   onCredits: () => void
 }) {
+  const [prompt, setPrompt] = useState(howToPromptShown)
   const canPlayOnline = account.status === 'signedIn' && account.callsign !== null
   return (
     <main className="screen">
@@ -29,6 +33,24 @@ export function TitleScreen({
           Assemble a containment team of six anomalies within your clearance budget, then
           neutralize the opposing site's SCPs.
         </p>
+        {prompt && (
+          <p className="notice small" role="status">
+            New here?{' '}
+            <button className="btn-link" onClick={onHowToPlay}>
+              Read How to Play
+            </button>{' '}
+            ·{' '}
+            <button
+              className="btn-link"
+              onClick={() => {
+                dismissHowToPrompt()
+                setPrompt(false)
+              }}
+            >
+              dismiss
+            </button>
+          </p>
+        )}
         <div className="title-actions">
           <button className="btn btn-primary" onClick={onPlay}>
             New Battle
@@ -41,6 +63,9 @@ export function TitleScreen({
               {account.status === 'signedIn' ? 'Choose a Callsign below to play online.' : 'Sign in below to play online with friends.'}
             </p>
           )}
+          <button className="btn" onClick={onHowToPlay}>
+            How to Play
+          </button>
           <button className="btn" onClick={onCredits}>
             Credits
           </button>

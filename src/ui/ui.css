@@ -860,3 +860,15 @@ button.preview-card {
 .roster-line:last-child {
   border-bottom: none;
 }
+
+/* ---------- how to play ---------- */
+.howto ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.howto li {
+  line-height: 1.45;
+}

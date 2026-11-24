@@ -16,13 +16,15 @@ import { rememberedRoom } from './online/room'
 import { OnlineScreen } from './ui/screens/OnlineScreen'
 import { BattleScreen } from './ui/screens/BattleScreen'
 import { CreditsScreen } from './ui/screens/CreditsScreen'
+import { HowToPlayScreen } from './ui/screens/HowToPlayScreen'
+import { dismissHowToPrompt } from './ui/howToPrompt'
 import { ResultScreen } from './ui/screens/ResultScreen'
 import { TeamBuilderScreen } from './ui/screens/TeamBuilderScreen'
 import { TeamPreviewScreen } from './ui/screens/TeamPreviewScreen'
 import { TitleScreen } from './ui/screens/TitleScreen'
 import { useTeamShelf } from './ui/teamShelf'
 
-type Screen = 'title' | 'builder' | 'credits' | 'preview' | 'battle' | 'result' | 'online'
+type Screen = 'title' | 'builder' | 'credits' | 'howto' | 'preview' | 'battle' | 'result' | 'online'
 
 /** A fresh battle seed; battles only need to differ, not be secret. */
 const newSeed = () => (Date.now() ^ (Math.random() * 0x100000000)) >>> 0
@@ -111,6 +113,10 @@ export default function App() {
           account={account}
           onPlay={() => go('builder')}
           onPlayOnline={() => go('online')}
+          onHowToPlay={() => {
+            dismissHowToPrompt()
+            go('howto')
+          }}
           onCredits={() => go('credits')}
         />
       )
@@ -122,6 +128,10 @@ export default function App() {
             account={account}
             onPlay={() => go('builder')}
             onPlayOnline={() => go('online')}
+            onHowToPlay={() => {
+              dismissHowToPrompt()
+              go('howto')
+            }}
             onCredits={() => go('credits')}
           />
         )
@@ -136,6 +146,8 @@ export default function App() {
       )
     case 'credits':
       return <CreditsScreen onBack={() => go('title')} />
+    case 'howto':
+      return <HowToPlayScreen onBack={() => go('title')} />
     case 'builder':
       return (
         <TeamBuilderScreen
