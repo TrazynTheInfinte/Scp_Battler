@@ -4,7 +4,11 @@ import type { ObjectClass, Stats, StatName } from '../engine'
 export const CLASS_STAT_TOTAL: Readonly<Record<ObjectClass, number>> = {
   Safe: 450,
   Euclid: 475,
-  Keter: 600,
+  /**
+   * Lowered from 600 in wave 5: every wave adds Safes, so three Keters kept
+   * finding stronger cheap partners and KKKSSS teams crept past the 70% limit.
+   */
+  Keter: 580,
   Thaumiel: 550,
   /** Lowered from 700: at 700 any meaningful ability made an Apollyon dominate (wave 2 balance). */
   Apollyon: 650,
