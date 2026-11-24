@@ -292,8 +292,8 @@ const ABILITY_LIST: AbilityData[] = [
   {
     id: 'barbedChains',
     name: 'Barbed Chains',
-    description: 'An attacker that damages it with a move loses 1/10 of its own max HP.',
-    rules: [{ kind: 'retaliate', fraction: 1 / 10 }],
+    description: 'An attacker that damages it with a move loses 1/12 of its own max HP.',
+    rules: [{ kind: 'retaliate', fraction: 1 / 12 }],
   },
   {
     id: 'sleepersPrey',
