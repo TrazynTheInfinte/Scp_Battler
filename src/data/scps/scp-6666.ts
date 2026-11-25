@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Biological'],
   stats: { template: 'physicalBruiser' },
   moves: ['spear-of-hector', 'rend', 'crimson-residue', 'ambush'],
+  moveNames: { rend: 'Six-Armed Fury', 'crimson-residue': 'Root Drag', ambush: 'Toxic Fog' },
   signatureMove: phys('spear-of-hector', 'Spear of Hector', 'Thaumic', 95, 100),
   ability: 'rootSnare',
   eligibility: "A six-armed demon with a spear fused to his arm, bound in a vast dead tree whose roots drag people under.",

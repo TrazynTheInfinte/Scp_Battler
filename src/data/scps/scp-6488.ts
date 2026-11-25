@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Antimemetic'],
   stats: { template: 'specialBruiser' },
   moves: ['simulated-reality', 'data-surge', 'corrupt-file', 'memory-hole'],
+  moveNames: { 'data-surge': 'Infosignature', 'corrupt-file': 'Deviance Scan', 'memory-hole': 'Lotus Dream' },
   signatureMove: spec('simulated-reality', 'Simulated Reality', 'Mechanical', 85, 100, [inflict('Contained', 30)]),
   ability: 'deviantDetection',
   eligibility: "LOTUS, an AI that traps rogue AIs in simulated worlds they believe are real.",

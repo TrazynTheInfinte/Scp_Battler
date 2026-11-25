@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Memetic'],
   stats: { template: 'mixedAttacker' },
   moves: ['brainworm', 'relentless-pursuit', 'crushing-jaws', 'erasure'],
+  moveNames: { 'relentless-pursuit': 'Puppet Host', 'crushing-jaws': 'Mandible Crush', erasure: 'Nerve Takeover' },
   signatureMove: phys('brainworm', 'Brainworm', 'Biological', 85, 100, [inflict('Amnesiac', 30)]),
   ability: 'puppetHosts',
   eligibility: "A giant sapient arthropod whose offspring burrow into hosts and steer them; the Foundation uses its puppets as spies.",

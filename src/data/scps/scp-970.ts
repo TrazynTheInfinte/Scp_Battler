@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Antimemetic'],
   stats: { template: 'fastPhysical' },
   moves: ['forced-manifestation', 'blink', 'stalk', 'demanifest'],
+  moveNames: { blink: 'Next Room', stalk: 'Looming Door' },
   signatureMove: phys('forced-manifestation', 'Forced Manifestation', 'Reality', 85, 100),
   ability: 'randomManifestation',
   eligibility:

@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Memetic'],
   stats: { template: 'fastSpecial' },
   moves: ['threat-analysis', 'corrupt-file', 'data-surge', 'dissonant-chord'],
+  moveNames: { 'corrupt-file': 'Watchdog Report', 'data-surge': 'Data Mining', 'dissonant-chord': 'Bardic Verse' },
   signatureMove: spec('threat-analysis', 'Threat Analysis', 'Mechanical', 80, null),
   ability: 'patternRecognition',
   eligibility: "An analyst AI that sifts every scrap of intelligence to find anomalies and the people hiding them.",

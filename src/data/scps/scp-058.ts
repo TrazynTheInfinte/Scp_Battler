@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Kinetic'],
   stats: { template: 'fastPhysical', tweaks: { atk: -10, spa: 10 } },
   moves: ['tentacle-lash', 'crimson-residue', 'blink', 'stalk'],
+  moveNames: { 'crimson-residue': 'Barbed Tentacle', blink: 'Unseen Lash', stalk: 'Pulsing Hunger' },
   signatureMove: phys('tentacle-lash', 'Tentacle Lash', 'Kinetic', 80, 100),
   ability: 'resilient',
   eligibility: "A heart on four legs that lashes out with spiked tentacles and a burning stinger, and shrugs off trauma.",

@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'slowSpecial' },
   moves: ['criticality', 'blast', 'flare', 'brace'],
+  moveNames: { blast: 'Blue Flash', flare: 'Radiation Glow', brace: 'Beryllium Shell' },
   signatureMove: spec('criticality', 'Criticality', 'Mundane', 100, 90),
   ability: 'radiation',
   eligibility: "The real plutonium core whose criticality accidents killed two scientists; the \"anomalies\" were a cover story.",

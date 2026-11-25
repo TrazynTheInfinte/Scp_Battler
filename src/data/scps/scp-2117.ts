@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'specialBruiser' },
   moves: ['wormhole-cannon', 'gear-grind', 'data-surge', 'negative-space'],
+  moveNames: { 'gear-grind': 'Point Defense', 'data-surge': 'Station AI', 'negative-space': 'Space Fold' },
   signatureMove: spec('wormhole-cannon', 'Wormhole Cannon', 'Temporal', 90, 100),
   ability: 'shieldedHull',
   eligibility: "A vast, armed space station orbiting Titan, bigger inside than out, kept to fight threats from beyond the stars.",

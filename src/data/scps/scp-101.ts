@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Reality'],
   stats: { template: 'physicalBruiser' },
   moves: ['snap-shut', 'blink', 'tickle', 'weep'],
+  moveNames: { blink: 'Lunging Clasp', tickle: 'Nibble', weep: 'Gorge' },
   signatureMove: phys('snap-shut', 'Snap Shut', 'Reality', 85, 100),
   ability: 'toothedMaw',
   eligibility: "A disguised, toothed bag that lures people into reaching in, then bites.",

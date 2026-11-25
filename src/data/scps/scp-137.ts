@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Reality'],
   stats: { template: 'balanced' },
   moves: ['toy-soldier', 'refine', 'contagious-joy', 'weep'],
+  moveNames: { refine: 'Make It Real', 'contagious-joy': 'Playtime', weep: 'Brave Toy' },
   signatureMove: phys('toy-soldier', 'Toy Soldier', 'Memetic', 85, 100),
   ability: 'makeBelieve',
   eligibility: "An entity that possesses toys and makes them real: toy soldiers become armed men, toy lions maul.",

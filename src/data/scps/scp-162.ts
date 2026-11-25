@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Memetic'],
   stats: { template: 'wall' },
   moves: ['compel-touch', 'corrupt-file', 'gear-grind', 'coarse'],
+  moveNames: { 'corrupt-file': 'Urge to Touch', 'gear-grind': 'Hook Barrage', coarse: 'Barbed Shell' },
   signatureMove: status('compel-touch', 'Compel Touch', 'Memetic', 90, [inflict('Contained')]),
   ability: 'fishHooks',
   eligibility: "A ball of hooks and needles that compels people to touch it, then holds them until they bleed out.",

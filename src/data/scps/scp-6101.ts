@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Reality'],
   stats: { template: 'fastSpecial' },
   moves: ['fear-and-loathing', 'smite', 'turn-back-time', 'obscure'],
+  moveNames: { smite: 'Super Strength', 'turn-back-time': 'Fly Away', obscure: 'Turn Invisible' },
   signatureMove: spec('fear-and-loathing', 'Fear and Loathing', 'Reality', 90, 100),
   ability: 'heidi',
   eligibility: "A flying, invisible, super-strong boy with two guns, Fear and Loathing, and a lethal guard dog.",

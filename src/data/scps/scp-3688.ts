@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Temporal'],
   stats: { template: 'fastPhysical' },
   moves: ['kinetoglyph-dance', 'flank', 'corrosive-touch', 'blink'],
+  moveNames: { flank: 'Time Step', 'corrosive-touch': 'Annihilating Twirl', blink: 'Afterimage' },
   signatureMove: phys('kinetoglyph-dance', 'Kinetoglyph Dance', 'Kinetic', 85, 100),
   ability: 'danceOfInvincibility',
   eligibility: "A dance that makes its performer all but invincible, with variants that raise barriers and slow time.",

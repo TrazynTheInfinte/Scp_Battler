@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Biological'],
   stats: { template: 'slowSpecial' },
   moves: ['jasper-burn', 'acidic-bile', 'coarse', 'calming-ooze'],
+  moveNames: { 'acidic-bile': 'Searing Stone', coarse: 'Jasper Shell', 'calming-ooze': 'Numbing Glow' },
   signatureMove: spec('jasper-burn', 'Jasper Burn', 'Reality', 85, 100, [inflict('Bleeding', 30)]),
   ability: 'searingTouch',
   eligibility: "A stone whose touch violently rewrites the body of whoever holds it, burning and sometimes killing them.",

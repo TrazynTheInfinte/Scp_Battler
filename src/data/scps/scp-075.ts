@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Temporal'],
   stats: { template: 'physicalBruiser' },
   moves: ['corrosive-drench', 'corrosive-touch', 'ram', 'stalk'],
+  moveNames: { 'corrosive-touch': 'Acid Slime', ram: 'Shell Bash', stalk: 'Slow Pursuit' },
   signatureMove: phys('corrosive-drench', 'Corrosive Drench', 'Biological', 80, 100, [foe({ def: -1 }, 30)]),
   ability: 'leapingPredator',
   eligibility: "A huge snail that leaps on its prey at speed and drenches it in a corrosive secretion.",

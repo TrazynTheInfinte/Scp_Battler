@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'physicalBruiser' },
   moves: ['breach-strike', 'bludgeon', 'quick-jab', 'brace'],
+  moveNames: { bludgeon: 'Wild Swing', 'quick-jab': 'Feint' },
   signatureMove: phys('breach-strike', 'Breach Strike', 'Mundane', 95, 95),
   ability: 'podHunters',
   eligibility: "Orcas that became sapient through ordinary evolution: apex predators, now thinking ones.",

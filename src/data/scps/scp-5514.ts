@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Kinetic'],
   stats: { template: 'armoredStriker' },
   moves: ['cold-iron-sword', 'ram', 'ambush', 'roll-out'],
+  moveNames: { ram: 'Gravity Railgun', ambush: 'Mecha Stomp', 'roll-out': 'Sun-Vent Burst' },
   signatureMove: phys('cold-iron-sword', 'Cold-Iron Sword', 'Mechanical', 95, 100),
   ability: 'kaijuArmor',
   eligibility: "A 100 m mecha with a gravity railgun and a cold-iron sword, built to kill kaiju.",

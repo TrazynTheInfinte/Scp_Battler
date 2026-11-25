@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Thaumic'],
   stats: { template: 'specialBruiser' },
   moves: ['point-of-impact', 'smite', 'blinding-light', 'turn-back-time'],
+  moveNames: { smite: 'Sunfire', 'turn-back-time': 'Divert Fate' },
   signatureMove: spec('point-of-impact', 'Point of Impact', 'Reality', 95, 85),
   ability: 'sisterOfTheSun',
   eligibility: "A vast entity beside the Sun that points, unerringly, at whatever is about to strike the Earth.",

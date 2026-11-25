@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Reality'],
   stats: { template: 'support' },
   moves: ['barren-earth', 'refine', 'coarse', 'calming-ooze'],
+  moveNames: { refine: "Cain's Rebuke", coarse: 'Prosthetic Guard', 'calming-ooze': 'Patient Words' },
   signatureMove: spec('barren-earth', 'Barren Earth', 'Temporal', 75, 100, [foe({ spd: -1 }, 20)]),
   ability: 'markOfCain',
   eligibility: "Any harm done to him is turned back on whoever did it, and the ground he walks on dies.",

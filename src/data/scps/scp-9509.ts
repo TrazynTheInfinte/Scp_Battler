@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Temporal'],
   stats: { template: 'support' },
   moves: ['energy-drain', 'acidic-bile', 'sedative', 'corrosive-touch'],
+  moveNames: { 'acidic-bile': 'Cell Replacement', sedative: 'Frozen Stillness', 'corrosive-touch': 'Endless Hunger' },
   signatureMove: spec('energy-drain', 'Energy Drain', 'Temporal', 80, 100, [foe({ spe: -1 }, 50)]),
   ability: 'perpetualMotion',
   eligibility: "A heatproof bacterium that never stops, found in Antarctic ice that drains the energy from anything.",

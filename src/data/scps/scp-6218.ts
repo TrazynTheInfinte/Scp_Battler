@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Antimemetic'],
   stats: { template: 'wall' },
   moves: ['hallucinogenic-surface', 'refine', 'memory-hole', 'obscure'],
+  moveNames: { refine: 'Cosmic Ripple', 'memory-hole': 'Lost Beyond the Ceiling', obscure: 'Dreamlike Haze' },
   signatureMove: spec('hallucinogenic-surface', 'Hallucinogenic Surface', 'Antimemetic', 80, 100, [inflict('Amnesiac', 30)]),
   ability: 'shellOfTheUniverse',
   eligibility: "A sphere that holds the whole universe, whose hallucinogenic surface hosts creatures of its own.",

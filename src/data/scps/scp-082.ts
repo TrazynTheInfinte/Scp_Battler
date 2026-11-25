@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Kinetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['bone-cracking-bite', 'ram', 'contagious-joy', 'stalk'],
+  moveNames: { ram: 'Bull Rush', 'contagious-joy': 'Friendly Greeting', stalk: 'Hunger Pangs' },
   signatureMove: phys('bone-cracking-bite', 'Bone-Cracking Bite', 'Biological', 85, 100, [foe({ def: -1 }, 20)]),
   ability: 'thickHide',
   eligibility: "An amicable giant who attacks without warning, cracks bone with his jaw, and barely notices bullets.",

@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'mixedAttacker' },
   moves: ['dead-hand', 'decay', 'corrosive-touch', 'crimson-residue'],
+  moveNames: { decay: 'Fallout', 'corrosive-touch': 'Corpse Grasp', 'crimson-residue': 'Plague Bite' },
   signatureMove: spec('dead-hand', 'Dead Hand', 'Mechanical', 100, 90),
   ability: 'extinctionCascade',
   eligibility: "A dead world where a doomsday AI, a corpse plague and giants all ended its people at once.",

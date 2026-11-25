@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic'],
   stats: { template: 'fastPhysical' },
   moves: ['hellfire-grapple', 'rend', 'flank', 'stalk'],
+  moveNames: { rend: 'Bone Claws', flank: 'Skeletal Dash', stalk: 'Smoldering Rage' },
   signatureMove: phys('hellfire-grapple', 'Hellfire Grapple', 'Thaumic', 80, 100, [inflict('Bleeding', 30)]),
   ability: 'burningBody',
   eligibility: "A burning skeleton that runs down, leaps on, and strangles anyone near its grove.",

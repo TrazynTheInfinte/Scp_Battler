@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Kinetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['debris-slam', 'ram', 'roll-out', 'weep'],
+  moveNames: { ram: 'Collapsing Wall', 'roll-out': 'Rubble Slide', weep: 'Cradle Song' },
   signatureMove: phys('debris-slam', 'Debris Slam', 'Mechanical', 90, 100),
   ability: 'accretion',
   eligibility: "A giant body built from the debris of a town, which grows more dangerous with each weapon it absorbs.",

@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Biological'],
   stats: { template: 'fastPhysical' },
   moves: ['eaten-alive', 'relentless-pursuit', 'ambush', 'crimson-residue'],
+  moveNames: { 'relentless-pursuit': 'Inevitable Ending', ambush: 'Web Ambush', 'crimson-residue': 'Venom Fangs' },
   signatureMove: phys('eaten-alive', 'Eaten Alive', 'Biological', 85, 100, [inflict('Bleeding', 30)]),
   ability: 'spiderNest',
   eligibility: "A pattern that rewrites every retelling of an old novel so that spiders devour its hero.",

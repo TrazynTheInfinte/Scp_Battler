@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Memetic'],
   stats: { template: 'fastPhysical' },
   moves: ['wire-lash', 'relentless-pursuit', 'overclock', 'crimson-residue'],
+  moveNames: { 'relentless-pursuit': 'Seek Power', overclock: 'Surge Feed', 'crimson-residue': 'Spinal Burrow' },
   signatureMove: phys('wire-lash', 'Wire Lash', 'Mechanical', 85, 100, [inflict('Bleeding', 20)]),
   ability: 'neuralGrowth',
   eligibility: "A tangle of living wire that grows toward power, burrows into the spine, and takes over the brain.",

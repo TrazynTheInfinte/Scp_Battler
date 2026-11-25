@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'fastPhysical' },
   moves: ['goblin-bite', 'quick-jab', 'bludgeon', 'pepper-spray'],
+  moveNames: { 'quick-jab': 'Coin Grab', bludgeon: 'Lever Smack', 'pepper-spray': 'Jackpot Glare' },
   signatureMove: phys('goblin-bite', 'Goblin Bite', 'Mundane', 90, 95, [foe({ def: -1 }, 30)]),
   ability: 'spiteful',
   eligibility: "A cranky automaton guarding a database slot, which bit and punched an agent before it was shut down.",

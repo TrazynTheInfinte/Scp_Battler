@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Temporal'],
   stats: { template: 'balanced' },
   moves: ['daevite-rite', 'decay', 'crescendo', 'coarse'],
+  moveNames: { decay: 'Rewritten Past', crescendo: 'Expanding History', coarse: 'Bound Volume' },
   signatureMove: spec('daevite-rite', 'Daevite Rite', 'Thaumic', 85, 100, [inflict('Bleeding', 20)]),
   ability: 'expandingChronicle',
   eligibility: "A chronicle of the Daevas that writes their history, and their armies, back into the world when blood or ink touches it.",

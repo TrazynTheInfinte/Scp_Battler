@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Reality'],
   stats: { template: 'fastPhysical' },
   moves: ['swarm-of-heaven', 'tickle', 'unmake', 'blink'],
+  moveNames: { tickle: 'Honey Sting', unmake: 'Godless Honey', blink: 'Hive Launch' },
   signatureMove: phys('swarm-of-heaven', 'Swarm of Heaven', 'Biological', 80, 100, [inflict('Bleeding', 30)]),
   ability: 'akivaHoney',
   eligibility: "Bees whose honey cuts people off from the divine; the Foundation launches their hives at hostile gods.",

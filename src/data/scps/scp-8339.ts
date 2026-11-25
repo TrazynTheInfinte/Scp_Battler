@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Reality'],
   stats: { template: 'fastPhysical' },
   moves: ['lightbreak-touch', 'unmake', 'ambush', 'blinding-light'],
+  moveNames: { unmake: 'Into the Light', ambush: 'Sudden Arrival', 'blinding-light': 'Searing Glow' },
   signatureMove: phys('lightbreak-touch', 'Lightbreak Touch', 'Kinetic', 90, 100),
   ability: 'lightHunters',
   eligibility: "The Luminaries: impossibly fast hunters that sense any light through walls and burst whatever they touch into light.",

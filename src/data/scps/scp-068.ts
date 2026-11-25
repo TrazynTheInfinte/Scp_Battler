@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical'],
   stats: { template: 'armoredStriker' },
   moves: ['wire-rend', 'roll-out', 'rend', 'coarse'],
+  moveNames: { 'roll-out': 'Wire Tumble', rend: 'Razor Wire', coarse: 'Wire Frame' },
   signatureMove: phys('wire-rend', 'Wire Rend', 'Mechanical', 75, 100, [inflict('Bleeding', 20)]),
   ability: 'selfReplicating',
   eligibility: "A wire figure that tears through anything soft and rebuilds itself from any metal nearby.",

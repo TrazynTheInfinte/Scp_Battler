@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'mixedAttacker' },
   moves: ['saw-trick', 'flare', 'pepper-spray', 'brace'],
+  moveNames: { flare: 'Smoke Bomb', 'pepper-spray': 'Misdirection', brace: 'Ta-Da' },
   signatureMove: phys('saw-trick', 'Saw Trick', 'Mundane', 90, 95),
   ability: 'escapeArtist',
   eligibility: "A stage magician whose saw tricks, bullet catches, and escapes stopped being tricks.",

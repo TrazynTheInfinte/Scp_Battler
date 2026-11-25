@@ -9,6 +9,7 @@ export default {
   types: ['Reality'],
   stats: { template: 'wall' },
   moves: ['shifting-halls', 'blinding-light', 'refine', 'coarse'],
+  moveNames: { 'blinding-light': 'Disorienting Corridor', refine: 'Remodel', coarse: 'Load-Bearing Walls' },
   signatureMove: spec('shifting-halls', 'Shifting Halls', 'Reality', 80, 100, [foe({ acc: -1 }, 30)]),
   ability: 'endlessHalls',
   eligibility: "A small dodecahedron that expands any building around it into a warped, shifting maze.",

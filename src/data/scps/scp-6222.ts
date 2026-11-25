@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Antimemetic'],
   stats: { template: 'balanced' },
   moves: ['leviathans-wake', 'acidic-bile', 'crushing-jaws', 'memory-hole'],
+  moveNames: { 'acidic-bile': 'Fire Goby', 'crushing-jaws': 'Isopod Stab', 'memory-hole': 'Oarfish Coil' },
   signatureMove: spec('leviathans-wake', "Leviathan's Wake", 'Antimemetic', 85, 100),
   ability: 'cellBlock',
   eligibility: "A prison of sapient sea-creature criminals, from a stabbing isopod to an antimemetic leviathan.",

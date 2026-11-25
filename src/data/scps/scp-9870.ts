@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Kinetic'],
   stats: { template: 'slowSpecial' },
   moves: ['primal-cold', 'corrupt-file', 'flank', 'negative-space'],
+  moveNames: { 'corrupt-file': 'Numbing Frost', flank: 'Frozen Moment', 'negative-space': 'Heat Sink' },
   signatureMove: spec('primal-cold', 'Primal Cold', 'Temporal', 85, 100, [foe({ spe: -1 }, 30)]),
   ability: 'absoluteZero',
   eligibility: "A spreading cold that blocks all new heat and slows time, freezing victims where they stand.",

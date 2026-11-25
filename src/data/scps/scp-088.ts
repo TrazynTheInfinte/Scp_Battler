@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Thaumic'],
   stats: { template: 'specialBruiser' },
   moves: ['royal-mutagen', 'acidic-bile', 'smite', 'regenerate'],
+  moveNames: { 'acidic-bile': 'Venom Spit', smite: 'Royal Decree', regenerate: 'Shed Skin' },
   signatureMove: spec('royal-mutagen', 'Royal Mutagen', 'Thaumic', 70, 100, [inflict('Amnesiac', 20)]),
   ability: 'hibernation',
   eligibility: "An ancient reptilian king whose caustic fluid and mutagen turn those it touches into its servants.",

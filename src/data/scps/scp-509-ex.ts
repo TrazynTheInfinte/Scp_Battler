@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'armoredStriker' },
   moves: ['boiler-blast', 'strike', 'quick-jab', 'brace'],
+  moveNames: { strike: 'Cowcatcher', 'quick-jab': 'Pick Up Speed', brace: 'Iron Frame' },
   signatureMove: phys('boiler-blast', 'Boiler Blast', 'Mundane', 90, 95),
   ability: 'fullSteam',
   eligibility: "A run of locomotives that exploded and killed their crews; just an aging machine and a statistical fluke.",

@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Temporal'],
   stats: { template: 'fastSpecial' },
   moves: ['fade-away', 'decay', 'memory-hole', 'erasure'],
+  moveNames: { decay: 'Fading Record', 'memory-hole': 'Hidden Note', erasure: 'Forgotten File' },
   signatureMove: spec('fade-away', 'Fade Away', 'Antimemetic', 90, 100),
   ability: 'hiddenNote',
   eligibility: "A hidden note that makes anomalies and their files fade from existence, turned into a weapon against the worst of them.",

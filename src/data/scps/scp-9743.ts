@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Thaumic'],
   stats: { template: 'support' },
   moves: ['judgment', 'blinding-light', 'refine', 'unmake'],
+  moveNames: { 'blinding-light': 'Divine Light', refine: 'Restructure', unmake: 'Into the Cube' },
   signatureMove: phys('judgment', 'Judgment', 'Thaumic', 85, 100, [inflict('Contained', 30)]),
   ability: 'handsOfJudgment',
   eligibility: "A divine remaking of the world, where floating hands seize the wicked and violence turns back on attackers.",

@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Kinetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['gravity-well', 'roll-out', 'corrosive-touch', 'flank'],
+  moveNames: { 'roll-out': 'Planetary Roll', 'corrosive-touch': 'Eroding Hull', flank: 'Orbit' },
   signatureMove: phys('gravity-well', 'Gravity Well', 'Kinetic', 90, 90, [foe({ spe: -1 }, 30)]),
   ability: 'armorPlating',
   eligibility: "A colossal armored biomechanical being with its own gravity, unharmed by nukes and energy weapons.",

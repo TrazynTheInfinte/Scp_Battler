@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Mechanical'],
   stats: { template: 'fastSpecial' },
   moves: ['deafening-blast', 'dissonant-chord', 'gear-grind', 'overclock'],
+  moveNames: { 'gear-grind': 'Coiled Lash', overclock: 'Rewind' },
   signatureMove: spec('deafening-blast', 'Deafening Blast', 'Memetic', 75, 100, [inflict('Stunned', 20)]),
   ability: 'constantRefrain',
   eligibility: "A mass of yarn whose sounds have permanently deafened staff, and which lashes out with fast strands.",

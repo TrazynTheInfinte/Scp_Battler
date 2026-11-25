@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical'],
   stats: { template: 'mixedAttacker' },
   moves: ['clockwork-fist', 'gear-grind', 'rend', 'coarse'],
+  moveNames: { rend: 'Bladed Module', coarse: 'Armor Module' },
   signatureMove: phys('clockwork-fist', 'Clockwork Fist', 'Mechanical', 90, 100),
   ability: 'interchangeableModules',
   eligibility: "A clockwork man with swappable modules, including a \"soldier\" one; no lock holds it and it can copy any machine it studies.",

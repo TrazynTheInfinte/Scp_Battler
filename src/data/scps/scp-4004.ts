@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Kinetic'],
   stats: { template: 'specialBruiser' },
   moves: ['conceptual-severance', 'dissonant-chord', 'rend', 'blinding-light'],
+  moveNames: { 'dissonant-chord': 'Anthem', rend: 'Rushmore Fissure', 'blinding-light': 'Dawn Over Liberty' },
   signatureMove: spec('conceptual-severance', 'Conceptual Severance', 'Reality', 90, 100),
   ability: 'preemptiveStrike',
   eligibility: "A national reality engine whose Mount Rushmore strikes down threats with fissures, disease and severance.",

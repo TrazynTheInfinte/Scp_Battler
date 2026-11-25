@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Kinetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['gigafauna-rampage', 'tickle', 'ambush', 'corrosive-touch'],
+  moveNames: { tickle: 'Tail Swipe', ambush: 'Rising Kaiju', 'corrosive-touch': 'Magma Spew' },
   signatureMove: phys('gigafauna-rampage', 'Gigafauna Rampage', 'Kinetic', 90, 90),
   ability: 'akivaRadiation',
   eligibility: "Twenty-seven risen kaiju, from a regenerating crocodile-squid to a magma-spewing beast.",

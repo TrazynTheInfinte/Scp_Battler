@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Reality'],
   stats: { template: 'balanced' },
   moves: ['scrap-construct', 'refine', 'coarse', 'overclock'],
+  moveNames: { refine: 'Rearrange Parts', coarse: 'Scrap Armor', overclock: 'Spin Up' },
   signatureMove: phys('scrap-construct', 'Scrap Construct', 'Mechanical', 85, 100),
   ability: 'guardConstructs',
   eligibility: "A construct of cans that builds animal constructs to guard and patrol its junkyard.",

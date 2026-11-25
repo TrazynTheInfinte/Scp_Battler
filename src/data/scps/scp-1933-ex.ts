@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'physicalBruiser' },
   moves: ['animatronic-lunge', 'bludgeon', 'pepper-spray', 'brace'],
+  moveNames: { bludgeon: 'Tail Slam', 'pepper-spray': 'Exhaust Fumes', brace: 'Fiberglass Hide' },
   signatureMove: phys('animatronic-lunge', 'Animatronic Lunge', 'Mundane', 90, 95),
   ability: 'smokeAndMirrors',
   eligibility: "A lake serpent that was always a hoax: the footage was a staged animatronic.",

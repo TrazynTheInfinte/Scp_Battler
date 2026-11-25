@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'wall' },
   moves: ['dead-mans-switch', 'roll-out', 'corrosive-touch', 'ram'],
+  moveNames: { 'roll-out': 'Tiny Tumble', 'corrosive-touch': 'Clockwork Tick', ram: 'Dense Body Slam' },
   signatureMove: phys('dead-mans-switch', "Dead Man's Switch", 'Mechanical', 80, 100),
   ability: 'selfRepairingBody',
   eligibility: "Hammie, a tiny, impossibly dense, self-repairing robot with a clockwork dead-man's switch, kept as a last resort.",

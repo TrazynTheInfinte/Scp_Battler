@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Thaumic'],
   stats: { template: 'support' },
   moves: ['pilgrims-light', 'smite', 'dissonant-chord', 'blinding-light'],
+  moveNames: { smite: 'Holy Radiance', 'dissonant-chord': 'Call to Prayer', 'blinding-light': 'Lantern Glare' },
   signatureMove: spec('pilgrims-light', "Pilgrim's Light", 'Memetic', 80, 100, [inflict('Amnesiac', 30)]),
   ability: 'callToPilgrimage',
   eligibility: "An unbreakable glass lamp whose light shows a holy city; whoever stares into it walks away to find it.",

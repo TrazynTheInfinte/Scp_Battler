@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Memetic'],
   stats: { template: 'support' },
   moves: ['holy-water', 'dissonant-chord', 'refine', 'calming-ooze'],
+  moveNames: { 'dissonant-chord': 'Hunka Hymn', refine: 'Baptize', 'calming-ooze': 'Blessed Croon' },
   signatureMove: spec('holy-water', 'Holy Water', 'Thaumic', 80, 100),
   ability: 'sanctified',
   eligibility: "A sainted Elvis impersonator who turns a reservoir into holy water for fighting demons.",

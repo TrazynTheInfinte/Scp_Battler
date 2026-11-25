@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic'],
   stats: { template: 'fastPhysical' },
   moves: ['drain-ambush', 'crimson-residue', 'flank', 'stalk'],
+  moveNames: { 'crimson-residue': 'Gnawing Mass', flank: 'Pipe Slither', stalk: 'Lurk Below' },
   signatureMove: phys('drain-ambush', 'Drain Ambush', 'Antimemetic', 80, 100, [foe({ def: -1 }, 30)]),
   ability: 'camouflaged',
   eligibility: "Camouflaged worms in the drains that dissolve the grate with acid and drag people down.",

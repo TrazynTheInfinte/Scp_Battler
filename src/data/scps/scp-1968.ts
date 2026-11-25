@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Reality'],
   stats: { template: 'balanced' },
   moves: ['retrocausal-loop', 'refine', 'decay', 'negative-space'],
+  moveNames: { refine: 'Rewritten Origin', decay: 'Unwritten Past', 'negative-space': 'Torus Void' },
   signatureMove: spec('retrocausal-loop', 'Retrocausal Loop', 'Temporal', 85, 100),
   ability: 'rewriteHistory',
   eligibility: "A bronze torus that rewrites its handler's past, kept as a last resort against the end of the world.",

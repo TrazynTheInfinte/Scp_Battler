@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Memetic'],
   stats: { template: 'balanced' },
   moves: ['drowsing-gaze', 'sedative', 'negative-space', 'memory-hole'],
+  moveNames: { sedative: 'Lull to Sleep', 'negative-space': 'Shapeless Dark', 'memory-hole': 'Dream Theft' },
   signatureMove: spec('drowsing-gaze', 'Drowsing Gaze', 'Antimemetic', 85, 100, [inflict('Stunned', 20)]),
   ability: 'nightmares',
   eligibility: "A shadowy shape whose gaze puts anyone watching to sleep, often leaving lasting psychological damage.",

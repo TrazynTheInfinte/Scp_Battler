@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Thaumic'],
   stats: { template: 'support' },
   moves: ['curtain-call', 'smite', 'dissonant-chord', 'blood-ink'],
+  moveNames: { smite: 'Divine Applause', 'dissonant-chord': 'Overture', 'blood-ink': 'Red Fluid' },
   signatureMove: spec('curtain-call', 'Curtain Call', 'Temporal', 80, 100, [inflict('Stunned', 30)]),
   ability: 'frozenAudience',
   eligibility: "A theatre outside reality whose frozen audience of entities wakes as a red fluid sets time running.",

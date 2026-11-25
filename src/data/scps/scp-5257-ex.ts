@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'support' },
   moves: ['malfunction', 'flare', 'pepper-spray', 'brace'],
+  moveNames: { flare: 'Static Shock', 'pepper-spray': 'Short Circuit', brace: 'Unplug' },
   signatureMove: spec('malfunction', 'Malfunction', 'Mundane', 75, 100, [foe({ spa: -1 }, 30)]),
   ability: 'badLuck',
   eligibility: "A technician convinced technology hates him, around whom machines keep breaking, and hurting people.",

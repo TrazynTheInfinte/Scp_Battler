@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Memetic'],
   stats: { template: 'support' },
   moves: ['foresight', 'dissonant-chord', 'blinding-light', 'erasure'],
+  moveNames: { 'dissonant-chord': 'Grim Prophecy', 'blinding-light': 'Fateful Warning', erasure: 'Backwards Memory' },
   signatureMove: spec('foresight', 'Foresight', 'Temporal', 80, null),
   ability: 'remembersTheFuture',
   eligibility: "A man who ages backwards and remembers the future, consulted to see threats coming.",

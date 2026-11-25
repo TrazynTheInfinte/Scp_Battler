@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Antimemetic'],
   stats: { template: 'fastSpecial' },
   moves: ['moral-panic', 'erasure', 'memory-hole', 'corrupt-file'],
+  moveNames: { erasure: 'Rewritten Memory', 'memory-hole': 'Forbidden Dish', 'corrupt-file': 'Twisted Morals' },
   signatureMove: spec('moral-panic', 'Moral Panic', 'Memetic', 85, 100, [foe({ spd: -1 }, 30)]),
   ability: 'mobMentality',
   eligibility: "A memetic plague that warps memory and morals, turning the infected against anyone who eats a certain food.",

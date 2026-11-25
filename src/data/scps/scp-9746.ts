@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Mechanical'],
   stats: { template: 'fastSpecial' },
   moves: ['concept-devour', 'data-surge', 'negative-space', 'obscure'],
+  moveNames: { 'data-surge': 'Gallop Online', 'negative-space': 'Eat the Idea', obscure: 'Corrupted Hooves' },
   signatureMove: spec('concept-devour', 'Concept Devour', 'Antimemetic', 85, 100),
   ability: 'conceptEater',
   eligibility: "A digitized horse loose on the web, eating files, decisions and ideas out of existence.",

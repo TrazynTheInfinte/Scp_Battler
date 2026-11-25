@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Thaumic'],
   stats: { template: 'wall' },
   moves: ['prison-pod', 'acidic-bile', 'smite', 'calming-ooze'],
+  moveNames: { 'acidic-bile': 'Digestive Sap', smite: "Goddess's Pulse", 'calming-ooze': 'Sleeping Pollen' },
   signatureMove: spec('prison-pod', 'Prison Pod', 'Biological', 75, 100, [inflict('Contained', 30)]),
   ability: 'plantGuardians',
   eligibility: "A living plant prison that seals monsters in pods, guarded by plant sentries that attack anyone harming it.",

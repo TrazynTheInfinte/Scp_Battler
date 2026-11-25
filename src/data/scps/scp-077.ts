@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Thaumic'],
   stats: { template: 'slowSpecial' },
   moves: ['green-vapor', 'blood-ink', 'refine', 'coarse'],
+  moveNames: { 'blood-ink': 'Rotting Mist', refine: 'Rot Spores', coarse: 'Bone Plating' },
   signatureMove: spec('green-vapor', 'Green Vapor', 'Temporal', 75, 100, [inflict('Bleeding', 30)]),
   ability: 'miasma',
   eligibility: "A rune-carved skull that, when neglected, releases a gas rotting all organic matter in its sight.",

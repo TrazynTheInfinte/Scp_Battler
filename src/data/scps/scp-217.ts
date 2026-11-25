@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'balanced' },
   moves: ['clockwork-conversion', 'acidic-bile', 'decay', 'overclock'],
+  moveNames: { 'acidic-bile': 'Rusting Fluid', decay: 'Clockwork Creep', overclock: 'Wind Up' },
   signatureMove: spec('clockwork-conversion', 'Clockwork Conversion', 'Mechanical', 85, 100, [inflict('Stunned', 20)]),
   ability: 'clockworkInfection',
   eligibility: "A virus that turns flesh into gears and clockwork, spreading by touch.",

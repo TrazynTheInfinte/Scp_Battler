@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'balanced' },
   moves: ['defensive-spray', 'blast', 'brace', 'strike'],
+  moveNames: { blast: 'Ray Gun', brace: 'Hunker Down', strike: 'Tentacle Slap' },
   signatureMove: spec('defensive-spray', 'Defensive Spray', 'Mundane', 85, 100, [inflict('Stunned', 20)]),
   ability: 'alienHide',
   eligibility: "A stranded alien that sprays anyone who threatens it; not anomalous, just from somewhere else.",

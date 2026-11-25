@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'fastPhysical' },
   moves: ['kinetoglyph', 'quick-jab', 'strike', 'brace'],
+  moveNames: { 'quick-jab': 'Sprint Start', strike: 'Body Check', brace: 'Team Huddle' },
   signatureMove: phys('kinetoglyph', 'Kinetoglyph', 'Mundane', 85, 100, [self({ spe: 1 })]),
   ability: 'deflection',
   eligibility: "Two gymnasts whose routines stopped gunfire and took down a Mobile Task Force team.",

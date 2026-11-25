@@ -9,6 +9,7 @@ export default {
   types: ['Temporal'],
   stats: { template: 'balanced' },
   moves: ['reverse-blow', 'decay', 'flank', 'coarse'],
+  moveNames: { decay: 'Unaging', flank: 'Backstep', coarse: 'Undo Harm' },
   signatureMove: phys('reverse-blow', 'Reverse Blow', 'Temporal', 80, 100),
   ability: 'backwards',
   eligibility: "A man who lives every action in reverse; whatever is done to him runs the other way.",

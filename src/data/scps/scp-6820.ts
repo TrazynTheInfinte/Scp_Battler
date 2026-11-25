@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Mechanical'],
   stats: { template: 'specialBruiser' },
   moves: ['memeplex-erasure', 'gear-grind', 'corrupt-file', 'negative-space'],
+  moveNames: { 'gear-grind': 'Tendril Crush', 'corrupt-file': 'Rage State', 'negative-space': 'Concept Purge' },
   signatureMove: spec('memeplex-erasure', 'Memeplex Erasure', 'Memetic', 95, 100),
   ability: 'adaptiveDefenses',
   eligibility: "A colossal, adaptive eigenweapon built to erase an idea-based predator.",

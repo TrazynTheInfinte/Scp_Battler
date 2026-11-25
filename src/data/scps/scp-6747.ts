@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Memetic'],
   stats: { template: 'fastSpecial' },
   moves: ['narrative-corruption', 'dissonant-chord', 'refine', 'corrupt-file'],
+  moveNames: { 'dissonant-chord': 'Villain Monologue', refine: 'Plot Armor', 'corrupt-file': 'Narrativohazard' },
   signatureMove: spec('narrative-corruption', 'Narrative Corruption', 'Reality', 85, 100, [inflict('Amnesiac', 30)]),
   ability: 'narrativeAnchor',
   eligibility: "A story-world built to bring back the dead, haunted by a reality-warping caricature of its director.",

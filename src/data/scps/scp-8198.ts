@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Antimemetic'],
   stats: { template: 'support' },
   moves: ['endless-nightmare', 'sedative', 'memory-hole', 'negative-space'],
+  moveNames: { sedative: 'Deep Sleep', 'memory-hole': 'Dream Bubble', 'negative-space': 'Waking Dark' },
   signatureMove: spec('endless-nightmare', 'Endless Nightmare', 'Memetic', 80, 100, [inflict('Stunned', 30)]),
   ability: 'deathOfSleep',
   eligibility: "A living plane of nightmares: anyone who falls asleep is trapped there and never wakes.",

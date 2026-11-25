@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Kinetic'],
   stats: { template: 'fastPhysical' },
   moves: ['retroactive-shot', 'ram', 'flank', 'ambush'],
+  moveNames: { ram: 'Muzzle Blast', flank: 'Chamber Round', ambush: 'Paradox Shot' },
   signatureMove: phys('retroactive-shot', 'Retroactive Shot', 'Temporal', 85, null),
   ability: 'alreadyFired',
   eligibility: "A gun the Foundation will build and fire once, killing its target in the past.",

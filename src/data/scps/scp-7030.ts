@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Temporal'],
   stats: { template: 'slowSpecial' },
   moves: ['crystallize', 'decay', 'negative-space', 'obscure'],
+  moveNames: { decay: 'Erosion of Time', 'negative-space': 'Vanishing', obscure: 'Crystal Glare' },
   signatureMove: spec('crystallize', 'Crystallize', 'Antimemetic', 90, 100, [inflict('Stunned', 20)]),
   ability: 'scalingStatues',
   eligibility: "People vanishing from every reality, leaving behind crystal statues that keep growing.",

@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Temporal'],
   stats: { template: 'balanced' },
   moves: ['neon-haze', 'decay', 'turn-back-time', 'obscure'],
+  moveNames: { decay: 'Apathetic Drift', 'turn-back-time': 'Last Train', obscure: 'Neon Glare' },
   signatureMove: spec('neon-haze', 'Neon Haze', 'Memetic', 80, 100, [foe({ atk: -1, spa: -1 }, 30)]),
   ability: 'apathy',
   eligibility: "A neon city spreading across universes, draining the will out of everyone it reaches.",

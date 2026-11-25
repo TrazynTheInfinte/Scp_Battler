@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Kinetic'],
   stats: { template: 'wall' },
   moves: ['school-lockdown', 'ram', 'roll-out', 'flank'],
+  moveNames: { ram: 'Slamming Doors', 'roll-out': 'Shifting Halls', flank: 'Recess Bell' },
   signatureMove: phys('school-lockdown', 'School Lockdown', 'Mechanical', 75, 100, [inflict('Contained', 30)]),
   ability: 'doorsSlamShut',
   eligibility: "A sapient school building that moves its own walls and doors, and now runs as a containment site.",

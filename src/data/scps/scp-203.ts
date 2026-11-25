@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Thaumic'],
   stats: { template: 'mixedAttacker' },
   moves: ['iron-drone', 'rend', 'blood-ink', 'weep'],
+  moveNames: { rend: 'Barbed Fingers', 'blood-ink': 'Hemorrhage', weep: 'Iron Resolve' },
   signatureMove: spec('iron-drone', 'Iron Drone', 'Memetic', 90, 90, [inflict('Stunned', 20)]),
   ability: 'deathDrone',
   eligibility: "A cast-iron humanoid with barbed fingers whose drone causes fatal brain hemorrhages.",

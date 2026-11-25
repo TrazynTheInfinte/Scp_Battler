@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Temporal'],
   stats: { template: 'mixedAttacker' },
   moves: ['crying-bullet', 'flank', 'corrosive-touch', 'rend'],
+  moveNames: { flank: 'Blizzard Step', 'corrosive-touch': 'Pygnite Heat', rend: "Fae Hunter's Blade" },
   signatureMove: phys('crying-bullet', 'Crying Bullet', 'Thaumic', 85, 100, [inflict('Stunned', 20)]),
   ability: 'nameStealer',
   eligibility: "Name-stealing fae, and the heat-giving metal forged from them to survive an endless blizzard.",

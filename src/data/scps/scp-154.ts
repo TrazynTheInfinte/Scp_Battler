@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Thaumic'],
   stats: { template: 'fastPhysical' },
   moves: ['bone-arrow', 'ambush', 'flank', 'overclock'],
+  moveNames: { ambush: "Hunter's Instinct", flank: 'Swift Dodge', overclock: 'Battle Trance' },
   signatureMove: phys('bone-arrow', 'Bone Arrow', 'Kinetic', 90, 95),
   ability: 'regrowingBones',
   eligibility: "Bracelets that form a bow which fires its wielder's own arm bones, which then regrow.",

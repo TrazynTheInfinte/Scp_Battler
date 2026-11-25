@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Antimemetic'],
   stats: { template: 'mixedAttacker' },
   moves: ['the-way-opens', 'memory-hole', 'crushing-jaws', 'negative-space'],
+  moveNames: { 'memory-hole': 'Lost in the Stacks', 'crushing-jaws': 'Serpent Bite', 'negative-space': "Librarian's Hush" },
   signatureMove: spec('the-way-opens', 'The Way Opens', 'Thaumic', 90, 100),
   ability: 'wanderersLibrary',
   eligibility: "A growing Way to the Wanderer's Library, guarded by a sapient serpent and hostile Librarians.",

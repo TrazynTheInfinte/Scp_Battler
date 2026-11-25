@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic'],
   stats: { template: 'fastPhysical' },
   moves: ['punch-through', 'blink', 'flank', 'stalk'],
+  moveNames: { blink: 'Through the Hole', flank: 'Trapdoor', stalk: 'Widen' },
   signatureMove: phys('punch-through', 'Punch Through', 'Kinetic', 80, null),
   ability: 'breakingAndEntering',
   eligibility: "Paper discs that instantly punch a hole through anything solid, used by burglars.",

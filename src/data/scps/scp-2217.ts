@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Mechanical'],
   stats: { template: 'specialBruiser' },
   moves: ['fulgurite-strike', 'gear-grind', 'data-surge', 'smite'],
+  moveNames: { 'gear-grind': 'Fulgurite Machine', 'data-surge': 'Static Charge', smite: 'Storm Blessing' },
   signatureMove: spec('fulgurite-strike', 'Fulgurite Strike', 'Kinetic', 90, 100, [inflict('Stunned', 20)]),
   ability: 'purifyingLightning',
   eligibility: "A beach of lightning and fulgurite machines whose discharge burned out the Flesh that Hates for miles.",

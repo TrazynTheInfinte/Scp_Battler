@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Thaumic'],
   stats: { template: 'support' },
   moves: ['thrown-voice', 'blood-ink', 'corrupt-file', 'erasure'],
+  moveNames: { 'blood-ink': 'Cursed Whisper', 'corrupt-file': 'Voice in Your Head', erasure: 'Lost Voice' },
   signatureMove: spec('thrown-voice', 'Thrown Voice', 'Memetic', 85, 100, [foe({ acc: -1 }, 30)]),
   ability: 'devotedHandlers',
   eligibility: "A dummy that compels its handlers to speak for it and guard it, sometimes lethally.",

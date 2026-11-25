@@ -9,6 +9,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'slowSpecial' },
   moves: ['detonation', 'blast', 'flare', 'brace'],
+  moveNames: { blast: 'Shrapnel Burst', flare: 'Fuse Spark', brace: 'Steel Casing' },
   signatureMove: spec('detonation', 'Detonation', 'Mundane', 100, 85),
   ability: 'shrapnel',
   eligibility: "A Mark 65 aerial bomb that turned out to be exactly that: a completely normal bomb.",

@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Kinetic'],
   stats: { template: 'fastSpecial' },
   moves: ['information-siphon', 'dissonant-chord', 'negative-space', 'obscure'],
+  moveNames: { 'dissonant-chord': 'Gravity Pulse', 'negative-space': 'Blank Record', obscure: 'Meteor Shower' },
   signatureMove: spec('information-siphon', 'Information Siphon', 'Antimemetic', 85, 100, [foe({ spa: -1 }, 30)]),
   ability: 'erasedFromRecord',
   eligibility: "A faster-than-light celestial being that feeds on erased text and memory, and finally on Earth.",

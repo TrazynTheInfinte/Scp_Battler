@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Kinetic'],
   stats: { template: 'physicalBruiser', tweaks: { atk: -15, hp: 15 } },
   moves: ['iron-contagion', 'ram', 'flank', 'roll-out'],
+  moveNames: { ram: 'Iron Tide', flank: 'Gear Swarm', 'roll-out': 'Rolling Cogs' },
   signatureMove: phys('iron-contagion', 'Iron Contagion', 'Mechanical', 85, 100),
   ability: 'contagiousIron',
   eligibility: "Contagious iron that turns living things into gear-like machines that attack and spread it.",

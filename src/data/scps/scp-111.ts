@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Mechanical'],
   stats: { template: 'specialBruiser' },
   moves: ['methane-jet', 'acidic-bile', 'calming-ooze', 'coarse'],
+  moveNames: { 'acidic-bile': 'Corrosive Slime', 'calming-ooze': 'Docile Slither', coarse: 'Hard Shell' },
   signatureMove: spec('methane-jet', 'Methane Jet', 'Mechanical', 85, 100, [inflict('Bleeding', 20)]),
   ability: 'stressed',
   eligibility: "Snail-like creatures that breathe jets of burning methane when stressed or angry.",

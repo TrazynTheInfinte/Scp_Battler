@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Kinetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['hellmouth', 'rend', 'crimson-residue', 'ambush'],
+  moveNames: { rend: 'Hell Claws', 'crimson-residue': 'Burning Oil', ambush: 'From the Sinkhole' },
   signatureMove: phys('hellmouth', 'Hellmouth', 'Thaumic', 90, 100, [inflict('Bleeding', 20)]),
   ability: 'regeneratingHide',
   eligibility: "A hell under a diamond mine, full of winged, feline and colossal regenerating monsters.",

@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Mechanical'],
   stats: { template: 'wall' },
   moves: ['anchor-field', 'data-surge', 'refine', 'blinding-light'],
+  moveNames: { 'data-surge': 'Anchor Pulse', refine: 'Stabilize', 'blinding-light': 'Hume Spike' },
   signatureMove: spec('anchor-field', 'Anchor Field', 'Reality', 80, 100),
   ability: 'scrantonField',
   eligibility: "The MK-VII Scranton Reality Anchor, which cancels reality-bending for 300 m around it.",

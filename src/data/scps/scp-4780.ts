@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Reality'],
   stats: { template: 'balanced' },
   moves: ['shrink-ray', 'data-surge', 'unmake', 'refine'],
+  moveNames: { 'data-surge': 'Recalibrate', unmake: 'Shrink to Nothing', refine: 'Resize' },
   signatureMove: spec('shrink-ray', 'Shrink Ray', 'Mechanical', 70, 100, [foe({ atk: -1, spa: -1 }, 50)]),
   ability: 'reverseSetting',
   eligibility: "A shrink ray, written up by the researcher it shrank, which has a reverse setting.",

@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Antimemetic'],
   stats: { template: 'support' },
   moves: ['half-death', 'smite', 'negative-space', 'blinding-light'],
+  moveNames: { smite: 'Death Rattle', 'negative-space': 'Between Worlds', 'blinding-light': 'Last Light' },
   signatureMove: spec('half-death', 'Half-Death', 'Antimemetic', 80, 100, [inflict('Amnesiac', 30)]),
   ability: 'deathHeldAtBay',
   eligibility: "A machine that sends a volunteer halfway into death to confront death itself.",

@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Antimemetic'],
   stats: { template: 'fastSpecial' },
   moves: ['momentum-barrage', 'negative-space', 'memory-hole', 'overclock'],
+  moveNames: { 'negative-space': 'Energy Sink', 'memory-hole': 'Invisible Impact', overclock: 'Build Speed' },
   signatureMove: spec('momentum-barrage', 'Momentum Barrage', 'Kinetic', 90, 90),
   ability: 'holeForMomentum',
   eligibility: "An unseen source of momentum that hurls loose objects in its sight at deadly speeds.",

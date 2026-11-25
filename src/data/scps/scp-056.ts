@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Reality'],
   stats: { template: 'support' },
   moves: ['captivate', 'calming-ooze', 'corrupt-file', 'regenerate'],
+  moveNames: { 'calming-ooze': 'Disarming Beauty', 'corrupt-file': 'Unsettling Charm', regenerate: 'Flawless Renewal' },
   signatureMove: spec('captivate', 'Captivate', 'Memetic', 70, 100, [inflict('Stunned', 20)]),
   ability: 'fascination',
   eligibility: "Becomes whatever its onlookers find most disarming; one incident left 27 people dead.",

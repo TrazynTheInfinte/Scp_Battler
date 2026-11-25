@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical'],
   stats: { template: 'physicalBruiser' },
   moves: ['unwanted-upgrade', 'crimson-residue', 'bone-saw', 'coarse'],
+  moveNames: { 'crimson-residue': 'Incision', 'bone-saw': 'Surgical Saw', coarse: 'Steel Plating' },
   signatureMove: phys('unwanted-upgrade', 'Unwanted Upgrade', 'Mechanical', 85, 100, [inflict('Bleeding', 30)]),
   ability: 'surgicalPrecision',
   eligibility: "A three-armed medical machine that restrains living things and \"improves\" them with metal, without anesthetic.",

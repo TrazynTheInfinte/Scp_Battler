@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Temporal'],
   stats: { template: 'slowSpecial' },
   moves: ['destabilizing-pulse', 'decay', 'blinding-light', 'smite'],
+  moveNames: { decay: 'Fading Starlight', 'blinding-light': 'Stellar Glow', smite: "Lovers' Quarrel" },
   signatureMove: spec('destabilizing-pulse', 'Destabilizing Pulse', 'Reality', 95, 100),
   ability: 'twoHearts',
   eligibility: "Two vast celestial lovers whose conversation sends reality-shaking pulses across the world.",

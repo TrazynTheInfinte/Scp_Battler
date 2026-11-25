@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Temporal'],
   stats: { template: 'fastSpecial' },
   moves: ['ball-lightning', 'turn-back-time', 'refine', 'obscure'],
+  moveNames: { 'turn-back-time': 'Archived Moment', refine: 'Barter', obscure: 'Dazzling Arc' },
   signatureMove: spec('ball-lightning', 'Ball Lightning', 'Kinetic', 85, 100, [inflict('Stunned', 20)]),
   ability: 'plasmaBody',
   eligibility: "The Archivists: sapient balls of lightning that trade with humans for things from other universes.",

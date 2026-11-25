@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Kinetic'],
   stats: { template: 'balanced' },
   moves: ['chitin-claw', 'crimson-residue', 'weep', 'stalk'],
+  moveNames: { 'crimson-residue': 'Graft Rip', weep: 'Replace Parts', stalk: 'Scavenge' },
   signatureMove: phys('chitin-claw', 'Chitin Claw', 'Kinetic', 85, 100),
   ability: 'hostTakeover',
   eligibility: "A parasite that replaces its host's limbs with stronger, faster chitinous ones, and spreads.",
