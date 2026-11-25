@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Reality'],
   stats: { template: 'slowSpecial' },
   moves: ['fission-shell', 'refine', 'decay', 'coarse'],
+  moveNames: { refine: 'Targeting', decay: 'Fission Fallout', coarse: 'Reinforced Barrel' },
   signatureMove: spec('fission-shell', 'Fission Shell', 'Mechanical', 110, 85),
   ability: 'loadedChamber',
   eligibility: 'A cannon that turns whatever is loaded into it into an explosive shell.',

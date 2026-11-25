@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic'],
   stats: { template: 'support' },
   moves: ['stitch-up', 'smite', 'roll-out', 'calming-ooze'],
+  moveNames: { smite: 'Patchwork Magic', 'roll-out': 'Playful Tumble', 'calming-ooze': 'Comforting Hug' },
   signatureMove: status('stitch-up', 'Stitch Up', 'Thaumic', null, [heal(33), cure]),
   ability: 'stuffed',
   eligibility: 'A patchwork bear that sews replacement organs into the injured.',

@@ -9,6 +9,7 @@ export default {
   types: ['Memetic', 'Thaumic'],
   stats: { template: 'balanced' },
   moves: ['possess', 'blood-ink', 'acidic-bile', 'calming-ooze'],
+  moveNames: { 'blood-ink': 'Tragic Visage', 'acidic-bile': 'Corrosive Discharge', 'calming-ooze': 'Hollow Promise' },
   signatureMove: spec('possess', 'Possess', 'Memetic', 85, 90),
   ability: 'psychoticAura',
   eligibility: 'A corrosive, telepathic mask that possesses whoever wears it.',

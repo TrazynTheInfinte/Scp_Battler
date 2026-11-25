@@ -9,6 +9,7 @@ export default {
   types: ['Biological'],
   stats: { template: 'physicalBruiser' },
   moves: ['infectious-bite', 'corrosive-touch', 'ambush', 'diagnose-pestilence'],
+  moveNames: { 'corrosive-touch': 'Necrotic Touch', ambush: 'Shambling Lunge', 'diagnose-pestilence': 'Infect' },
   signatureMove: phys('infectious-bite', 'Infectious Bite', 'Biological', 80, 100, [inflict('Bleeding', 30)]),
   ability: 'contagious',
   eligibility: 'A lethal prion whose reanimated hosts hunt and infect the living.',

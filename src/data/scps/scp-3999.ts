@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Memetic'],
   stats: { template: 'support' },
   moves: ['narrative-collapse', 'corrupt-file', 'turn-back-time', 'negative-space'],
+  moveNames: { 'corrupt-file': 'Plot Hole', 'turn-back-time': 'Rewrite Scene', 'negative-space': 'Blank Page' },
   signatureMove: spec('narrative-collapse', 'Narrative Collapse', 'Reality', 80, 90),
   ability: 'centerOfEverything',
   eligibility: 'A story that rewrites reality around whoever it centers on.',

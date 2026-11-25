@@ -50,6 +50,7 @@ function toSpecies(scp: ScpDefinition): SpeciesData {
     baseStats,
     moves: scp.moves,
     ability: scp.ability,
+    ...(scp.moveNames ? { moveNames: scp.moveNames } : {}),
   }
 }
 

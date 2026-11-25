@@ -136,6 +136,16 @@ export interface SpeciesData {
   moves: readonly [string, string, string, string]
   /** Id of an ability in the Dex. */
   ability?: string
+  /**
+   * Display-only names for shared moves on this species (move id -> name).
+   * The move's stats are unchanged; see moveName().
+   */
+  moveNames?: Readonly<Record<string, string>>
+}
+
+/** The name a move shows on a species: its own name for a shared move, or the move's name. */
+export function moveName(dex: Dex, speciesId: string, move: MoveData): string {
+  return dex.species[speciesId]?.moveNames?.[move.id] ?? move.name
 }
 
 export interface Dex {

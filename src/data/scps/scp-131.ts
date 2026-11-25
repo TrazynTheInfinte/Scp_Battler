@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic'],
   stats: { template: 'fastPhysical', tweaks: { hp: 4, atk: -12, def: -3, spa: 6, spd: -3, spe: 8 } },
   moves: ['roll-out', 'ram', 'flank', 'keep-watch'],
+  moveNames: { ram: 'Tumble Into', flank: 'Scurry Around' },
   signatureMove: status('keep-watch', 'Keep Watch', 'Memetic', 100, [foe({ spe: -1 })]),
   ability: 'everWatchful',
   eligibility: 'Mobile creatures that watch and follow anomalies.',

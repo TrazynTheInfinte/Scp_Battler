@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Thaumic'],
   stats: { template: 'physicalBruiser' },
   moves: ['flaming-sword', 'unmake', 'rend', 'erasure'],
+  moveNames: { unmake: 'Unmaking Light', rend: "Guardian's Blow", erasure: 'Mind-Searing Light' },
   signatureMove: phys('flaming-sword', 'Flaming Sword', 'Thaumic', 100, 90),
   ability: 'guardianOfTheGate',
   eligibility: 'A colossal guardian that destroys anything that approaches or attacks it.',

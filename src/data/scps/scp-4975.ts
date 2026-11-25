@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Antimemetic'],
   stats: { template: 'fastPhysical', tweaks: { hp: 10, atk: -10 } },
   moves: ['unseen-blow', 'rend', 'roll-out', 'blink'],
+  moveNames: { 'roll-out': 'Scuttling Rush' },
   signatureMove: phys('unseen-blow', 'Unseen Blow', 'Antimemetic', 80, null),
   ability: 'unseenAssailant',
   eligibility: "Stalks its prey for months, then bludgeons and tears it apart from where it cannot be seen.",

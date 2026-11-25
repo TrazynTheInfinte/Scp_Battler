@@ -9,6 +9,7 @@ export default {
   types: ['Memetic'],
   stats: { template: 'support' },
   moves: ['hostile-compulsion', 'contagious-joy', 'regenerate', 'calming-ooze'],
+  moveNames: { 'contagious-joy': 'Innocent Smile', regenerate: 'Mend', 'calming-ooze': 'Calm Presence' },
   signatureMove: status('hostile-compulsion', 'Hostile Compulsion', 'Memetic', 90, [inflict('Stunned')]),
   ability: 'untouchable',
   eligibility: "Anyone who hurts her dies within seconds, and her wounds close almost at once.",

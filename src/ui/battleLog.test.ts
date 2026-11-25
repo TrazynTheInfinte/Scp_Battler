@@ -21,6 +21,15 @@ describe('formatEvents', () => {
     expect(fmt([{ type: 'move', side: 1, moveId: 'rampage' }])).toEqual(['Hostile SCP-682 used Rampage.'])
   })
 
+  it("uses the SCP's own name for a shared move, tracking who is active", () => {
+    expect(
+      fmt([
+        { type: 'switch', side: 0, from: 0, to: 3 },
+        { type: 'move', side: 0, moveId: 'ram' },
+      ]),
+    ).toEqual(['You withdrew SCP-173 and deployed SCP-131.', 'SCP-131 used Tumble Into.'])
+  })
+
   it('shows exact damage for the player and a percentage for the opponent', () => {
     expect(
       fmt([{ type: 'damage', side: 0, amount: 30, hpAfter: 105, effectiveness: 1, crit: false }]),

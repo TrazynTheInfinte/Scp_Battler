@@ -9,6 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'fastSpecial' },
   moves: ['through-the-lens', 'gear-grind', 'refine', 'corrupt-file'],
+  moveNames: { 'gear-grind': 'Flash Photo', refine: 'Focus', 'corrupt-file': 'Overexposure' },
   signatureMove: spec('through-the-lens', 'Through the Lens', 'Temporal', 75, null),
   ability: 'outOfReach',
   eligibility: 'Reaches through photographs to act on distant places and people.',

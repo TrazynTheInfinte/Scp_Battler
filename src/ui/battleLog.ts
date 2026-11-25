@@ -1,4 +1,4 @@
-import { STRUGGLE, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
+import { STRUGGLE, moveName, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
 import { STAT_LABEL } from './text'
 
 /** The human player is always side 0; the AI is side 1. */
@@ -47,7 +47,9 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(`${name(e.side)} forgot what it was doing...`)
         break
       case 'move':
-        lines.push(`${name(e.side)} used ${(dex.moves[e.moveId] ?? STRUGGLE).name}.`)
+        lines.push(
+          `${name(e.side)} used ${moveName(dex, before.sides[e.side].team[active[e.side]].speciesId, dex.moves[e.moveId] ?? STRUGGLE)}.`,
+        )
         if (e.moveId === STRUGGLE.id) lines.splice(-1, 0, `${name(e.side)} has no PP left!`)
         break
       case 'miss':

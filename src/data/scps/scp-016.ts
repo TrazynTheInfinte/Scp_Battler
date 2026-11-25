@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Reality'],
   stats: { template: 'mixedAttacker' },
   moves: ['blood-spray', 'crimson-residue', 'unmake', 'rend'],
+  moveNames: { 'crimson-residue': 'Cellular Rupture', unmake: 'Assimilate', rend: 'Tissue Tear' },
   signatureMove: spec('blood-spray', 'Blood Spray', 'Biological', 85, 100, [inflict('Bleeding', 20)]),
   ability: 'teratomorphosis',
   eligibility: "A blood-borne pathogen whose hosts spray infected blood and, under stress, mutate into stronger, aggressive forms.",

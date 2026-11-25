@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic'],
   stats: { template: 'fastPhysical' },
   moves: ['undertow', 'smite', 'tickle', 'calming-ooze'],
+  moveNames: { smite: 'Tidal Hex', tickle: 'Lure', 'calming-ooze': 'Soothing Waters' },
   signatureMove: phys('undertow', 'Undertow', 'Thaumic', 70, 100, [foe({ spe: -1 }, 30)]),
   ability: 'formless',
   eligibility: "A humanoid of living water that has attacked and injured staff, and dissolves into any body of water.",

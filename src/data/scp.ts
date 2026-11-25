@@ -25,6 +25,12 @@ export interface ScpDefinition {
   stats: StatSpec
   /** Four distinct move ids: Move Pool moves, plus the signature move's id if it has one. */
   moves: SpeciesData['moves']
+  /**
+   * Its own names for shared Move Pool moves (move id -> name), so a pool move
+   * reads as something this SCP would do. Only the name changes; signature
+   * moves can't be renamed (they're already its own).
+   */
+  moveNames?: Readonly<Record<string, string>>
   /** Its one Signature Move (see GLOSSARY.md), if any. */
   signatureMove?: MoveData
   /** Id of an ability in abilities.ts. */

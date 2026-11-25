@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Biological'],
   stats: { template: 'fastPhysical' },
   moves: ['phantom-bite', 'crimson-residue', 'crushing-jaws', 'stalk'],
+  moveNames: { 'crimson-residue': 'Phantom Wound', 'crushing-jaws': 'Jaws From Nowhere', stalk: 'Circling' },
   signatureMove: phys('phantom-bite', 'Phantom Bite', 'Antimemetic', 70, null),
   ability: 'provoked',
   eligibility: 'An invisible predator that attacks swimmers and lashes out when provoked.',

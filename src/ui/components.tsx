@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, type ObjectClass, type TypeName } from '../engine'
+import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, moveName, type ObjectClass, type TypeName } from '../engine'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { ROSTER, isExplained, isOperative } from '../data/roster'
 import type { ScreenGuide } from './screenGuides'
@@ -122,7 +122,7 @@ export function DossierCard({
                 const m = ROSTER.moves[id]
                 return (
                   <li key={id}>
-                    <strong>{m.name}</strong> <TypeBadge type={m.type} />
+                    <strong>{moveName(ROSTER, speciesId, m)}</strong> <TypeBadge type={m.type} />
                     <span className="muted">{describeMove(m)}</span>
                   </li>
                 )

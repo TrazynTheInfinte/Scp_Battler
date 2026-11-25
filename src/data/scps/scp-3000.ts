@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Antimemetic'],
   stats: { template: 'wall' },
   moves: ['devour', 'memory-hole', 'erasure', 'regenerate'],
+  moveNames: { 'memory-hole': 'Forgetful Coils', erasure: 'Lose Yourself', regenerate: 'Endless Body' },
   signatureMove: phys('devour', 'Devour', 'Biological', 90, 100),
   ability: 'y909',
   eligibility: 'A colossal serpent that devours people and erases memories.',

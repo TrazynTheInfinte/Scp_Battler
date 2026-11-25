@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Antimemetic'],
   stats: { template: 'fastPhysical' },
   moves: ['splinter-strike', 'blink', 'bone-saw', 'overclock'],
+  moveNames: { blink: 'Splinter Jump', 'bone-saw': 'Embedded Splinters', overclock: 'Gather Remnants' },
   signatureMove: phys('splinter-strike', 'Splinter Strike', 'Kinetic', 85, 100, [inflict('Bleeding', 20)]),
   ability: 'agitated',
   eligibility: 'A teleporting chair that drives its splinters into anyone hostile.',

@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic', 'Memetic'],
   stats: { template: 'physicalBruiser' },
   moves: ['hoof-strike', 'contagious-joy', 'weep', 'flank'],
+  moveNames: { 'contagious-joy': 'Proud Charge', weep: 'Loyal Resolve', flank: 'Wheel Around' },
   signatureMove: phys('hoof-strike', 'Hoof Strike', 'Kinetic', 80, 100),
   ability: 'euphoricTouch',
   eligibility: "A 700 kg horse whose kicks have killed guards, and whose touch brings euphoria, then catatonia.",

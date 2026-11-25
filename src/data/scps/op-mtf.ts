@@ -8,6 +8,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'armoredStriker' },
   moves: ['gunfire', 'strike', 'flare', 'sedative'],
+  moveNames: { gunfire: 'Suppressing Fire', strike: 'Rifle Butt', flare: 'Frag Grenade', sedative: 'Tranquilizer Dart' },
   ability: 'tacticalTraining',
   eligibility: "A generic Mobile Task Force operative: trained, armed, and sent in when an anomaly breaches.",
   dossier: {

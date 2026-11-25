@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   activeOf,
   isStruggling,
+  moveName,
   STRUGGLE,
   switchTargets,
   typeEffectiveness,
@@ -379,7 +380,8 @@ export function BattleScreen({
               {mySpecies.moves.map((id, i) => {
                 const m = ROSTER.moves[id]
                 const tag = m.category === 'Status' ? '' : effectivenessTag(typeEffectiveness(m.type, foeTypes))
-                const desc = `${m.name}: ${describeMove(m)}`
+                const shown = moveName(ROSTER, mySpecies.id, m)
+                const desc = `${shown}: ${describeMove(m)}`
                 return (
                   <button
                     key={id}
@@ -395,7 +397,7 @@ export function BattleScreen({
                       act({ kind: 'move', moveIndex: i })
                     }}
                   >
-                    <span className="move-name">{m.name}</span>
+                    <span className="move-name">{shown}</span>
                     <span className="move-meta">
                       <span className={`type-${m.type}`}>{TYPE_ABBR[m.type]}</span>
                       <span className="muted">

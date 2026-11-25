@@ -9,6 +9,7 @@ export default {
   types: ['Biological', 'Thaumic'],
   stats: { template: 'mixedAttacker', tweaks: { hp: 10, atk: 2, spa: -9, spd: 6, spe: -9 } },
   moves: ['diagnose-pestilence', 'the-cure', 'bone-saw', 'sedative'],
+  moveNames: { 'bone-saw': 'Scalpel', sedative: 'Sedate the Patient' },
   signatureMove: phys('the-cure', 'The Cure', 'Biological', 85, 100),
   ability: 'theCure',
   eligibility: 'A hostile humanoid that kills with a touch.',

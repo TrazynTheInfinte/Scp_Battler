@@ -9,6 +9,7 @@ export default {
   types: ['Reality', 'Temporal'],
   stats: { template: 'support' },
   moves: ['loyal-creation', 'regenerate', 'calming-ooze', 'refine'],
+  moveNames: { regenerate: 'Self-Modification', 'calming-ooze': 'Docile Creation', refine: 'Genetic Rewrite' },
   signatureMove: phys('loyal-creation', 'Loyal Creation', 'Reality', 85, 100),
   ability: 'loyalCreations',
   eligibility: "Reshapes living things into loyal creatures, which fight and shield her on her behalf.",

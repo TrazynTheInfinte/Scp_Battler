@@ -9,6 +9,7 @@ export default {
   types: ['Thaumic', 'Antimemetic'],
   stats: { template: 'fastSpecial' },
   moves: ['hands-hex', 'memory-hole', 'turn-back-time', 'erasure'],
+  moveNames: { 'memory-hole': 'Library Lore', 'turn-back-time': 'Way Through Time', erasure: 'Forget-Me Hex' },
   signatureMove: spec('hands-hex', "Hand's Hex", 'Thaumic', 85, 100, [foe({ spa: -1 }, 20)]),
   ability: 'wayWalker',
   eligibility: "A Serpent's Hand leader who walked into Site-19 unnoticed to steal anomalies.",

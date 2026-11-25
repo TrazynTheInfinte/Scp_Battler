@@ -9,6 +9,7 @@ export default {
   types: ['Antimemetic', 'Reality'],
   stats: { template: 'fastSpecial' },
   moves: ['engulf', 'negative-space', 'refine', 'erasure'],
+  moveNames: { 'negative-space': 'Living Shadow', refine: 'Dark Shard', erasure: 'Swallowed by Dark' },
   signatureMove: spec('engulf', 'Engulf', 'Antimemetic', 80, 100),
   ability: 'shroud',
   eligibility: "A smoke-like shadow figure that leaps on anything casting a shadow and absorbs it without a trace.",

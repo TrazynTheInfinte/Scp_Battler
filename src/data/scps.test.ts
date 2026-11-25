@@ -67,6 +67,19 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     expect(mundane, 'Mundane moves on a non-Mundane SCP').toEqual([])
   })
 
+  it('renames only its own shared moves, with short, distinct names', () => {
+    const renamed = Object.entries(scp.moveNames ?? {})
+    for (const [moveId, name] of renamed) {
+      expect(scp.moves, `${moveId} is not one of its moves`).toContain(moveId)
+      expect(moveId, 'signature moves already have their own name').not.toBe(scp.signatureMove?.id)
+      expect(name.trim().length, moveId).toBeGreaterThan(0)
+      expect(name.length, `${name} is over 24 characters`).toBeLessThanOrEqual(24)
+      expect(name, `${name} is the move's own name`).not.toBe(ROSTER.moves[moveId].name)
+    }
+    const shown = scp.moves.map((m) => scp.moveNames?.[m] ?? ROSTER.moves[m].name)
+    expect(new Set(shown).size, `duplicate move names: ${shown.join(', ')}`).toBe(shown.length)
+  })
+
   it.runIf(scp.objectClass === 'Thaumiel')('as a Thaumiel, has an ability that counters something', () => {
     expect(ABILITIES[scp.ability].rules.some((r) => COUNTER_RULE_KINDS.has(r.kind))).toBe(true)
   })

@@ -8,6 +8,7 @@ export default {
   types: ['Mundane'],
   stats: { template: 'balanced' },
   moves: ['strike', 'roll-out', 'stalk', 'flank'],
+  moveNames: { 'roll-out': 'Duck and Roll', stalk: 'Steel Nerves', flank: 'Cheap Shot' },
   ability: 'expendable',
   eligibility: "A generic Class-D: expendable personnel sent in first to handle hazardous anomalies.",
   dossier: {

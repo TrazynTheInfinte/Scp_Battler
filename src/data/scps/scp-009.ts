@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Reality'],
   stats: { template: 'balanced' },
   moves: ['frozen-veins', 'refine', 'sedative', 'decay'],
+  moveNames: { refine: 'Crimson Shard', sedative: 'Hypothermia', decay: 'Slow Freeze' },
   signatureMove: spec('frozen-veins', 'Frozen Veins', 'Temporal', 75, 100, [inflict('Bleeding', 30)]),
   ability: 'spreadingFreeze',
   eligibility: "Converts the water inside a body into spreading red ice, which ruptures it from within.",

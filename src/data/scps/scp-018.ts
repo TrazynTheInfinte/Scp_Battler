@@ -9,6 +9,7 @@ export default {
   types: ['Kinetic'],
   stats: { template: 'fastPhysical' },
   moves: ['ricochet', 'ram', 'roll-out', 'flank'],
+  moveNames: { ram: 'Rebound', flank: 'Wild Bounce' },
   signatureMove: phys('ricochet', 'Ricochet', 'Kinetic', 70, 100, [self({ spe: 1 })]),
   ability: 'superelastic',
   eligibility: "A ball that bounces back with more energy every time, until it moves fast enough to injure people.",

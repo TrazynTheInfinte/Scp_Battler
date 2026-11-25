@@ -9,6 +9,7 @@ export default {
   types: ['Temporal', 'Thaumic'],
   stats: { template: 'balanced', tweaks: { hp: 10, atk: 10, spe: -20 } },
   moves: ['corrosive-touch', 'decay', 'ambush', 'into-the-pocket'],
+  moveNames: { ambush: 'From the Walls' },
   signatureMove: status('into-the-pocket', 'Into the Pocket', 'Thaumic', 90, [inflict('Contained')]),
   ability: 'phasing',
   eligibility: 'A hostile entity that corrodes matter and traps victims.',
