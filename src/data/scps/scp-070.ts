@@ -8,7 +8,7 @@ export default {
   wave: 4,
   types: ['Mechanical', 'Biological'],
   stats: { template: 'wall' },
-  moves: ['chain-lash', 'crimson-residue', 'coarse', 'regenerate'],
+  moves: ['chain-lash', 'crimson-residue', 'rend', 'regenerate'],
   signatureMove: phys('chain-lash', 'Chain Lash', 'Mechanical', 75, 100, [foe({ spe: -1 }, 30)]),
   ability: 'barbedChains',
   eligibility: "A man whose iron wings whip barbed chains at anyone who attacks him, whether he wants them to or not.",
