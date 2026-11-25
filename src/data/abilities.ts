@@ -1025,6 +1025,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "When it enters the field, the opponent glimpses the fractal: Sp. Def −1, and it loses its stat boosts.",
     rules: [{ kind: 'opponentStagesOnEntry', changes: { spd: -1 } }, { kind: 'clearOpponentBoostsOnEntry' }],
   },
+  // wave 10
+  {
+    id: 'lostInTheFair',
+    name: "Lost in the Fair",
+    description: "When it enters the field, the opponent loses its way: Accuracy −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }],
+  },
+  {
+    id: 'keyholder',
+    name: "Keyholder",
+    description: "Its guest slips through attacks: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'eyesOnTheCosmos',
+    name: "Eyes on the Cosmos",
+    description: "She sees from light-years away: her moves never miss.",
+    rules: [{ kind: 'neverMisses' }],
+  },
+  {
+    id: 'mountingGuilt',
+    name: "Mounting Guilt",
+    description: "Deals 1.3x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'gaeasField',
+    name: "Gaea's Field",
+    description: "When she enters the field, the opponent's artificial edge wears away: it loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'reducedPain',
+    name: "Reduced Pain",
+    description: "She barely feels pain: she can never be Stunned.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Stunned'] }],
+  },
+  {
+    id: 'continentalBulk',
+    name: "Continental Bulk",
+    description: "Takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'tunedFrequency',
+    name: "Tuned Frequency",
+    description: "When it enters the field, it tunes to the opponent: Defense −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { def: -1 } }],
+  },
+  {
+    id: 'numerologicalZone',
+    name: "Numerological Zone",
+    description: "At the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'startled',
+    name: "Startled",
+    description: "The first time it survives a damaging hit after entering, Speed +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { spe: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'hiveDetonation',
+    name: "Hive Detonation",
+    description: "Cornered units detonate: an attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'whateverSheWants',
+    name: "Whatever She Wants",
+    description: "Nothing she doesn't want can happen to her: opponents can't lower her stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(
