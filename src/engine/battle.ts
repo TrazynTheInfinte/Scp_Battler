@@ -10,13 +10,13 @@ import type {
   SideIndex,
   SideState,
   SpeciesData,
-  StageableStat,
+  StageName,
   StatStages,
   StatusName,
   Volatiles,
 } from './model'
 import { createRng, type Rng } from './rng'
-import { LEVEL, MAX_STAGE, MIN_STAGE, calcStat, effectiveStat } from './stats'
+import { ACC_MAX_STAGE, ACC_MIN_STAGE, LEVEL, MAX_STAGE, MIN_STAGE, calcStat, effectiveAccuracy, effectiveStat } from './stats'
 import {
   AMNESIAC_MAX_TURNS,
   AMNESIAC_MIN_TURNS,
@@ -46,8 +46,8 @@ const SIDES: readonly SideIndex[] = [0, 1]
  */
 export const TURN_LIMIT = 100
 
-const STAGEABLE: readonly StageableStat[] = ['atk', 'def', 'spa', 'spd', 'spe']
-const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0 }
+const STAGEABLE: readonly StageName[] = ['atk', 'def', 'spa', 'spd', 'spe', 'acc']
+const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0 }
 const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0, withdrawing: false }
 
 /**
@@ -384,6 +384,20 @@ function moveData(dex: Dex, id: string): MoveData {
 }
 
 /** What modifies an SCP in battle: its ability, then its Equipment (each if it has one). */
+/**
+ * `user`'s chance to hit with `move` (percent), after its accuracy stage;
+ * null means it can't miss (the move never misses, or its ability says so).
+ */
+export function moveAccuracy(dex: Dex, user: Combatant, move: MoveData): number | null {
+  if (effectsOf(dex, user).some((e) => e.neverMisses)) return null
+  return effectiveAccuracy(move.accuracy, user.stages.acc)
+}
+
+/** True if opponents can't usefully lower `c`'s stats (its ability blocks or reverses drops). */
+export function shrugsOffStatDrops(dex: Dex, c: Combatant): boolean {
+  return effectsOf(dex, c).some((e) => e.blocksOpponentStatDrops || e.reversesOpponentStatDrops)
+}
+
 function effectsOf(dex: Dex, c: Combatant): Ability[] {
   const out: Ability[] = []
   const ability = getAbility(dex, species(dex, c.speciesId).ability)
@@ -525,7 +539,8 @@ function executeMove(
   events.push({ type: 'move', side, moveId: move.id })
   if (!struggling) user.pp[moveIndex] -= 1
 
-  if (move.accuracy !== null && rng.int(1, 100) > move.accuracy) {
+  const accuracy = moveAccuracy(dex, user, move)
+  if (accuracy !== null && rng.int(1, 100) > accuracy) {
     events.push({ type: 'miss', side })
     return isStatusMove
   }
@@ -667,16 +682,26 @@ function changeStages(
   const c = activeOf(s, side)
   if (isNeutralized(c)) return false
   const blocker = effectsOf(dex, c).find((e) => e.blocksOpponentStatDrops)
+  const reverser = blocker ? undefined : effectsOf(dex, c).find((e) => e.reversesOpponentStatDrops)
   let changed = false
   let blocked = false
+  let reversed = false
   for (const stat of STAGEABLE) {
-    const requested = changes[stat]
+    let requested = changes[stat]
     if (!requested) continue
     if (requested < 0 && byOpponent && blocker) {
       blocked = true
       continue
     }
-    const next = Math.max(MIN_STAGE, Math.min(MAX_STAGE, c.stages[stat] + requested))
+    if (requested < 0 && byOpponent && reverser) {
+      if (!reversed) events.push(triggered(side, reverser))
+      reversed = true
+      // Accuracy never rises, so a reversed accuracy drop just fails.
+      if (stat === 'acc') continue
+      requested = -requested
+    }
+    const [lo, hi] = stat === 'acc' ? [ACC_MIN_STAGE, ACC_MAX_STAGE] : [MIN_STAGE, MAX_STAGE]
+    const next = Math.max(lo, Math.min(hi, c.stages[stat] + requested))
     const delta = next - c.stages[stat]
     if (delta === 0) continue
     c.stages[stat] = next

@@ -9,9 +9,15 @@ export type ObjectClass = 'Safe' | 'Euclid' | 'Keter' | 'Thaumiel' | 'Apollyon'
 export type StatName = 'hp' | 'atk' | 'def' | 'spa' | 'spd' | 'spe'
 export type Stats = Record<StatName, number>
 
-/** Stats that can carry stat stages (no accuracy/evasion stages by design). */
+/** Stats that can carry stat stages. */
 export type StageableStat = Exclude<StatName, 'hp'>
-export type StatStages = Record<StageableStat, number>
+/**
+ * Everything that carries a stage: the five stats plus accuracy. Accuracy only
+ * goes down (to ACC_MIN_STAGE) and only affects moves with an accuracy number;
+ * moves that never miss ignore it. There are no evasion stages.
+ */
+export type StageName = StageableStat | 'acc'
+export type StatStages = Record<StageName, number>
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status'
 
@@ -94,6 +100,12 @@ export type AbilityRule =
   | { kind: 'extraPp'; fraction: number }
   /** At end of turn, `chance`% to withdraw (as the 'withdraw' move effect does). */
   | { kind: 'randomWithdraw'; chance: number }
+  /** Stat drops the opponent causes become boosts of the same size (accuracy drops just fail). */
+  | { kind: 'reverseStatDrops' }
+  /** Whenever it enters the field, applies `changes` to the opponent (blockable like any opponent drop). */
+  | { kind: 'opponentStagesOnEntry'; changes: Partial<StatStages> }
+  /** Its moves never miss, whatever their accuracy or its accuracy stage. */
+  | { kind: 'neverMisses' }
 
 export interface AbilityData {
   id: string
@@ -240,7 +252,7 @@ export type BattleEvent =
   | { type: 'recoil'; side: SideIndex; amount: number; hpAfter: number }
   /** Tried to attack while frozen by a watcher (Unobserved vs Ever Watchful): the attack fails. */
   | { type: 'frozen'; side: SideIndex }
-  | { type: 'stage'; side: SideIndex; stat: StageableStat; delta: number }
+  | { type: 'stage'; side: SideIndex; stat: StageName; delta: number }
   | { type: 'status'; side: SideIndex; status: StatusName }
   /** A status was cured or wore off. */
   | { type: 'statusEnded'; side: SideIndex; status: StatusName }

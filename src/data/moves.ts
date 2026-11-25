@@ -109,4 +109,9 @@ export const MOVE_POOL: readonly MoveData[] = [
   // SCP-970 (Friend's Pick): an escape that also sheds statuses and stat drops.
   // Limited PP, like a heal, so it can't be used to stall.
   { ...status('demanifest', 'Demanifest', 'Kinetic', null, [resetSelf, withdraw]), pp: PP_LIMITED },
+  // wave 7: accuracy drops. They only matter against moves that can miss,
+  // which is what sets "never misses" apart from 100%.
+  status('flashbang', 'Flashbang', 'Mundane', 100, [foe({ acc: -1 })]),
+  status('blinding-light', 'Blinding Light', 'Reality', 100, [foe({ acc: -1 })]),
+  spec('obscure', 'Obscure', 'Antimemetic', 55, 100, [foe({ acc: -1 }, 50)]),
 ]

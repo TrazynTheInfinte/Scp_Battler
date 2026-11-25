@@ -1,6 +1,6 @@
 import type { AbilityData, AbilityRule, Combatant, Dex, EquipmentData, MoveData, StatStages, StatusName } from './model'
 import type { Rng } from './rng'
-import { MAX_STAGE } from './stats'
+import { ACC_MIN_STAGE, MAX_STAGE, MIN_STAGE } from './stats'
 import type { TypeName } from './typeChart'
 
 /**
@@ -37,6 +37,10 @@ interface AbilityHooks {
   // --- Flags ---
   /** Opponents' moves and abilities can't lower this SCP's stat stages. */
   blocksOpponentStatDrops?: boolean
+  /** Opponents' stat drops on this SCP become boosts instead (accuracy drops fail). */
+  reversesOpponentStatDrops?: boolean
+  /** This SCP's moves never miss. */
+  neverMisses?: boolean
   /** Statuses this SCP can never receive (on top of type immunities). */
   statusImmunities?: readonly StatusName[]
   /**
@@ -109,6 +113,24 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
       }
     case 'blockStatDrops':
       return { blocksOpponentStatDrops: true }
+    case 'reverseStatDrops':
+      return { reversesOpponentStatDrops: true }
+    case 'neverMisses':
+      return { neverMisses: true }
+    case 'opponentStagesOnEntry':
+      return {
+        onSwitchIn(ctx) {
+          const opp = ctx.opponent
+          if (opp.hp <= 0) return
+          const floor = (stat: keyof StatStages) => (stat === 'acc' ? ACC_MIN_STAGE : MIN_STAGE)
+          const room = (Object.entries(rule.changes) as [keyof StatStages, number][]).some(
+            ([stat, n]) => n < 0 && opp.stages[stat] > floor(stat),
+          )
+          if (!room) return
+          ctx.announce()
+          ctx.changeStages('opponent', rule.changes)
+        },
+      }
     case 'statusImmunity':
       return { statusImmunities: rule.statuses }
     case 'watcher':
@@ -200,6 +222,8 @@ export function compileAbility(data: AbilityData, source: Ability['source'] = 'a
 
   const ability: Ability = { id: data.id, name: data.name, description: data.description, source }
   if (parts.some((p) => p.blocksOpponentStatDrops)) ability.blocksOpponentStatDrops = true
+  if (parts.some((p) => p.reversesOpponentStatDrops)) ability.reversesOpponentStatDrops = true
+  if (parts.some((p) => p.neverMisses)) ability.neverMisses = true
   if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
   if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
   if (parts.some((p) => p.healsEachTurn)) ability.healsEachTurn = true

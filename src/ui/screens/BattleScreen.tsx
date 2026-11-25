@@ -70,6 +70,7 @@ function SideInfo({ state, side }: { state: BattleState; side: SideIndex }) {
         <strong>{sp.name}</strong>
         <ClassBadge objectClass={sp.objectClass} />
         {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+        {c.stages.acc < 0 && <span className="badge status-badge">ACC −{-c.stages.acc}</span>}
       </div>
       <div className="row" style={{ gap: 4 }}>
         {sp.types.map((t) => (

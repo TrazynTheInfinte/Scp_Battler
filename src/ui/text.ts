@@ -1,12 +1,13 @@
-import type { MoveData, MoveEffect, StageableStat, TypeName } from '../engine'
+import type { MoveData, MoveEffect, StageName, TypeName } from '../engine'
 
-export const STAT_LABEL: Readonly<Record<StageableStat | 'hp', string>> = {
+export const STAT_LABEL: Readonly<Record<StageName | 'hp', string>> = {
   hp: 'HP',
   atk: 'Atk',
   def: 'Def',
   spa: 'Sp.Atk',
   spd: 'Sp.Def',
   spe: 'Speed',
+  acc: 'Accuracy',
 }
 
 export const TYPE_ABBR: Readonly<Record<TypeName, string>> = {
@@ -38,7 +39,7 @@ const STATUS_VERB: Readonly<Record<string, string>> = {
 }
 
 function stageText(changes: MoveEffect & { kind: 'stages' }): string {
-  const parts = (Object.entries(changes.changes) as [StageableStat, number][])
+  const parts = (Object.entries(changes.changes) as [StageName, number][])
     .filter(([, n]) => n)
     .map(([stat, n]) => `${STAT_LABEL[stat]} ${n > 0 ? '+' : '−'}${Math.abs(n)}`)
   const who = changes.who === 'user' ? 'User' : 'Target'

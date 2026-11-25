@@ -562,6 +562,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "An attacker that damages it with a move loses 1/16 of its own max HP.",
     rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
   },
+  // wave 7
+  {
+    id: 'interchangeableModules',
+    name: "Interchangeable Modules",
+    description: "Fits its soldier module on the way in: Attack +1 whenever it enters the field.",
+    rules: [{ kind: 'boostOnEntry', changes: { atk: 1 } }],
+  },
+  {
+    id: 'devotedHandlers',
+    name: "Devoted Handlers",
+    description: "Its handlers protect it: an attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'sisterOfTheSun',
+    name: "Sister of the Sun",
+    description: "Its aim is never wrong: its moves never miss, and opponents can't lower its stats.",
+    rules: [{ kind: 'neverMisses' }, { kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'endlessHalls',
+    name: "Endless Halls",
+    description: "When it enters the field, the opponent gets lost in its halls: Speed −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spe: -1 } }],
+  },
+  {
+    id: 'backwards',
+    name: "Backwards",
+    description: "Stat drops from the opponent work in reverse and raise its stats instead. Accuracy drops just fail.",
+    rules: [{ kind: 'reverseStatDrops' }],
+  },
+  {
+    id: 'deathDrone',
+    name: "Death Drone",
+    description: "At the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'castShadows',
+    name: "Cast Shadows",
+    description: "When it enters the field, the opponent can't see straight: Accuracy −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }],
+  },
+  {
+    id: 'surgicalPrecision',
+    name: "Surgical Precision",
+    description: "Deals 1.5x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.5 }],
+  },
+  {
+    id: 'clockworkInfection',
+    name: "Clockwork Infection",
+    description: "An attacker that hits it with a Physical move has a 30% chance to be Stunned.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Stunned', chance: 30 }],
+  },
+  {
+    id: 'paralyticMucus',
+    name: "Paralytic Mucus",
+    description: "An attacker that hits it with a Physical move has a 30% chance to be Stunned.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Stunned', chance: 30 }],
+  },
+  {
+    id: 'unstoppable',
+    name: "Unstoppable",
+    description: "Nothing moves it or slows it down: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'neuralGrowth',
+    name: "Neural Growth",
+    description: "An attacker that hits it with a Physical move has a 30% chance to become Amnesiac.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Amnesiac', chance: 30 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

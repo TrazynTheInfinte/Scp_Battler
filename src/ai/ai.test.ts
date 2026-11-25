@@ -58,7 +58,7 @@ describe('chooseAction', () => {
     // 173 vs 914: Neck Snap (Kinetic, x2 on Mechanical) beats Blink and Crimson Residue.
     // (Already boosted to the limit, so it attacks rather than Stalks.)
     const s = battle(['scp-173', 'scp-999', 'scp-914', 'scp-131'], ['scp-914', 'scp-999', 'scp-343', 'scp-131'])
-    activeOf(s, 0).stages = { atk: 2, def: 0, spa: 0, spd: 0, spe: 2 }
+    activeOf(s, 0).stages = { atk: 2, def: 0, spa: 0, spd: 0, spe: 2, acc: 0 }
     expect(chooseAction(s, ROSTER, 0, rng())).toEqual({ kind: 'move', moveIndex: 0 })
   })
 

@@ -225,7 +225,7 @@ describe('Phasing (106)', () => {
 describe('Self-Keeping Secret (055)', () => {
   it('wipes the opponent’s boosts when it enters, but not their drops', () => {
     const s = battle(team('scp-914', 'scp-055'), team('scp-173'))
-    activeOf(s, 1).stages = { atk: 2, def: -1, spa: 0, spd: 0, spe: 1 }
+    activeOf(s, 1).stages = { atk: 2, def: -1, spa: 0, spd: 0, spe: 1, acc: 0 }
     // 914 switches to 055; 173 uses Stalk this turn (+1 Atk, +1 Spe after the wipe).
     const { events } = resolveTurn(s, ROSTER, [sw(1), move(3)])
     const wipe = events.findIndex((e) => e.type === 'ability' && e.abilityId === 'selfKeepingSecret')

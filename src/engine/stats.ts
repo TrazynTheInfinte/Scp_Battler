@@ -5,6 +5,20 @@ export const LEVEL = 50
 
 export const MIN_STAGE = -6
 export const MAX_STAGE = 6
+/** Accuracy can drop to -3 and never rises. */
+export const ACC_MIN_STAGE = -3
+export const ACC_MAX_STAGE = 0
+
+/** Accuracy multiplier: -1 => x0.75, -2 => x0.6, -3 => x0.5. */
+export function accuracyMultiplier(stage: number): number {
+  const s = Math.max(ACC_MIN_STAGE, Math.min(ACC_MAX_STAGE, stage))
+  return 3 / (3 - s)
+}
+
+/** A move's chance to hit (percent) at an accuracy stage; null means it never misses, whatever the stage. */
+export function effectiveAccuracy(accuracy: number | null, stage: number): number | null {
+  return accuracy === null ? null : Math.floor(accuracy * accuracyMultiplier(stage))
+}
 
 /**
  * Max HP is scaled up from the Pokémon formula so most hits take 3+ to knock

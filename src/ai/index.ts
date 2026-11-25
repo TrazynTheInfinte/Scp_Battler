@@ -13,6 +13,8 @@ import {
   createCombatant,
   equipmentBudget,
   equipmentHasEffect,
+  moveAccuracy,
+  shrugsOffStatDrops,
   expectedDamage,
   isNeutralized,
   isStruggling,
@@ -135,6 +137,10 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
   const boost = safeBoost(dex, me, opp, moves, usable, rng)
   if (boost !== null) return { kind: 'move', moveIndex: boost }
 
+  // 3b. Lower the foe's accuracy once, if its best attack can miss and it's safe to spend a turn.
+  const blind = safeBlind(dex, me, opp, moves, usable, rng)
+  if (blind !== null) return { kind: 'move', moveIndex: blind }
+
   // 4. Inflict a status when attacks are weak against this target.
   const attackScores = moves.map((m) => expectedShare(dex, me, opp, m))
   const usableScores = attackScores.filter((_, i) => usable(i))
@@ -144,7 +150,7 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
       const inflicts = m.effects?.find((e) => e.kind === 'status')
       if (!inflicts || inflicts.kind !== 'status') return []
       if (!canReceiveStatus(dex, opp, inflicts.status)) return []
-      return [{ value: i, score: (m.accuracy ?? 100) / 100 }]
+      return [{ value: i, score: hitChance(dex, m, me) }]
     })
     if (statusMoves.length > 0) return { kind: 'move', moveIndex: pickBest(statusMoves, rng) }
   }
@@ -191,8 +197,13 @@ function movesOf(dex: Dex, c: Combatant): MoveData[] {
 /** Expected share of the target's current HP one use of `move` removes (accuracy included, capped at 1). */
 function expectedShare(dex: Dex, user: Combatant, target: Combatant, move: MoveData): number {
   if (move.category === 'Status' || target.hp <= 0 || attacksBlocked(dex, user, target)) return 0
-  const dmg = expectedDamage(dex, user, target, move) * ((move.accuracy ?? 100) / 100)
+  const dmg = expectedDamage(dex, user, target, move) * hitChance(dex, move, user)
   return Math.min(1, dmg / target.hp)
+}
+
+/** Chance (0-1) that `user` hits with `move`, after its accuracy stage and ability. */
+function hitChance(dex: Dex, move: MoveData, user: Combatant): number {
+  return (moveAccuracy(dex, user, move) ?? 100) / 100
 }
 
 function bestShare(dex: Dex, user: Combatant, target: Combatant): number {
@@ -238,6 +249,41 @@ function safeBoost(
     if (!raises.every(([stat]) => me.stages[stat] < BOOST_STAGE_LIMIT)) return []
     return [{ value: i, score: raises.reduce((sum, [, n]) => sum + n, 0) }]
   })
+  return options.length > 0 ? pickBest(options, rng) : null
+}
+
+/** A move that only lowers the target's accuracy (e.g. Flashbang), or false. */
+function isBlinding(m: MoveData): boolean {
+  return (
+    m.category === 'Status' &&
+    !!m.effects?.length &&
+    m.effects.every((e) => e.kind === 'stages' && e.who === 'target' && (e.changes.acc ?? 0) < 0)
+  )
+}
+
+/**
+ * An accuracy-lowering move to use now, or null. Only once per foe (while its
+ * accuracy is untouched), only if the foe's best attack can miss at all, and
+ * under the same safety checks as boosting.
+ */
+function safeBlind(
+  dex: Dex,
+  me: Combatant,
+  opp: Combatant,
+  moves: readonly MoveData[],
+  usable: (i: number) => boolean,
+  rng: Rng,
+): number | null {
+  if (opp.stages.acc < 0 || shrugsOffStatDrops(dex, opp)) return null
+  const mine = bestShare(dex, me, opp)
+  if (mine >= 1) return null
+  const theirMoves = movesOf(dex, opp)
+  const shares = theirMoves.map((m) => expectedShare(dex, opp, me, m))
+  const theirs = Math.max(0, ...shares)
+  if (theirs <= 0 || theirs >= BOOST_SAFE_SHARE) return null
+  if (moveAccuracy(dex, opp, theirMoves[shares.indexOf(theirs)]) === null) return null
+  if (speedOf(opp) > speedOf(me) && theirs > mine) return null
+  const options = moves.flatMap((m, i) => (isBlinding(m) && usable(i) ? [{ value: i, score: hitChance(dex, m, me) }] : []))
   return options.length > 0 ? pickBest(options, rng) : null
 }
 
