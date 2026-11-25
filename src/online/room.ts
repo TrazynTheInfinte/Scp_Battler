@@ -78,8 +78,12 @@ export async function createRoom(entrant: Entrant): Promise<Result<{ code: strin
   } catch {
     return { ok: false, error: OFFLINE }
   }
+  // Writes before sign-in is restored go out signed-out, and the rules refuse them.
+  const signedIn = await signedInAs(fb, entrant.uid)
+  if (!signedIn.ok) return signedIn
   void sweepStaleRooms(fb)
   const { dbApi, db } = fb
+  let lastError: unknown = null
   for (let attempt = 0; attempt < 5; attempt++) {
     const code = newRoomCode()
     try {
@@ -90,14 +94,38 @@ export async function createRoom(entrant: Entrant): Promise<Result<{ code: strin
         createdAt: dbApi.serverTimestamp(),
         seats: { 0: seatFor(entrant) },
       })
-      await dbApi.set(dbApi.ref(db, `roomAges/${code}`), dbApi.serverTimestamp())
-      remember({ code, seat: 0 })
-      return { ok: true, code }
-    } catch {
-      // Taken (or offline); try another code.
+    } catch (e) {
+      // Taken (or refused); try another code.
+      lastError = e
+      continue
     }
+    // Only used to sweep stale Rooms later: the Room works without it.
+    dbApi.set(dbApi.ref(db, `roomAges/${code}`), dbApi.serverTimestamp()).catch((e: unknown) => {
+      console.warn('Room created, but its age entry was refused:', e)
+    })
+    remember({ code, seat: 0 })
+    return { ok: true, code }
   }
-  return { ok: false, error: "Couldn't create a Room. Check your connection and try again." }
+  console.error("Couldn't create a Room:", lastError)
+  return { ok: false, error: `Couldn't create a Room (${errorCode(lastError)}). Try again; if it keeps happening, sign out and back in.` }
+}
+
+/** The short reason Firebase gave (e.g. "permission denied"), for messages players can report. */
+function errorCode(e: unknown): string {
+  const raw = (e as { code?: unknown } | null)?.code ?? (e as { message?: unknown } | null)?.message
+  return typeof raw === 'string' ? raw.toLowerCase().replace(/_/g, ' ') : 'unknown error'
+}
+
+/** Wait for sign-in to be restored, and check it's the Account the player is using. */
+async function signedInAs(fb: Firebase, uid: string): Promise<Result> {
+  try {
+    await fb.auth.authStateReady()
+  } catch {
+    return { ok: false, error: OFFLINE }
+  }
+  return fb.auth.currentUser?.uid === uid
+    ? { ok: true }
+    : { ok: false, error: 'Your sign-in has expired. Sign out and back in on the title screen, then try again.' }
 }
 
 /** Join a Room as seat 1 (or rejoin the seat this Account already holds). */
@@ -108,6 +136,8 @@ export async function joinRoom(code: string, entrant: Entrant): Promise<Result<{
   } catch {
     return { ok: false, error: OFFLINE }
   }
+  const signedIn = await signedInAs(fb, entrant.uid)
+  if (!signedIn.ok) return signedIn
   const { dbApi, db } = fb
   let room: RoomData | null
   try {
