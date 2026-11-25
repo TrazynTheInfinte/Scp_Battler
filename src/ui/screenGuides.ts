@@ -12,6 +12,7 @@ export const TEAM_BUILDER_GUIDE: ScreenGuide = {
     ['Budget bar', 'Points spent on SCPs. Each costs its object class.'],
     ['Equipment bar', 'Points spent on Equipment, out of what you have left.'],
     ['Yellow line', 'What the team still needs, or why something was refused.'],
+    ['Opponent', 'Who you fight: Scientist (random moves), Trainer (shows its next move), Mobile Task Force (standard), O5 Council Member (strongest teams) or Reality Bender (flipped stats, counter-typed moves).'],
     ['Battle', 'Lights up once the team is complete and legal.'],
     ['Equipment button', 'Lists every piece and what it does.'],
     ['Saved', 'Name and save the current team, or load one you saved.'],
@@ -25,7 +26,8 @@ export const TEAM_BUILDER_GUIDE: ScreenGuide = {
 export const BATTLE_GUIDE: ScreenGuide = {
   title: 'Battle',
   parts: [
-    ['Top card', "The opponent's active SCP: object class, types, status, Equipment and HP."],
+    ['Top card', "The opponent's name and active SCP: object class, types, status, Equipment and HP. REALITY-BENT means its stats are flipped and its moves use their counter type."],
+    ['Yellow banner', "Against the Trainer: the move it has already committed to this turn."],
     ['Bottom card', 'Your active SCP.'],
     ['Dots', '● SCPs still standing on that side, ○ Neutralized.'],
     ['Log', 'What just happened. Click it while a turn plays to skip ahead.'],

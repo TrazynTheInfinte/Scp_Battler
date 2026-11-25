@@ -202,6 +202,12 @@ export interface Combatant {
   /** At most one status condition. Persists through switching. */
   status: StatusState | null
   volatiles: Volatiles
+  /**
+   * Reality-bent (the Reality Bender bot's team): its stats were swapped by
+   * rank when the battle began, and each of its moves uses its counter type
+   * (see counterType). Absent on everyone else.
+   */
+  bent?: true
 }
 
 export interface SideState {

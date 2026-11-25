@@ -342,6 +342,19 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
+.opponent-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.opponent-pick select {
+  font: inherit;
+  padding: 6px 8px;
+  color: var(--fg);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
 .battle-btn {
   flex: 1;
 }

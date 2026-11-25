@@ -51,12 +51,12 @@ export function applyEventToView(view: BattleState, e: BattleEvent): BattleState
 }
 
 /** Frames for a sequence of steps: one per event, then a snap to each step's real final state. */
-export function framesFor(steps: readonly Step[], dex: Dex): Frame[] {
+export function framesFor(steps: readonly Step[], dex: Dex, hostileTag?: string): Frame[] {
   const frames: Frame[] = []
   for (const step of steps) {
     let view = step.before
     for (const e of step.events) {
-      const lines = formatEvents(view, [e], dex)
+      const lines = formatEvents(view, [e], dex, hostileTag)
       view = applyEventToView(view, e)
       frames.push({ view, lines, hit: e.type === 'damage' ? e.side : null })
     }

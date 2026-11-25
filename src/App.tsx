@@ -1,6 +1,15 @@
 import { useState, useSyncExternalStore } from 'react'
 import { chooseAction, chooseReplacement, randomEquipment, randomTeam } from './ai'
+import {
+  DEFAULT_OPPONENT,
+  makeOpponent,
+  strongEquipment,
+  strongTeam,
+  type Opponent,
+  type OpponentKind,
+} from './ai/opponents'
 import { ROSTER, ROSTER_ORDER } from './data/roster'
+import { WIN_RATES } from './data/winRates'
 import { createRng, type BattleState } from './engine'
 import { accountStore } from './online/account'
 import './ui/ui.css'
@@ -42,13 +51,19 @@ interface Match {
   aiTeam: string[]
   aiEquipment: (string | null)[]
   seed: number
+  /** Who the player faces (absent for the tutorial). */
+  opponent?: Opponent
 }
 
-function newMatch(): Match {
+function newMatch(kind: OpponentKind = DEFAULT_OPPONENT): Match {
   const seed = newSeed()
   const rng = createRng(seed ^ 0xa1)
-  const aiTeam = randomTeam(ROSTER, rng, ROSTER_ORDER)
-  return { aiTeam, aiEquipment: randomEquipment(ROSTER, rng, aiTeam), seed }
+  const opponent = makeOpponent(kind, rng)
+  // The O5 brings the statistically strongest builds; everyone else a random legal team.
+  const aiTeam = kind === 'o5' ? strongTeam(ROSTER, rng, ROSTER_ORDER, WIN_RATES) : randomTeam(ROSTER, rng, ROSTER_ORDER)
+  const aiEquipment =
+    kind === 'o5' ? strongEquipment(ROSTER, rng, aiTeam, WIN_RATES) : randomEquipment(ROSTER, rng, aiTeam)
+  return { aiTeam, aiEquipment, seed, opponent }
 }
 
 /**
@@ -160,7 +175,7 @@ export default function App() {
           setEquipment={setEquipment}
           shelf={shelf}
           onBack={() => go('title')}
-          onBattle={() => toPreview(newMatch())}
+          onBattle={(kind) => toPreview(newMatch(kind))}
         />
       )
     case 'preview':
@@ -187,9 +202,15 @@ export default function App() {
           playerEquipment={equipment}
           aiTeam={match.aiTeam}
           aiEquipment={match.aiEquipment}
+          opponentLabel={match.opponent?.name.toUpperCase()}
           onBack={() => go('builder')}
           onBegin={(lead) => {
-            setDriver(aiDriver(startSession(ROSTER, team, match.aiTeam, lead, match.seed, [equipment, match.aiEquipment]).session))
+            setDriver(
+              aiDriver(
+                startSession(ROSTER, team, match.aiTeam, lead, match.seed, [equipment, match.aiEquipment], match.opponent)
+                  .session,
+              ),
+            )
             go('battle')
           }}
         />
@@ -211,6 +232,7 @@ export default function App() {
       return (
         <ResultScreen
           final={result}
+          opponent={match.opponent?.name}
           // Same opposing team, new seed, choose leads again (the tutorial just starts over).
           onRematch={() => (match.tutorial ? startTutorial() : toPreview({ ...match, seed: newSeed() }))}
           onBuilder={() => go('builder')}

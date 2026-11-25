@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { randomEquipment, randomTeam } from '../../ai'
+import { OPPONENTS, type OpponentKind } from '../../ai/opponents'
 import {
   CLASS_LIMIT,
   EQUIPMENT_ALLOWANCE,
@@ -25,6 +26,7 @@ import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from '../rost
 import { useToggle } from '../hooks'
 import { MAX_NAME_LENGTH, MAX_SAVED_TEAMS, type SavedTeam } from '../savedTeams'
 import type { TeamShelf } from '../teamShelf'
+import { readOpponentKind, writeOpponentKind } from '../opponentChoice'
 
 /** What a saved team breaks under the current rules (it still loads, so it can be fixed), or null. */
 function savedTeamProblem(t: SavedTeam): string | null {
@@ -184,8 +186,14 @@ export function TeamBuilderScreen({
   setEquipment: (equipment: (string | null)[]) => void
   shelf: TeamShelf
   onBack: () => void
-  onBattle: () => void
+  onBattle: (opponent: OpponentKind) => void
 }) {
+  const [opponent, setOpponentState] = useState<OpponentKind>(readOpponentKind)
+  const setOpponent = (kind: OpponentKind) => {
+    setOpponentState(kind)
+    writeOpponentKind(kind)
+  }
+  const battle = () => onBattle(opponent)
   const equipment = team.map((_, i) => rawEquipment[i] ?? null)
   const [showEquipment, setShowEquipment] = useState(false)
   // Dev-only: ?open=<speciesId> starts with that dossier expanded (for screenshot checks).
@@ -284,7 +292,7 @@ export function TeamBuilderScreen({
             <span className="small" style={{ flex: 1 }}>
               {team.length}/{TEAM_SIZE} SCPs · {cost}/{TEAM_BUDGET} pts
             </span>
-            <button className="btn btn-small btn-primary" disabled={!legal} onClick={onBattle}>
+            <button className="btn btn-small btn-primary" disabled={!legal} onClick={battle}>
               Battle
             </button>
           </div>
@@ -365,8 +373,19 @@ export function TeamBuilderScreen({
                     ? `Equipment over budget (${gearCost}/${gearBudget}). Remove a piece to fix it.`
                     : `Pick ${TEAM_SIZE - team.length} more. ${COST_HINT}.`)}
           </p>
+          <label className="opponent-pick">
+            <span className="section-label">OPPONENT</span>
+            <select value={opponent} onChange={(e) => setOpponent(e.target.value as OpponentKind)}>
+              {OPPONENTS.map((o) => (
+                <option key={o.kind} value={o.kind}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <span className="muted small">{OPPONENTS.find((o) => o.kind === opponent)?.blurb}</span>
+          </label>
           <div className="row">
-            <button className="btn btn-primary battle-btn" disabled={!legal} onClick={onBattle}>
+            <button className="btn btn-primary battle-btn" disabled={!legal} onClick={battle}>
               Battle
             </button>
             <button className="btn" onClick={() => setShowEquipment((v) => !v)} aria-expanded={showEquipment}>

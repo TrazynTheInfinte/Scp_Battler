@@ -9,12 +9,23 @@ export const HOSTILE: SideIndex = 1
  * Turn engine events into log lines. `before` is the state the events were
  * produced from; active SCPs are tracked through switches so every line
  * names the right SCP. The opponent's HP is reported as a percentage only.
+ * `hostileTag` names the opponent ("Nine-Tailed Fox" gives "Nine-Tailed Fox's
+ * SCP-682"); without one, its SCPs are "Hostile" and it is "The hostile site".
  */
-export function formatEvents(before: BattleState, events: readonly BattleEvent[], dex: Dex): string[] {
+export function formatEvents(
+  before: BattleState,
+  events: readonly BattleEvent[],
+  dex: Dex,
+  hostileTag?: string,
+): string[] {
   const active: [number, number] = [before.sides[0].active, before.sides[1].active]
+  const site = hostileTag ?? 'The hostile site'
+  /** An SCP's plain name, for lines that already say whose it is. */
+  const bare = (side: SideIndex, teamIndex: number) => dex.species[before.sides[side].team[teamIndex].speciesId].name
   const nameAt = (side: SideIndex, teamIndex: number) => {
-    const name = dex.species[before.sides[side].team[teamIndex].speciesId].name
-    return side === HOSTILE ? `Hostile ${name}` : name
+    const name = bare(side, teamIndex)
+    if (side !== HOSTILE) return name
+    return hostileTag ? `${hostileTag}'s ${name}` : `Hostile ${name}`
   }
   const name = (side: SideIndex) => nameAt(side, active[side])
   const maxHp = (side: SideIndex) => before.sides[side].team[active[side]].stats.hp
@@ -28,7 +39,7 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(
           e.side === PLAYER
             ? `You withdrew ${from} and deployed ${name(e.side)}.`
-            : `The hostile site withdrew ${from.replace('Hostile ', '')} and deployed ${name(e.side).replace('Hostile ', '')}.`,
+            : `${site} withdrew ${bare(e.side, e.from)} and deployed ${bare(e.side, e.to)}.`,
         )
         break
       }
@@ -37,7 +48,7 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(
           e.side === PLAYER
             ? `You deployed ${name(e.side)}.`
-            : `The hostile site deployed ${name(e.side).replace('Hostile ', '')}.`,
+            : `${site} deployed ${bare(e.side, e.to)}.`,
         )
         break
       case 'stunned':
@@ -112,7 +123,7 @@ export function formatEvents(before: BattleState, events: readonly BattleEvent[]
         lines.push(`${nameAt(e.side, e.teamIndex)} was neutralized.`)
         break
       case 'forfeit':
-        lines.push(e.side === PLAYER ? 'You forfeited.' : 'The hostile site forfeited.')
+        lines.push(e.side === PLAYER ? 'You forfeited.' : `${site} forfeited.`)
         break
       case 'withdraw':
         lines.push(`${name(e.side)} will withdraw at the end of the turn.`)

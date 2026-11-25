@@ -42,6 +42,15 @@ export function matchup(attack: TypeName, defend: TypeName): Effectiveness {
   return 1
 }
 
+/**
+ * The type that counters `t`: the one just before it on the ring, which hits
+ * `t` super effectively. Mundane has no counter and stays Mundane.
+ */
+export function counterType(t: TypeName): TypeName {
+  if (t === MUNDANE) return t
+  return TYPE_RING[(TYPE_RING.indexOf(t) - 1 + RING_SIZE) % RING_SIZE]
+}
+
 /** Combined multiplier against a one- or two-type defender (stacks: x4 .. x0.25). */
 export function typeEffectiveness(attack: TypeName, defenders: readonly TypeName[]): number {
   return defenders.reduce((mult, t) => mult * matchup(attack, t), 1)

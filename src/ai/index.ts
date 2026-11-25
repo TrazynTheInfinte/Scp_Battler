@@ -10,6 +10,7 @@ import {
   activeOf,
   attacksBlocked,
   canReceiveStatus,
+  combatantMove,
   createCombatant,
   equipmentBudget,
   equipmentHasEffect,
@@ -191,7 +192,7 @@ export function chooseReplacement(state: BattleState, dex: Dex, side: SideIndex,
 // ---------------------------------------------------------------------------
 
 function movesOf(dex: Dex, c: Combatant): MoveData[] {
-  return dex.species[c.speciesId].moves.map((id) => dex.moves[id])
+  return dex.species[c.speciesId].moves.map((id) => combatantMove(dex, c, id))
 }
 
 /** Expected share of the target's current HP one use of `move` removes (accuracy included, capped at 1). */

@@ -1,4 +1,5 @@
-import type { BattleState, Choice } from '../engine'
+import { STRUGGLE, activeOf, combatantMove, isStruggling, moveName, type BattleState, type Choice } from '../engine'
+import { HOSTILE } from './battleLog'
 import { playerForfeit, playerReplace, playerTurn, type Advance, type Session, type Step } from './battleController'
 
 /**
@@ -11,6 +12,10 @@ export interface BattleDriver {
   readonly initial: BattleView
   /** Shown as the opponent's name. */
   readonly opponent: string
+  /** Names the opponent in log lines (see formatEvents); absent: "Hostile". */
+  readonly hostileTag?: string
+  /** The Trainer's announced move for the turn being chosen, as text; null when there is none. */
+  plan?(): string | null
   /** Receive each advance (to animate) and status change. Returns a function that stops listening. */
   listen(listener: DriverListener): () => void
   choose(choice: Choice): void
@@ -60,7 +65,9 @@ export function aiDriver(session: Session): BattleDriver {
   }
   return {
     initial: { state: session.state, log: session.log },
-    opponent: 'The hostile site',
+    opponent: session.opponent?.name ?? 'The hostile site',
+    hostileTag: session.opponent?.tag,
+    plan: () => planText(current),
     listen(l) {
       listener = l
       return () => {
@@ -71,4 +78,18 @@ export function aiDriver(session: Session): BattleDriver {
     replace: (teamIndex) => push(playerReplace(current, teamIndex)),
     forfeit: () => push(playerForfeit(current)),
   }
+}
+
+/** "Trainer will use Neck Snap." / "Trainer will switch to SCP-096." for the Trainer's plan; null otherwise. */
+export function planText(session: Session): string | null {
+  const plan = session.plan
+  if (!plan || session.state.phase !== 'choose') return null
+  const who = session.opponent?.tag ?? 'The opponent'
+  const active = activeOf(session.state, HOSTILE)
+  if (plan.kind === 'switch') {
+    return `${who} will switch to ${session.dex.species[session.state.sides[HOSTILE].team[plan.teamIndex].speciesId].name}.`
+  }
+  const moveId = session.dex.species[active.speciesId].moves[plan.moveIndex]
+  const move = isStruggling(active) ? STRUGGLE : combatantMove(session.dex, active, moveId)
+  return `${who} will use ${moveName(session.dex, active.speciesId, move)}.`
 }

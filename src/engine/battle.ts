@@ -12,6 +12,7 @@ import type {
   SpeciesData,
   StageName,
   StatStages,
+  Stats,
   StatusName,
   Volatiles,
 } from './model'
@@ -30,7 +31,7 @@ import {
 } from './status'
 import { validateTeam } from './team'
 import type { TypeName } from './typeChart'
-import { typeEffectiveness } from './typeChart'
+import { counterType, typeEffectiveness } from './typeChart'
 
 export interface StepResult {
   state: BattleState
@@ -76,6 +77,38 @@ export const AVERAGE_ROLL = (MIN_ROLL + MAX_ROLL) / 2
 /** Each side's Equipment ids, aligned with its team (null or missing = none). */
 export type TeamEquipment = readonly [readonly (string | null)[], readonly (string | null)[]]
 
+export interface BattleOptions {
+  /** Per side: whether its team is Reality-bent (see Combatant.bent). */
+  bent?: readonly [boolean, boolean]
+}
+
+const STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'] as const
+
+/**
+ * Swap a stat spread by rank: best with worst, 2nd with 5th, 3rd with 4th.
+ * Ties keep HP-to-Speed order, so the result is deterministic.
+ */
+export function bendStats(stats: Stats): Stats {
+  const ranked = [...STAT_KEYS].sort((a, b) => stats[b] - stats[a])
+  const out = { ...stats }
+  for (let i = 0; i < ranked.length; i++) out[ranked[i]] = stats[ranked[ranked.length - 1 - i]]
+  return out
+}
+
+/** A freshly created combatant, Reality-bent: swapped stats (full HP), counter-typed moves. */
+function bend(c: Combatant): Combatant {
+  const stats = bendStats(c.stats)
+  return { ...c, stats, hp: stats.hp, bent: true }
+}
+
+/** The move as `c` uses it: a Reality-bent SCP's moves take their counter type. */
+export function combatantMove(dex: Dex, c: Combatant, moveId: string): MoveData {
+  const m = moveData(dex, moveId)
+  if (!c.bent) return m
+  const type = counterType(m.type)
+  return type === m.type ? m : { ...m, type }
+}
+
 /**
  * Build the initial battle state after Team Preview: both teams (species ids,
  * in team order), each side's chosen starting SCP, the RNG seed, and each
@@ -91,6 +124,7 @@ export function createBattle(
   leads: readonly [number, number],
   seed: number,
   equipment: TeamEquipment = [[], []],
+  options: BattleOptions = {},
 ): BattleState {
   const sides = SIDES.map((side) => {
     const problems = validateTeam(dex, teams[side], equipment[side])
@@ -102,7 +136,10 @@ export function createBattle(
       throw new RangeError(`side ${side} lead index ${lead} out of range`)
     }
     return {
-      team: teams[side].map((id, i) => newCombatant(dex, species(dex, id), equipment[side][i] ?? null)),
+      team: teams[side].map((id, i) => {
+        const c = newCombatant(dex, species(dex, id), equipment[side][i] ?? null)
+        return options.bent?.[side] ? bend(c) : c
+      }),
       active: lead,
     }
   }) as [SideState, SideState]
@@ -125,8 +162,9 @@ export function startBattle(
   leads: readonly [number, number],
   seed: number,
   equipment: TeamEquipment = [[], []],
+  options: BattleOptions = {},
 ): StepResult {
-  const s = createBattle(dex, teams, leads, seed, equipment)
+  const s = createBattle(dex, teams, leads, seed, equipment, options)
   const rng = createRng(s.rngState)
   const events: BattleEvent[] = []
   for (const side of orderBySpeed(s, SIDES, rng)) runSwitchIn(s, dex, side, rng, events)
@@ -525,7 +563,7 @@ function executeMove(
     }
   }
 
-  const move = struggling ? STRUGGLE : moveData(dex, userSpecies.moves[moveIndex])
+  const move = struggling ? STRUGGLE : combatantMove(dex, user, userSpecies.moves[moveIndex])
   const isStatusMove = move.category === 'Status'
   const targetSide = other(side)
 

@@ -61,17 +61,23 @@ function HpBar({ c, exact }: { c: Combatant; exact: boolean }) {
   )
 }
 
-function SideInfo({ state, side }: { state: BattleState; side: SideIndex }) {
+function SideInfo({ state, side, owner }: { state: BattleState; side: SideIndex; owner?: string }) {
   const c = activeOf(state, side)
   const sp = ROSTER.species[c.speciesId]
   const remaining = state.sides[side].team.filter((m) => m.hp > 0).length
   return (
     <div className={`side-info ${side === HOSTILE ? 'hostile' : 'own'}`}>
+      {owner && <span className="muted small">{owner}</span>}
       <div className="row" style={{ gap: 6 }}>
         <strong>{sp.name}</strong>
         <ClassBadge objectClass={sp.objectClass} />
         {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
         {c.stages.acc < 0 && <span className="badge status-badge">ACC −{-c.stages.acc}</span>}
+        {c.bent && (
+          <span className="badge status-badge" title="Stats swapped by rank; moves use their counter type">
+            REALITY-BENT
+          </span>
+        )}
       </div>
       <div className="row" style={{ gap: 4 }}>
         {sp.types.map((t) => (
@@ -181,6 +187,8 @@ export function BattleScreen({
   const moveAllowed = (i: number) => allow.kind === 'any' || (allow.kind === 'move' && allow.moveIndex === i)
   const switchAllowed = allow.kind === 'any' || allow.kind === 'switch'
   const switchOnly = allow.kind === 'switch' ? allow.teamIndex : undefined
+  // Trainer: the move it has already committed to this turn.
+  const plan = !playing && !ended && !mustReplace ? (driver.plan?.() ?? null) : null
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
@@ -207,7 +215,7 @@ export function BattleScreen({
   const play = (steps: Step[], view: BattleView) => {
     setReal(view)
     final.current = { view: view.state, log: view.log }
-    queue.current = [...queue.current, ...framesFor(steps, ROSTER)]
+    queue.current = [...queue.current, ...framesFor(steps, ROSTER, driver.hostileTag)]
     setPlaying(true)
     setTick((n) => n + 1)
   }
@@ -289,7 +297,7 @@ export function BattleScreen({
 
       <section className={`field${playing ? ' skippable' : ''}`} onClick={skip}>
         <div className="field-row hostile">
-          <SideInfo state={state} side={HOSTILE} />
+          <SideInfo state={state} side={HOSTILE} owner={driver.opponent} />
           <div
             key={`h${hit?.side === HOSTILE ? hit.n : 0}`}
             className={`field-art${hit?.side === HOSTILE ? ' hit' : ''}${foe.hp <= 0 ? ' down' : ''}`}
@@ -319,6 +327,11 @@ export function BattleScreen({
           <p className="notice small" role="status">
             {driver.opponent} lost connection. You win in <Countdown deadline={status.deadline} /> unless they
             return.
+          </p>
+        )}
+        {plan && (
+          <p className="guide-hint" role="status">
+            {plan}
           </p>
         )}
         {guide && status.kind !== 'noContest' && (
