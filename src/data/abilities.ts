@@ -10,6 +10,10 @@ export const COUNTER_RULE_KINDS: ReadonlySet<AbilityRule['kind']> = new Set([
   'statusImmunity',
   'watcher',
   'clearOpponentBoostsOnEntry',
+  /** Turns the opponent's stat drops into boosts. */
+  'reverseStatDrops',
+  /** Ignores the opponent's accuracy drops. */
+  'neverMisses',
 ])
 
 /**
@@ -821,6 +825,205 @@ const ABILITY_LIST: AbilityData[] = [
     name: "Summoned Cast",
     description: "Sp. Atk +1 whenever it enters the field.",
     rules: [{ kind: 'boostOnEntry', changes: { spa: 1 } }],
+  },
+  // wave 9 (Thaumiel): each ability counters something.
+  {
+    id: 'puppetHosts',
+    name: "Puppet Hosts",
+    description: "Its hosts think for it: it can never become Amnesiac.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Amnesiac'] }],
+  },
+  {
+    id: 'shieldedHull',
+    name: "Shielded Hull",
+    description: "Built to take fire: takes 0.75x damage from Physical moves, and its warp drive means it can never be Contained.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }, { kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'plantGuardians',
+    name: "Plant Guardians",
+    description: "Its guardians defend the dome: an attacker that hits it with a Physical move has a 30% chance to start Bleeding. As the prison itself, it can never be Contained.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }, { kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'regeneratingHide',
+    name: "Regenerating Hide",
+    description: "Its wounds close at once: it can never Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'danceOfInvincibility',
+    name: "Dance of Invincibility",
+    description: "While it dances, nothing sticks: it can never Bleed or be Stunned.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding', 'Stunned'] }],
+  },
+  {
+    id: 'doorsSlamShut',
+    name: "Doors Slam Shut",
+    description: "When it enters the field, its doors lock the opponent in: Speed −1. As a containment site itself, it can never be Contained.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spe: -1 } }, { kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'preemptiveStrike',
+    name: "Preemptive Strike",
+    description: "It strikes threats before they rise: when it enters the field, the opponent loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'kaijuArmor',
+    name: "Kaiju Armor",
+    description: "Plated against giants: takes 0.75x damage from Special moves, and opponents can't lower its stats.",
+    rules: [{ kind: 'damageTaken', category: 'Special', multiplier: 0.75 }, { kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'akivaHoney',
+    name: "Akiva Honey",
+    description: "Its honey cuts off divine power: when it enters the field, the opponent loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'heidi',
+    name: "Heidi",
+    description: "His dog guards him: an attacker that damages him with a move loses 1/16 of its own max HP. Opponents can't lower his stats.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }, { kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'cellBlock',
+    name: "Cell Block",
+    description: "An attacker that hits it with a Physical move has a 30% chance to be Contained. As the prison itself, it can never be Contained.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Contained', chance: 30 }, { kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'deviantDetection',
+    name: "Deviant Detection",
+    description: "It sees rogue programs coming: when it enters the field, the opponent loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'rootSnare',
+    name: "Root Snare",
+    description: "When it enters the field, its roots drag at the opponent: Speed −1. It can never be Stunned.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spe: -1 } }, { kind: 'statusImmunity', statuses: ['Stunned'] }],
+  },
+  {
+    id: 'nameStealer',
+    name: "Name-Stealer",
+    description: "When it enters the field, it steals the opponent's name and its aim with it: Accuracy −1. Having no name of its own, it can never become Amnesiac.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }, { kind: 'statusImmunity', statuses: ['Amnesiac'] }],
+  },
+  {
+    id: 'adaptiveDefenses',
+    name: "Adaptive Defenses",
+    description: "After a damaging hit, it takes half damage from that move's type until it leaves the field. Opponents can't lower its stats.",
+    rules: [{ kind: 'adaptive', multiplier: 0.5 }, { kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'selfRepairingBody',
+    name: "Self-Repairing Body",
+    description: "Heals 1/16 of its max HP at the end of each turn when hurt, and it can never be Stunned.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }, { kind: 'statusImmunity', statuses: ['Stunned'] }],
+  },
+  {
+    id: 'remembersTheFuture',
+    name: "Remembers the Future",
+    description: "He saw it coming: when he enters the field, the opponent loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'rewriteHistory',
+    name: "Rewrite History",
+    description: "Stat drops from the opponent are rewritten into boosts of the same size. Accuracy drops just fail.",
+    rules: [{ kind: 'reverseStatDrops' }],
+  },
+  {
+    id: 'purifyingLightning',
+    name: "Purifying Lightning",
+    description: "Its lightning burns out infection: it can never Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'patternRecognition',
+    name: "Pattern Recognition",
+    description: "When it enters the field, it exposes the opponent's weak points: Defense −1. It watches the opponent, cancelling its priority and catching unobserved attackers.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { def: -1 } }, { kind: 'watcher' }],
+  },
+  {
+    id: 'fearSuppression',
+    name: "Fear Suppression",
+    description: "Nothing frightens its host: it can never be Stunned.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Stunned'] }],
+  },
+  {
+    id: 'plasmaBody',
+    name: "Plasma Body",
+    description: "A body of lightning can't bleed: it can never Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'hiddenNote',
+    name: "Hidden Note",
+    description: "When it enters the field, the opponent's stat boosts fade away.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'deathHeldAtBay',
+    name: "Death Held at Bay",
+    description: "Heals 1/16 of its max HP at the end of each turn when hurt, and it can never be Contained.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }, { kind: 'statusImmunity', statuses: ['Contained'] }],
+  },
+  {
+    id: 'alreadyFired',
+    name: "Already Fired",
+    description: "The shot has already landed: its moves never miss.",
+    rules: [{ kind: 'neverMisses' }],
+  },
+  {
+    id: 'sanctified',
+    name: "Sanctified",
+    description: "Holy water clears the mind: it can never become Amnesiac or be Contained.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Amnesiac', 'Contained'] }],
+  },
+  {
+    id: 'tooMuchKnowledge',
+    name: "Too Much Knowledge",
+    description: "Deals 1.3x damage to targets that have a status condition. It watches the opponent, cancelling its priority and catching unobserved attackers.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }, { kind: 'watcher' }],
+  },
+  {
+    id: 'godkiller',
+    name: "Godkiller",
+    description: "When it enters the field, the opponent's power unravels: Sp. Atk −1, and it loses its stat boosts.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spa: -1 } }, { kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'narrativeAnchor',
+    name: "Narrative Anchor",
+    description: "Its story holds: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'apathy',
+    name: "Apathy",
+    description: "When it enters the field, the opponent stops caring: Attack −1. It can never become Amnesiac.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { atk: -1 } }, { kind: 'statusImmunity', statuses: ['Amnesiac'] }],
+  },
+  {
+    id: 'scrantonField',
+    name: "Scranton Field",
+    description: "Cancels reality-bending: when it enters the field, the opponent loses its stat boosts, and opponents can't lower its stats.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }, { kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'clericRadiation',
+    name: "Cleric Radiation",
+    description: "Heals 1/16 of its max HP at the end of each turn when hurt, and it can never Bleed.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }, { kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'firstOrder',
+    name: "First Order",
+    description: "When it enters the field, the opponent glimpses the fractal: Sp. Def −1, and it loses its stat boosts.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spd: -1 } }, { kind: 'clearOpponentBoostsOnEntry' }],
   },
 ]
 

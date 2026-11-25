@@ -24,8 +24,13 @@ export const EQUIPMENT_WIN_RATE_BAND = WIN_RATE_BAND
  * inside this band: Equipment should be worth buying, but never mandatory.
  */
 export const SPEND_WIN_RATE_BAND = [0.4, 0.6] as const
-/** Makeups (and spending groups) with fewer battles than this are too noisy to judge. */
-export const MIN_MAKEUP_SAMPLE = 100
+/**
+ * Makeups (and Equipment and spending groups) with fewer battles than this are
+ * too noisy to judge. Raised from 100 in wave 9: the gate saw only 178 AKSSSS
+ * battles (±3.5% per run), so a 64% makeup read 70.2% on one seed and 66.9% on
+ * the next. At 300 a run is within about ±2.7%.
+ */
+export const MIN_MAKEUP_SAMPLE = 300
 /** Each type's count must be within this fraction of an even share (rounded to the nearest whole number). */
 export const TYPE_SPREAD_TOLERANCE = 0.25
 

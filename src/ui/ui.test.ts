@@ -173,7 +173,8 @@ describe('roster filter', () => {
 
   it('searches number, name, and nickname, ignoring case and spaces', () => {
     expect(ids({ query: '173' })).toEqual(['scp-173'])
-    expect(ids({ query: ' scp-682 ' })).toEqual(['scp-682'])
+    // Numbers match as text, so "682" also finds SCP-6820.
+    expect(ids({ query: ' scp-682 ' })).toEqual(['scp-682', 'scp-6820'])
     expect(ids({ query: 'shy guy' })).toEqual(['scp-096'])
     expect(ids({ query: 'zzz' })).toEqual([])
   })
