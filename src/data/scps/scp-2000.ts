@@ -9,7 +9,7 @@ export default {
   types: ['Mechanical', 'Temporal'],
   stats: { template: 'support' },
   moves: ['procedure-lazarus', 'data-surge', 'decay', 'coarse'],
-  signatureMove: status('procedure-lazarus', 'Procedure Lazarus', 'Temporal', null, [heal(33), cure]),
+  signatureMove: status('procedure-lazarus', 'Procedure Lazarus', 'Temporal', null, [heal(25), cure]),
   ability: 'failsafe',
   eligibility: 'A machine that can reset history and rebuild what was lost.',
   dossier: {
