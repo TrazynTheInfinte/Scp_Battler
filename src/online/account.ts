@@ -1,6 +1,6 @@
 import { ROSTER } from '../data/roster'
 import { browserStorage, loadTeams, mergeTeams, parseTeams, writeTeams, type SavedTeam } from '../ui/savedTeams'
-import { checkCallsign, decodeTeams, encodeTeams, suggestCallsign } from './accountData'
+import { checkCallsign, decodeGrants, decodeTeams, encodeTeams, suggestCallsign } from './accountData'
 import { loadFirebase, type Firebase } from './firebase'
 
 /**
@@ -24,6 +24,8 @@ export type AccountState =
       /** Pre-fill for the Callsign form, from the Google name. */
       suggestedCallsign: string
       teams: SavedTeam[]
+      /** Gift SCPs this Account holds a Grant for (set by hand in the Firebase console). */
+      grants: string[]
       /** Connected to the database right now; saving is paused while false. */
       online: boolean
       /** The database has answered at least once this session (else `teams` is the cached copy). */
@@ -39,6 +41,7 @@ interface Cache {
   uid: string
   callsign: string | null
   teams: SavedTeam[]
+  grants: string[]
 }
 
 function readCache(): Cache | null {
@@ -49,6 +52,7 @@ function readCache(): Cache | null {
       uid: raw.uid,
       callsign: typeof raw.callsign === 'string' ? raw.callsign : null,
       teams: parseTeams(raw.teams, ROSTER),
+      grants: Array.isArray(raw.grants) ? raw.grants.filter((id): id is string => typeof id === 'string' && ROSTER.species[id]?.gift !== undefined) : [],
     }
   } catch {
     return null
@@ -81,7 +85,7 @@ const listeners = new Set<() => void>()
 
 function setState(next: AccountState) {
   state = next
-  if (next.status === 'signedIn') writeCache({ uid: next.uid, callsign: next.callsign, teams: next.teams })
+  if (next.status === 'signedIn') writeCache({ uid: next.uid, callsign: next.callsign, teams: next.teams, grants: next.grants })
   else writeCache(null)
   for (const l of listeners) l()
 }
@@ -120,6 +124,7 @@ function connect(): Promise<Firebase> {
         callsign: keep?.callsign ?? null,
         suggestedCallsign: suggestCallsign(user.displayName),
         teams: keep?.teams ?? [],
+        grants: keep?.grants ?? [],
         online: false,
         loaded: false,
         notice: keep?.notice ?? null,
@@ -150,9 +155,17 @@ function follow(fb: Firebase, uid: string): () => void {
     },
     () => patch({ notice: "Couldn't load your Account. Try signing out and in again." }),
   )
+  // Readable only by its owner, and never writable from the game (database.rules.json).
+  const offGrants = dbApi.onValue(
+    dbApi.ref(db, `grants/${uid}`),
+    (snap) => patch({ grants: decodeGrants(snap.val(), ROSTER) }),
+    // No Grants (or rules not published yet): just no Gift SCPs.
+    () => patch({ grants: [] }),
+  )
   const offConnected = dbApi.onValue(dbApi.ref(db, '.info/connected'), (snap) => patch({ online: snap.val() === true }))
   return () => {
     offUser()
+    offGrants()
     offConnected()
   }
 }

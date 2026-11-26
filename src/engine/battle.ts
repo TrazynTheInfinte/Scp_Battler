@@ -5,6 +5,7 @@ import type {
   BattleState,
   Choice,
   Combatant,
+  DelayedStrike,
   Dex,
   MoveData,
   SideIndex,
@@ -49,7 +50,18 @@ export const TURN_LIMIT = 100
 
 const STAGEABLE: readonly StageName[] = ['atk', 'def', 'spa', 'spd', 'spe', 'acc']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0 }
-const FRESH_VOLATILES: Volatiles = { adaptedType: null, watched: false, enteredTurn: 0, hitBoosts: 0, withdrawing: false }
+/** Fresh volatiles for an SCP entering the field with `hp` HP. */
+const freshVolatiles = (hp: number): Volatiles => ({
+  adaptedType: null,
+  watched: false,
+  enteredTurn: 0,
+  hitBoosts: 0,
+  withdrawing: false,
+  lastMoveId: null,
+  stacks: 0,
+  hpTwoAgo: hp,
+  hpOneAgo: hp,
+})
 
 /**
  * Used automatically once an SCP has no PP left in any move: always x1
@@ -98,7 +110,7 @@ export function bendStats(stats: Stats): Stats {
 /** A freshly created combatant, Reality-bent: swapped stats (full HP), counter-typed moves. */
 function bend(c: Combatant): Combatant {
   const stats = bendStats(c.stats)
-  return { ...c, stats, hp: stats.hp, bent: true }
+  return { ...c, stats, hp: stats.hp, volatiles: freshVolatiles(stats.hp), bent: true }
 }
 
 /** The move as `c` uses it: a Reality-bent SCP's moves take their counter type. */
@@ -200,7 +212,7 @@ function newCombatant(dex: Dex, sp: SpeciesData, equipment: string | null): Comb
     stages: { ...ZERO_STAGES },
     pp: sp.moves.map((id) => Math.floor(moveData(dex, id).pp * ppMultiplier)),
     status: null,
-    volatiles: { ...FRESH_VOLATILES },
+    volatiles: freshVolatiles(stats.hp),
   }
 }
 
@@ -511,7 +523,7 @@ function switchIn(
   // Status conditions persist.
   for (const c of [sideState.team[sideState.active], sideState.team[teamIndex]]) {
     c.stages = { ...ZERO_STAGES }
-    c.volatiles = { ...FRESH_VOLATILES }
+    c.volatiles = freshVolatiles(c.hp)
   }
   sideState.team[teamIndex].volatiles.enteredTurn = enteredTurn
   sideState.active = teamIndex
@@ -526,7 +538,8 @@ function runSwitchIn(s: BattleState, dex: Dex, side: SideIndex, rng: Rng, events
 /**
  * One side's action. Returns true if the move actually used was a Status move
  * (for SCP-173's Unobserved). RNG is consumed in a fixed order so lockstep
- * clients stay in sync: stun check, amnesia check(s), accuracy, crit, roll,
+ * clients stay in sync: stun check, amnesia check(s), accuracy, rolled power
+ * (Jackpot), crit, roll,
  * ability reactions, then effect chances in listed order.
  */
 function executeMove(
@@ -576,10 +589,18 @@ function executeMove(
 
   events.push({ type: 'move', side, moveId: move.id })
   if (!struggling) user.pp[moveIndex] -= 1
+  if (!struggling) countCrescendo(dex, side, user, move, events)
+  // Finale spends the stacks, hit or miss; its power is fixed before they reset.
+  const stackPower = move.powerPerStack ? move.power + move.powerPerStack * user.volatiles.stacks : null
+  if (move.powerPerStack && user.volatiles.stacks > 0) {
+    user.volatiles.stacks = 0
+    events.push({ type: 'stacks', side, stacks: 0 })
+  }
 
   const accuracy = moveAccuracy(dex, user, move)
   if (accuracy !== null && rng.int(1, 100) > accuracy) {
     events.push({ type: 'miss', side })
+    if (move.missRecoil) loseHp(s, dex, side, move.missRecoil, 'recoil', events)
     return isStatusMove
   }
 
@@ -588,10 +609,20 @@ function executeMove(
     return true
   }
 
+  if (move.delay) {
+    foretell(s, dex, side, move)
+    events.push({ type: 'foretold', side, phase: 'set' })
+    return false
+  }
+
   const target = activeOf(s, targetSide)
 
-  const crit = rng.chance(CRIT_CHANCE)
-  const { damage, effectiveness } = damageFor(dex, s.level, user, target, move, crit, rng.int(MIN_ROLL, MAX_ROLL))
+  // Rolled power (Jackpot) or stack power (Finale) replaces the listed power for this hit.
+  const power = move.powerRange ? rng.int(move.powerRange[0], move.powerRange[1]) : stackPower
+  const hit = power === null ? move : { ...move, power }
+  const critOneIn = Math.min(...effectsOf(dex, user).map((e) => e.critOneIn ?? Infinity))
+  const crit = rng.chance(critOneIn === Infinity ? CRIT_CHANCE : 1 / critOneIn)
+  const { damage, effectiveness } = damageFor(dex, s.level, user, target, hit, crit, rng.int(MIN_ROLL, MAX_ROLL))
 
   const dealt = Math.min(damage, target.hp)
   target.hp -= dealt
@@ -603,9 +634,8 @@ function executeMove(
     effectiveness,
     crit,
   })
-  if (isNeutralized(target)) {
-    events.push({ type: 'neutralized', side: targetSide, teamIndex: s.sides[targetSide].active })
-    if (move === STRUGGLE) struggleRecoil(s, side, events)
+  if (isNeutralized(target) && knockedOut(s, dex, targetSide, events)) {
+    if (move === STRUGGLE) struggleRecoil(s, dex, side, events)
     return false
   }
 
@@ -614,17 +644,126 @@ function executeMove(
   }
 
   applyEffects(s, dex, side, move, rng, events)
-  if (move === STRUGGLE) struggleRecoil(s, side, events)
+  if (move === STRUGGLE) struggleRecoil(s, dex, side, events)
   return false
 }
 
-function struggleRecoil(s: BattleState, side: SideIndex, events: BattleEvent[]): void {
+function struggleRecoil(s: BattleState, dex: Dex, side: SideIndex, events: BattleEvent[]): void {
+  loseHp(s, dex, side, STRUGGLE_RECOIL, 'recoil', events)
+}
+
+/** `side`'s active loses `fraction` of its max HP (min 1). No-op if already Neutralized. */
+function loseHp(
+  s: BattleState,
+  dex: Dex,
+  side: SideIndex,
+  fraction: number,
+  type: 'recoil' | 'abilityDamage',
+  events: BattleEvent[],
+): boolean {
+  const c = activeOf(s, side)
+  if (isNeutralized(c)) return false // e.g. already Neutralized by the target's retaliation
+  const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
+  c.hp -= amount
+  events.push({ type, side, amount, hpAfter: c.hp })
+  if (isNeutralized(c)) knockedOut(s, dex, side, events)
+  return true
+}
+
+/**
+ * `side`'s active just hit 0 HP. Rebirth brings it back once per battle
+ * (status and stat stages cleared); otherwise it's Neutralized. Returns true
+ * if it stays down.
+ */
+function knockedOut(s: BattleState, dex: Dex, side: SideIndex, events: BattleEvent[]): boolean {
+  const c = activeOf(s, side)
+  const rebirth = c.reborn ? undefined : effectsOf(dex, c).find((e) => e.rebirthFraction)
+  if (!rebirth) {
+    events.push({ type: 'neutralized', side, teamIndex: s.sides[side].active })
+    return true
+  }
+  events.push(triggered(side, rebirth))
+  c.reborn = true
+  c.hp = Math.max(1, Math.floor(c.stats.hp * (rebirth.rebirthFraction as number)))
+  events.push({ type: 'revive', side, hpAfter: c.hp })
+  if (c.status) {
+    events.push({ type: 'statusEnded', side, status: c.status.name })
+    c.status = null
+  }
+  for (const stat of STAGEABLE) {
+    if (c.stages[stat] === 0) continue
+    events.push({ type: 'stage', side, stat, delta: -c.stages[stat] })
+    c.stages[stat] = 0
+  }
+  return false
+}
+
+/** Crescendo: a move different from the last one adds a stack; repeating one resets them. */
+function countCrescendo(dex: Dex, side: SideIndex, user: Combatant, move: MoveData, events: BattleEvent[]): void {
+  const crescendo = effectsOf(dex, user).find((e) => e.crescendo)?.crescendo
+  if (!crescendo) return
+  const v = user.volatiles
+  const before = v.stacks
+  if (v.lastMoveId !== null) v.stacks = v.lastMoveId === move.id ? 0 : Math.min(crescendo.maxStacks, v.stacks + 1)
+  v.lastMoveId = move.id
+  if (v.stacks !== before) events.push({ type: 'stacks', side, stacks: v.stacks })
+}
+
+/** Queue a Foretold Strike, fixed with the user's attacking stat as it is now. */
+function foretell(s: BattleState, dex: Dex, side: SideIndex, move: MoveData): void {
   const user = activeOf(s, side)
-  if (isNeutralized(user)) return // e.g. already Neutralized by the target's retaliation
-  const amount = Math.min(user.hp, Math.max(1, Math.floor(user.stats.hp * STRUGGLE_RECOIL)))
-  user.hp -= amount
-  events.push({ type: 'recoil', side, amount, hpAfter: user.hp })
-  if (isNeutralized(user)) events.push({ type: 'neutralized', side, teamIndex: s.sides[side].active })
+  const stat = move.category === 'Physical' ? 'atk' : 'spa'
+  const strike: DelayedStrike = {
+    side,
+    moveId: move.id,
+    landsOnTurn: s.turn + (move.delay as number),
+    power: move.power,
+    type: move.type,
+    category: move.category,
+    attack: effectiveStat(user, stat),
+    sameType: (species(dex, user.speciesId).types as readonly string[]).includes(move.type),
+  }
+  s.delayed = [...(s.delayed ?? []), strike]
+}
+
+/** Land every Foretold Strike due this turn, in the order they were used. */
+function landStrikes(s: BattleState, dex: Dex, rng: Rng, events: BattleEvent[]): void {
+  const due = (s.delayed ?? []).filter((d) => d.landsOnTurn <= s.turn)
+  if (due.length === 0) return
+  const rest = (s.delayed ?? []).filter((d) => d.landsOnTurn > s.turn)
+  if (rest.length > 0) s.delayed = rest
+  else delete s.delayed
+  for (const d of due) {
+    const targetSide = other(d.side)
+    const target = activeOf(s, targetSide)
+    if (isNeutralized(target)) {
+      events.push({ type: 'foretold', side: targetSide, phase: 'fizzles' })
+      continue
+    }
+    const move: MoveData = { ...moveData(dex, d.moveId), type: d.type, power: d.power }
+    const defense = effectiveStat(target, d.category === 'Physical' ? 'def' : 'spd')
+    const effectiveness = typeEffectiveness(d.type, species(dex, target.speciesId).types)
+    const abilityMultiplier = effectsOf(dex, target).reduce(
+      (m, e) => m * (e.incomingDamageMultiplier?.(target, move) ?? 1),
+      1,
+    )
+    const damage = computeDamage({
+      level: s.level,
+      power: d.power,
+      attack: d.attack,
+      defense,
+      sameType: d.sameType,
+      effectiveness,
+      abilityMultiplier,
+      crit: false,
+      roll: rng.int(MIN_ROLL, MAX_ROLL),
+    })
+    const dealt = Math.min(damage, target.hp)
+    target.hp -= dealt
+    events.push({ type: 'foretold', side: targetSide, phase: 'lands' })
+    events.push({ type: 'damage', side: targetSide, amount: dealt, hpAfter: target.hp, effectiveness, crit: false })
+    if (isNeutralized(target)) knockedOut(s, dex, targetSide, events)
+  }
 }
 
 /** Apply a move's extra effects. Returns true if anything changed. */
@@ -875,15 +1014,12 @@ function abilityContext(
     withdraw: () => withdraw(s, side, events),
     inflictStatus: (who, status) => inflictStatus(s, dex, sideOf(who), status, rng, events),
     heal: (who, fraction) => heal(s, sideOf(who), fraction, events),
-    damage(who, fraction) {
-      const target = sideOf(who)
-      const c = activeOf(s, target)
-      if (isNeutralized(c)) return false
-      const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
-      c.hp -= amount
-      events.push({ type: 'abilityDamage', side: target, amount, hpAfter: c.hp })
-      if (isNeutralized(c)) events.push({ type: 'neutralized', side: target, teamIndex: s.sides[target].active })
-      return true
+    damage: (who, fraction) => loseHp(s, dex, sideOf(who), fraction, 'abilityDamage', events),
+    rewindTo(hp) {
+      const c = activeOf(s, side)
+      c.hp = Math.min(c.stats.hp, hp)
+      c.rewound = true
+      events.push({ type: 'rewind', side, hpAfter: c.hp })
     },
   }
 }
@@ -900,6 +1036,7 @@ function endOfTurn(
   events: BattleEvent[],
   watchedNext: readonly [boolean, boolean],
 ): void {
+  landStrikes(s, dex, rng, events)
   const alive = SIDES.filter((side) => !isNeutralized(activeOf(s, side)))
   for (const side of orderBySpeed(s, alive, rng)) {
     const c = activeOf(s, side)
@@ -911,10 +1048,8 @@ function endOfTurn(
       const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
       c.hp -= amount
       events.push({ type: 'residual', side, status: status.name, amount, hpAfter: c.hp })
-      if (isNeutralized(c)) {
-        events.push({ type: 'neutralized', side, teamIndex: s.sides[side].active })
-        continue
-      }
+      // Rebirth clears the status, so a revived SCP goes straight on to its end-of-turn ability.
+      if (isNeutralized(c) && knockedOut(s, dex, side, events)) continue
     }
     if (status?.name === 'Contained') {
       const left = (status.turnsLeft ?? 1) - 1
@@ -931,7 +1066,11 @@ function endOfTurn(
   }
 
   for (const side of SIDES) {
-    activeOf(s, side).volatiles.watched = watchedNext[side]
+    const c = activeOf(s, side)
+    c.volatiles.watched = watchedNext[side]
+    // HP history for Rewind.
+    c.volatiles.hpTwoAgo = c.volatiles.hpOneAgo
+    c.volatiles.hpOneAgo = c.hp
   }
 }
 
@@ -1010,9 +1149,12 @@ function cloneState(state: BattleState): BattleState {
       volatiles: { ...c.volatiles },
     })),
   })
-  return {
+  const s: BattleState = {
     ...state,
     sides: [cloneSide(state.sides[0]), cloneSide(state.sides[1])],
     needsReplacement: [...state.needsReplacement],
   }
+  // Strikes are never mutated, only replaced, so a new array is enough.
+  if (state.delayed) s.delayed = [...state.delayed]
+  return s
 }

@@ -5,7 +5,7 @@ A web-based, turn-based battler themed on the SCP Foundation universe, where pla
 ## Language
 
 **Roster**:
-The full, fixed set of SCPs available to every player when building a team.
+The full, fixed set of SCPs available to every player when building a team. Gift SCPs are the one exception: they appear only for Accounts holding a Grant.
 _Avoid_: Pokédex, collection, inventory
 
 **Team**:
@@ -54,6 +54,10 @@ _Avoid_: Character, hero, personnel, agent
 An SCP that misses Eligibility (e.g. a place) but joins the roster anyway because a playtester designed a kit for it that fits its article. Rare and hand-picked, like Operatives.
 _Avoid_: Fan pick, custom SCP, guest SCP
 
+**Gift SCP**:
+An original SCP made for this game rather than taken from the wiki, given to specific Accounts as a reward (to playtesters, or the admin's own). Only an Account holding a Grant for it may field it; the AI never does. It may be Mundane and has its own moves instead of Move Pool moves. Balanced like every other SCP.
+_Avoid_: Custom SCP, exclusive SCP, unlock, admin SCP (say Gift SCP)
+
 **Wave**:
 A batch of about twelve new SCPs added to the roster together and balanced as a group, most popular eligible SCPs first.
 _Avoid_: Expansion, DLC, set, generation
@@ -91,7 +95,7 @@ The fixed circular order of the eight types; each type is super effective agains
 _Avoid_: Type wheel, type triangle
 
 **Mundane**:
-The one type outside the type ring: non-anomalous force. Mundane moves are never super effective or resisted, and Mundane SCPs are never weak to or resistant against anything. Only Mundane SCPs may use Mundane moves. Every SCP-EX entry is Mundane (and only Mundane); otherwise only Operatives may be.
+The one type outside the type ring: non-anomalous force. Mundane moves are never super effective or resisted, and Mundane SCPs are never weak to or resistant against anything. Only Mundane SCPs may use Mundane moves. Every SCP-EX entry is Mundane (and only Mundane); otherwise only Operatives and Gift SCPs may be.
 _Avoid_: Normal, neutral type, typeless
 
 **Move**:
@@ -103,7 +107,7 @@ The shared set of moves that any SCP may be given; a move in the pool is designe
 _Avoid_: Learnset, move list, move library
 
 **Signature Move**:
-A move unique to one SCP, outside the move pool. An SCP has at most one.
+A move unique to one SCP, outside the move pool. An SCP has at most one (Gift SCPs excepted: all their moves are their own).
 _Avoid_: Exclusive move, special move (collides with Move Category)
 
 **Stat Template**:
@@ -143,6 +147,10 @@ _Avoid_: Username, display name, handle, nickname (collides with an SCP's dossie
 **Saved Team**:
 A named team kept for reuse, up to five. Signed in, they belong to the Account and follow it across devices; signed out, they belong to the browser.
 _Avoid_: Preset, loadout, deck
+
+**Grant**:
+Permission for one Account to field one Gift SCP, given and taken back by hand by the game's admin. Taking a Grant back locks the Gift SCP out of that Account's Saved Teams without deleting them.
+_Avoid_: Unlock, entitlement, ownership
 
 **Room**:
 A private meeting place for one online battle between two Accounts, created by one player and joined by the other. It disappears when the battle ends.

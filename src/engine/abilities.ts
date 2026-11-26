@@ -30,6 +30,8 @@ export interface AbilityContext {
   canWithdraw(): boolean
   /** The owner leaves the field at the end of this turn; its side picks who comes in. */
   withdraw(): boolean
+  /** Rewind: set the owner's HP back to `hp` (once per battle; marks it used). */
+  rewindTo(hp: number): void
 }
 
 /** The hooks and flags the engine checks at fixed points. Rules fill these in. */
@@ -54,6 +56,12 @@ interface AbilityHooks {
   ppMultiplier?: number
   /** Heals at the end of every turn. Equipment healing doesn't stack with an ability's (see equipmentFor). */
   healsEachTurn?: boolean
+  /** Its damaging hits are critical one time in this many (the best of several wins). */
+  critOneIn?: number
+  /** Rebirth: comes back once per battle at this fraction of max HP instead of being Neutralized. */
+  rebirthFraction?: number
+  /** Crescendo: stacks built by varying its moves. */
+  crescendo?: { perStack: number; maxStacks: number }
 
   // --- Hooks ---
   /** Turn order: return true to move before a non-prioritized opponent. */
@@ -199,6 +207,28 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
           ctx.damage('opponent', rule.fraction)
         },
       }
+    case 'critChance':
+      return { critOneIn: rule.oneIn }
+    case 'rebirth':
+      return { rebirthFraction: rule.fraction }
+    case 'crescendo':
+      return {
+        crescendo: { perStack: rule.perStack, maxStacks: rule.maxStacks },
+        // Moves that spend the stacks (Finale) get them as power instead.
+        outgoingDamageMultiplier: (self, _target, move) =>
+          move.powerPerStack ? 1 : 1 + rule.perStack * self.volatiles.stacks,
+      }
+    case 'rewind':
+      return {
+        onEndOfTurn(ctx) {
+          const c = ctx.self
+          if (c.rewound || c.hp <= 0 || c.hp >= c.stats.hp * rule.below) return
+          const back = c.volatiles.hpTwoAgo
+          if (back <= c.hp) return
+          ctx.announce()
+          ctx.rewindTo(back)
+        },
+      }
     case 'extraPp':
       return { ppMultiplier: 1 + rule.fraction }
     case 'clearOpponentBoostsOnEntry':
@@ -227,6 +257,12 @@ export function compileAbility(data: AbilityData, source: Ability['source'] = 'a
   if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
   if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
   if (parts.some((p) => p.healsEachTurn)) ability.healsEachTurn = true
+  const crits = parts.flatMap((p) => (p.critOneIn ? [p.critOneIn] : []))
+  if (crits.length > 0) ability.critOneIn = Math.min(...crits)
+  const rebirth = parts.find((p) => p.rebirthFraction)
+  if (rebirth) ability.rebirthFraction = rebirth.rebirthFraction
+  const crescendo = parts.find((p) => p.crescendo)
+  if (crescendo) ability.crescendo = crescendo.crescendo
   const pp = parts.reduce((m, p) => m * (p.ppMultiplier ?? 1), 1)
   if (pp !== 1) ability.ppMultiplier = pp
   const immunities = parts.flatMap((p) => p.statusImmunities ?? [])

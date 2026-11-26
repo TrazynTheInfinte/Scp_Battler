@@ -15,6 +15,7 @@ import {
   type CurrentRoom,
 } from '../../online/room'
 import { illegalSeats, matchSetup, parseRoomCode, type RoomData } from '../../online/roomData'
+import { lockedGifts } from '../../online/accountData'
 import { OnlineDriver } from '../onlineDriver'
 import type { SavedTeam } from '../savedTeams'
 import { BattleScreen } from './BattleScreen'
@@ -35,11 +36,14 @@ export function OnlineScreen({
   uid,
   callsign,
   teams,
+  grants,
   onExit,
 }: {
   uid: string
   callsign: string
   teams: SavedTeam[]
+  /** Gift SCPs this Account holds; teams with any other Gift SCP can't be used. */
+  grants: readonly string[]
   onExit: () => void
 }) {
   const [current, setCurrent] = useState<CurrentRoom | null>(rememberedRoom)
@@ -101,7 +105,7 @@ export function OnlineScreen({
     return () => window.clearTimeout(t)
   }, [awayDeadline, current, driver])
 
-  if (!current) return <Lobby uid={uid} callsign={callsign} teams={teams} message={message} onEnter={setCurrent} onExit={onExit} />
+  if (!current) return <Lobby uid={uid} callsign={callsign} teams={teams} grants={grants} message={message} onEnter={setCurrent} onExit={onExit} />
 
   const { code, seat } = current
 
@@ -247,6 +251,7 @@ function Lobby({
   uid,
   callsign,
   teams,
+  grants,
   message,
   onEnter,
   onExit,
@@ -254,11 +259,16 @@ function Lobby({
   uid: string
   callsign: string
   teams: SavedTeam[]
+  grants: readonly string[]
   message: string | null
   onEnter: (room: CurrentRoom) => void
   onExit: () => void
 }) {
-  const legal = teams.filter((t) => validateTeam(ROSTER, t.speciesIds, t.equipment).length === 0)
+  // The database also refuses a Room seat with a Gift SCP the Account doesn't hold (database.rules.json).
+  const legal = teams.filter(
+    (t) =>
+      validateTeam(ROSTER, t.speciesIds, t.equipment).length === 0 && lockedGifts(t.speciesIds, grants, ROSTER).length === 0,
+  )
   const [picked, setPicked] = useState<string | null>(legal.length === 1 ? legal[0].name : null)
   const [codeInput, setCodeInput] = useState('')
   const [busy, setBusy] = useState(false)

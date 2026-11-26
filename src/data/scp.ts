@@ -1,4 +1,4 @@
-import type { MoveData, ObjectClass, SpeciesData, Stats } from '../engine'
+import type { GiftKind, MoveData, ObjectClass, SpeciesData, Stats } from '../engine'
 import type { ImageCredit } from './dossiers'
 import type { StatTemplateId } from './statTemplates'
 
@@ -33,6 +33,13 @@ export interface ScpDefinition {
   moveNames?: Readonly<Record<string, string>>
   /** Its one Signature Move (see GLOSSARY.md), if any. */
   signatureMove?: MoveData
+  /**
+   * A Gift SCP (see GLOSSARY.md): an original SCP only Accounts holding a
+   * Grant for it can use. Its id is `gift-<name>`.
+   */
+  gift?: GiftKind
+  /** Gift SCPs only: their own original moves (any number, unlike a Signature Move). */
+  ownMoves?: readonly MoveData[]
   /** Id of an ability in abilities.ts. */
   ability: string
   /** Why it meets the Eligibility rule (see GLOSSARY.md), or for an Operative why it was chosen: how it would fight. */

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compileAbility, type Stats } from '../engine'
 import { ABILITIES, COUNTER_RULE_KINDS } from './abilities'
 import { MOVE_POOL } from './moves'
-import { ROSTER, SCP_FILES, SCPS, isExplained, isOperative } from './roster'
+import { ROSTER, SCP_FILES, SCPS, isExplained, isGift, isOperative } from './roster'
 import { CLASS_STAT_TOTAL, MAX_STAT_TWEAK, STAT_TEMPLATES, scaleTemplate, type StatTemplateId } from './statTemplates'
 
 const total = (s: Stats) => Object.values(s).reduce((a, b) => a + b, 0)
@@ -15,6 +15,10 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
       expect(id).toMatch(/^op-[a-z]+(-[a-z0-9]+)*$/)
       expect(scp.name.trim()).not.toBe('')
       expect(scp.dossier.wikiUrl, 'Operatives have no SCP article, so need a wiki link').toBeDefined()
+    } else if (isGift(id)) {
+      expect(id).toMatch(/^gift-[a-z]+(-[a-z0-9]+)*$/)
+      expect(scp.gift, 'Gift SCPs say who they are for').toBeDefined()
+      expect(scp.name).toMatch(scp.gift === 'admin' ? /^SCP-ADM-\d+$/ : /^SCP-PT-\d+$/)
     } else {
       expect(id).toMatch(/^scp-\d{3,4}(-ex)?$/)
       expect(scp.name).toBe(id.toUpperCase())
@@ -38,7 +42,10 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
     for (const m of scp.moves) expect(ROSTER.moves[m], m).toBeDefined()
     const pool = new Set(MOVE_POOL.map((m) => m.id))
     const own = scp.moves.filter((m) => !pool.has(m))
-    expect(own, 'moves outside the pool').toEqual(scp.signatureMove ? [scp.signatureMove.id] : [])
+    const ownIds = [...(scp.signatureMove ? [scp.signatureMove.id] : []), ...(scp.ownMoves ?? []).map((m) => m.id)]
+    expect(own, 'moves outside the pool').toEqual(ownIds)
+    if (scp.ownMoves) expect(isGift(id), 'only Gift SCPs have their own moves').toBe(true)
+    if (isGift(id) !== Boolean(scp.gift)) expect.fail('a gift- id and the gift field go together')
     const sameType = scp.moves.some((m) => {
       const move = ROSTER.moves[m]
       return move.category !== 'Status' && (scp.types as readonly string[]).includes(move.type)
@@ -58,7 +65,9 @@ describe.each(SCPS.map((scp) => [scp.id, scp] as const))('%s', (id, scp) => {
   it('is Mundane exactly when it is an SCP-EX entry (Operatives may be Mundane too)', () => {
     const mundane = (scp.types as readonly string[]).includes('Mundane')
     if (isExplained(id)) expect(scp.types).toEqual(['Mundane'])
-    else if (!isOperative(id)) expect(mundane, 'only SCP-EX entries and Operatives are Mundane').toBe(false)
+    else if (!isOperative(id) && !isGift(id)) {
+      expect(mundane, 'only SCP-EX entries, Operatives and Gift SCPs are Mundane').toBe(false)
+    }
   })
 
   it('uses Mundane moves only if it is Mundane', () => {

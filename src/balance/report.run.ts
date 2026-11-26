@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { writeFileSync } from 'node:fs'
 import { it } from 'vitest'
-import { ROSTER, ROSTER_ORDER } from '../data/roster'
+import { ROSTER, BALANCE_ORDER } from '../data/roster'
 import { balanceReport } from './report'
 import { BATTLES_PER_SCP } from './rules'
 import { simulateBalance } from './simulate'
@@ -12,8 +12,8 @@ import { simulateBalance } from './simulate'
  * file discovery works. Not part of `npm test`.
  */
 it('writes the balance report', () => {
-  const result = simulateBalance(ROSTER, ROSTER_ORDER, ROSTER_ORDER, BATTLES_PER_SCP)
-  const report = balanceReport(ROSTER, ROSTER_ORDER, result)
+  const result = simulateBalance(ROSTER, BALANCE_ORDER, BALANCE_ORDER, BATTLES_PER_SCP)
+  const report = balanceReport(ROSTER, BALANCE_ORDER, result)
   writeFileSync('balance-report.md', report)
   // The O5 Council Member bot builds from these (src/ai/opponents.ts). Committed, regenerated each wave.
   const rate = (t: { wins: number; battles: number }) => Math.round((t.wins / t.battles) * 1000) / 1000

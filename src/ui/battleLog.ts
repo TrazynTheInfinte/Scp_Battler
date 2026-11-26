@@ -128,6 +128,28 @@ export function formatEvents(
       case 'withdraw':
         lines.push(`${name(e.side)} will withdraw at the end of the turn.`)
         break
+      case 'revive':
+        lines.push(`${name(e.side)} rose from the ashes!`)
+        break
+      case 'rewind':
+        lines.push(`Time ran backwards for ${name(e.side)}.`)
+        break
+      case 'foretold':
+        lines.push(
+          e.phase === 'set'
+            ? `${name(e.side)} foretold a strike.`
+            : e.phase === 'lands'
+              ? 'The foretold strike lands!'
+              : 'The foretold strike found no one.',
+        )
+        break
+      case 'stacks':
+        lines.push(
+          e.stacks > 0
+            ? `${name(e.side)}'s music swells (${'♪'.repeat(e.stacks)}).`
+            : `${name(e.side)}'s music falls silent.`,
+        )
+        break
       case 'timeout':
         lines.push('CONTAINMENT TIMEOUT — decided by remaining HP.')
         break

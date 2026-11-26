@@ -19,7 +19,8 @@ import {
 } from '../../engine'
 import { DOSSIERS } from '../../data/dossiers'
 import { EQUIPMENT_ORDER } from '../../data/equipment'
-import { ROSTER, ROSTER_ORDER } from '../../data/roster'
+import { GIFT_ORDER, ROSTER, ROSTER_ORDER } from '../../data/roster'
+import { lockedGifts } from '../../online/accountData'
 import { DossierCard, ScreenGuideButton, TypeChartButton } from '../components'
 import { TEAM_BUILDER_GUIDE } from '../screenGuides'
 import { NO_FILTER, filterRoster, isFiltering, type RosterFilter } from '../rosterFilter'
@@ -29,7 +30,8 @@ import type { TeamShelf } from '../teamShelf'
 import { readOpponentKind, writeOpponentKind } from '../opponentChoice'
 
 /** What a saved team breaks under the current rules (it still loads, so it can be fixed), or null. */
-function savedTeamProblem(t: SavedTeam): string | null {
+function savedTeamProblem(t: SavedTeam, grants: readonly string[]): string | null {
+  if (lockedGifts(t.speciesIds, grants, ROSTER).length > 0) return 'locked gift'
   const p = validateTeam(ROSTER, t.speciesIds, t.equipment)[0]
   if (!p) return null
   if (p.kind === 'classLimit') return `too many ${p.objectClass}`
@@ -178,6 +180,7 @@ export function TeamBuilderScreen({
   shelf,
   onBack,
   onBattle,
+  grants,
 }: {
   team: string[]
   setTeam: (team: string[]) => void
@@ -187,6 +190,8 @@ export function TeamBuilderScreen({
   shelf: TeamShelf
   onBack: () => void
   onBattle: (opponent: OpponentKind) => void
+  /** Gift SCPs the signed-in Account holds; empty when signed out. */
+  grants: readonly string[]
 }) {
   const [opponent, setOpponentState] = useState<OpponentKind>(readOpponentKind)
   const setOpponent = (kind: OpponentKind) => {
@@ -211,13 +216,17 @@ export function TeamBuilderScreen({
     setCollapsedState(c)
     writeCollapsed(c)
   }
-  const shown = useMemo(() => filterRoster(ROSTER, ROSTER_ORDER, DOSSIERS, filter), [filter])
+  // The Account's Gift SCPs come first, so they're easy to find.
+  const available = useMemo(() => [...GIFT_ORDER.filter((id) => grants.includes(id)), ...ROSTER_ORDER], [grants])
+  const shown = useMemo(() => filterRoster(ROSTER, available, DOSSIERS, filter), [available, filter])
   const activeFilters = filter.types.size + filter.classes.size
 
   const cost = teamCost(ROSTER, team)
   const gearCost = equipmentCost(ROSTER, equipment)
   const gearBudget = equipmentBudget(ROSTER, team)
-  const legal = validateTeam(ROSTER, team, equipment).length === 0
+  // A saved team may hold a Gift SCP this Account doesn't (signed out, or the Grant was taken back).
+  const locked = lockedGifts(team, grants, ROSTER)
+  const legal = validateTeam(ROSTER, team, equipment).length === 0 && locked.length === 0
   const overBudget = cost > TEAM_BUDGET
   const gearOverBudget = gearCost > gearBudget
   const classProblem = validateTeam(ROSTER, team, equipment).find((p) => p.kind === 'classLimit')
@@ -255,7 +264,7 @@ export function TeamBuilderScreen({
     setEquipment(t.speciesIds.map((_, i) => t.equipment?.[i] ?? null))
     setName(t.name)
     setShowSaved(false)
-    const problem = savedTeamProblem(t)
+    const problem = savedTeamProblem(t, grants)
     setNotice(
       problem
         ? `Loaded "${t.name}", but the rules changed since you saved it: ${problem}. Swap something out to fix it.`
@@ -317,6 +326,7 @@ export function TeamBuilderScreen({
                   >
                     {id ? (
                       <span className={`class-${ROSTER.species[id].objectClass}`}>
+                        {locked.includes(id) && '🔒 '}
                         {ROSTER.species[id].name.replace('SCP-', '')}
                         <br />
                         <span className="muted">✕</span>
@@ -363,7 +373,9 @@ export function TeamBuilderScreen({
           )}
           <p className="notice" role="status">
             {notice ??
-              (legal
+              (locked.length > 0
+                ? `${locked.map((id) => ROSTER.species[id].name).join(', ')}: a Gift SCP this Account doesn't hold. Swap it out to battle.`
+                : legal
                 ? 'Team ready.'
                 : overBudget
                   ? `Over budget (${cost}/${TEAM_BUDGET}). Remove an SCP to fix it.`
@@ -434,8 +446,8 @@ export function TeamBuilderScreen({
                 <div className="saved-row" key={t.name}>
                   <div>
                     <strong>{t.name}</strong>
-                    {savedTeamProblem(t) && (
-                      <span className="badge status-badge">{savedTeamProblem(t)!.toUpperCase()}</span>
+                    {savedTeamProblem(t, grants) && (
+                      <span className="badge status-badge">{savedTeamProblem(t, grants)!.toUpperCase()}</span>
                     )}
                     <div className="muted small">
                       {t.speciesIds.map((id) => ROSTER.species[id].name.replace('SCP-', '')).join(' · ')}
@@ -479,7 +491,7 @@ export function TeamBuilderScreen({
         <div className="stack builder-list">
           <div className="row small muted" style={{ justifyContent: 'space-between' }}>
             <span aria-live="polite">
-              Showing {shown.length} of {ROSTER_ORDER.length}
+              Showing {shown.length} of {available.length}
             </span>
             {isFiltering(filter) && (
               <button className="btn-link" onClick={() => setFilter(NO_FILTER)}>

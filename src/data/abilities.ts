@@ -1098,6 +1098,34 @@ const ABILITY_LIST: AbilityData[] = [
     description: "Nothing she doesn't want can happen to her: opponents can't lower her stats.",
     rules: [{ kind: 'blockStatDrops' }],
   },
+  // Gift SCPs (see GLOSSARY.md).
+  {
+    id: 'loadedDice',
+    name: 'Loaded Dice',
+    description: 'Luck is on its side: its damaging hits are critical 1 time in 6 (instead of 1 in 24).',
+    rules: [{ kind: 'critChance', oneIn: 6 }],
+  },
+  {
+    id: 'rebirth',
+    name: 'Rebirth',
+    description:
+      'The first time it is Neutralized in a battle, it rises again at 1/3 HP, its status and stat changes burned away.',
+    rules: [{ kind: 'rebirth', fraction: 1 / 3 }],
+  },
+  {
+    id: 'crescendo',
+    name: 'Crescendo',
+    description:
+      'Each move it uses that differs from its last builds a stack (up to 4), each adding 20% damage. Repeating a move or switching out ends the music.',
+    rules: [{ kind: 'crescendo', perStack: 0.2, maxStacks: 4 }],
+  },
+  {
+    id: 'rewind',
+    name: 'Rewind',
+    description:
+      'Once per battle, at the end of a turn below 1/4 HP, its HP returns to what it was two turns ago. Time runs the other way: opponents raising its stats instead of lowering them.',
+    rules: [{ kind: 'rewind', below: 1 / 4 }, { kind: 'reverseStatDrops' }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

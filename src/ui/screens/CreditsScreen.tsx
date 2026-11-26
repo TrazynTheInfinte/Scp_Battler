@@ -1,5 +1,5 @@
 import { artCredit, DOSSIERS } from '../../data/dossiers'
-import { ROSTER, ROSTER_ORDER } from '../../data/roster'
+import { GIFT_ORDER, ROSTER, ROSTER_ORDER } from '../../data/roster'
 
 const REPO = 'https://github.com/TrazynTheInfinte/Scp_Battler'
 
@@ -46,7 +46,7 @@ export function CreditsScreen({ onBack }: { onBack: () => void }) {
               <strong>{ROSTER.species[id].name}</strong> <span className="muted">{d.nickname}</span>
               <div>
                 by {d.authors} —{' '}
-                <a href={d.wikiUrl} target="_blank" rel="noreferrer">
+                <a href={d.wikiUrl ?? undefined} target="_blank" rel="noreferrer">
                   article
                 </a>
                 {d.mature && <span className="mature-note"> (mature content)</span>}
@@ -60,6 +60,19 @@ export function CreditsScreen({ onBack }: { onBack: () => void }) {
             </div>
           )
         })}
+      </section>
+
+      <section className="panel">
+        <p className="section-label">ORIGINAL SCPS</p>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          Gift SCPs made for this game, not from the SCP Wiki. Same license as the rest of the game.
+        </p>
+        {GIFT_ORDER.map((id) => (
+          <div className="credit" key={id}>
+            <strong>{ROSTER.species[id].name}</strong> <span className="muted">{DOSSIERS[id].nickname}</span>
+            <div>by {DOSSIERS[id].authors}</div>
+          </div>
+        ))}
       </section>
     </main>
   )

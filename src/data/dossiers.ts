@@ -23,7 +23,8 @@ export interface Dossier {
   speciesId: string
   /** Community nickname, shown as a subtitle. Not from the article text. */
   nickname: string
-  wikiUrl: string
+  /** The wiki article; null for Gift SCPs, which are originals with no article. */
+  wikiUrl: string | null
   /** Exactly as credited on the article. */
   authors: string
   images: readonly ImageCredit[]
@@ -37,7 +38,7 @@ export const DOSSIERS: Readonly<Record<string, Dossier>> = Object.fromEntries(
     {
       speciesId: scp.id,
       nickname: scp.dossier.nickname,
-      wikiUrl: scp.dossier.wikiUrl ?? `https://scp-wiki.wikidot.com/${scp.id}`,
+      wikiUrl: scp.gift ? null : (scp.dossier.wikiUrl ?? `https://scp-wiki.wikidot.com/${scp.id}`),
       authors: scp.dossier.authors,
       images: scp.dossier.images,
       mature: scp.dossier.mature ?? false,

@@ -15,12 +15,15 @@ import {
   type Rng,
   type SideIndex,
 } from '../engine'
-import { ROSTER, ROSTER_ORDER, isOperative } from './roster'
+import { BALANCE_ORDER, GIFT_ORDER, ROSTER, ROSTER_ORDER, isGift, isOperative } from './roster'
 
 // Per-SCP rules live in scps.test.ts.
 describe('roster integrity', () => {
   it('lists every SCP once, cheapest object class first, Operatives after numbered SCPs', () => {
-    expect([...ROSTER_ORDER].sort()).toEqual(Object.keys(ROSTER.species).sort())
+    expect([...BALANCE_ORDER].sort()).toEqual(Object.keys(ROSTER.species).sort())
+    expect([...ROSTER_ORDER, ...GIFT_ORDER].sort()).toEqual([...BALANCE_ORDER].sort())
+    expect(ROSTER_ORDER.filter(isGift), 'Gift SCPs are not on the everyone roster').toEqual([])
+    expect(GIFT_ORDER.length).toBeGreaterThan(0)
     const costs = ROSTER_ORDER.map((id) => OBJECT_CLASS_COST[ROSTER.species[id].objectClass])
     expect(costs).toEqual([...costs].sort((a, b) => a - b))
     for (let i = 1; i < ROSTER_ORDER.length; i++) {
@@ -33,7 +36,8 @@ describe('roster integrity', () => {
 /** A random legal team: TEAM_SIZE distinct SCPs within budget and class limits. */
 function randomTeam(rng: Rng): string[] {
   for (let attempt = 0; attempt < 10_000; attempt++) {
-    const pool = [...ROSTER_ORDER]
+    // Gift SCPs too, so their new mechanics get fuzzed.
+    const pool = [...BALANCE_ORDER]
     const team: string[] = []
     while (team.length < TEAM_SIZE) team.push(pool.splice(rng.int(0, pool.length - 1), 1)[0])
     if (validateTeam(ROSTER, team).length === 0) return team

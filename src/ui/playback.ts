@@ -33,7 +33,10 @@ export function applyEventToView(view: BattleState, e: BattleEvent): BattleState
     case 'recoil':
     case 'abilityDamage':
     case 'heal':
+    case 'revive':
+    case 'rewind':
       activeOf(e.side).hp = e.hpAfter
+      if (e.type === 'revive') activeOf(e.side).reborn = true
       break
     case 'neutralized':
       next.sides[e.side].team[e.teamIndex].hp = 0
@@ -43,6 +46,9 @@ export function applyEventToView(view: BattleState, e: BattleEvent): BattleState
       break
     case 'statusEnded':
       activeOf(e.side).status = null
+      break
+    case 'stacks':
+      activeOf(e.side).volatiles = { ...activeOf(e.side).volatiles, stacks: e.stacks }
       break
     default:
       break

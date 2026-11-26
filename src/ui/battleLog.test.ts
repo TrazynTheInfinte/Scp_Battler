@@ -87,4 +87,26 @@ describe('formatEvents', () => {
     expect(lines.length).toBeGreaterThanOrEqual(r.events.length)
     for (const line of lines) expect(line).not.toMatch(/undefined|NaN/)
   })
+
+  it("describes the Gift SCPs' mechanics", () => {
+    expect(
+      fmt([
+        { type: 'revive', side: 0, hpAfter: 50 },
+        { type: 'rewind', side: 1, hpAfter: 80 },
+        { type: 'foretold', side: 0, phase: 'set' },
+        { type: 'foretold', side: 1, phase: 'lands' },
+        { type: 'foretold', side: 1, phase: 'fizzles' },
+        { type: 'stacks', side: 0, stacks: 3 },
+        { type: 'stacks', side: 0, stacks: 0 },
+      ]),
+    ).toEqual([
+      'SCP-173 rose from the ashes!',
+      'Time ran backwards for Hostile SCP-682.',
+      'SCP-173 foretold a strike.',
+      'The foretold strike lands!',
+      'The foretold strike found no one.',
+      "SCP-173's music swells (♪♪♪).",
+      "SCP-173's music falls silent.",
+    ])
+  })
 })

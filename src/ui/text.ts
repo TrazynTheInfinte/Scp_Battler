@@ -68,14 +68,33 @@ export function describeEffect(e: MoveEffect): string {
   }
 }
 
+/** A move's power as shown: "20–160" for rolled power, "40+" when it grows with Crescendo stacks. */
+export function powerLabel(m: MoveData): string {
+  if (m.powerRange) return `${m.powerRange[0]}–${m.powerRange[1]}`
+  if (m.powerPerStack) return `${m.power}+`
+  return `${m.power}`
+}
+
 /** One-line stats summary, e.g. "Physical · 100 power · 85% accuracy · 8 PP". */
 export function moveSummary(m: MoveData): string {
   const acc = m.accuracy === null ? 'never misses' : `${m.accuracy}% accuracy`
-  const base = m.category === 'Status' ? `Status · ${acc}` : `${m.category} · ${m.power} power · ${acc}`
+  const base = m.category === 'Status' ? `Status · ${acc}` : `${m.category} · ${powerLabel(m)} power · ${acc}`
   return `${base} · ${m.pp} PP`
+}
+
+/** What a move's special mechanics do, if it has any. */
+function mechanicsText(m: MoveData): string[] {
+  const out: string[] = []
+  if (m.powerRange) out.push(`Power is rolled each use, from ${m.powerRange[0]} to ${m.powerRange[1]}.`)
+  if (m.powerPerStack) out.push(`+${m.powerPerStack} power per Crescendo stack, then the stacks reset.`)
+  if (m.delay) out.push(`Lands ${m.delay} turns later, on whoever is in then.`)
+  if (m.missRecoil) out.push(`If it misses, the user loses ${Math.round(m.missRecoil * 100)}% of its max HP.`)
+  return out
 }
 
 /** Full move description: summary plus every effect. */
 export function describeMove(m: MoveData): string {
-  return [moveSummary(m), ...(m.effects ?? []).map(describeEffect)].join('. ').replace(/\.\./g, '.')
+  return [moveSummary(m), ...mechanicsText(m), ...(m.effects ?? []).map(describeEffect)]
+    .join('. ')
+    .replace(/\.\./g, '.')
 }

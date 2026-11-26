@@ -18,7 +18,7 @@ export const TEAM_BUILDER_GUIDE: ScreenGuide = {
     ['Saved', 'Name and save the current team, or load one you saved.'],
     ['Hide / Show', 'Shrinks the team panel to one line so the list has more room.'],
     ['Search and Filters', 'Narrow the list by number, name, type or object class.'],
-    ['SCP list', 'Click an SCP to open its dossier: stats, moves and Ability. Add puts it on your team.'],
+    ['SCP list', 'Click an SCP to open its dossier: stats, moves and Ability. Add puts it on your team. Gift SCPs your Account was given come first.'],
     ['Random', 'Fills a random legal team, Equipment included.'],
   ],
 }
@@ -26,7 +26,7 @@ export const TEAM_BUILDER_GUIDE: ScreenGuide = {
 export const BATTLE_GUIDE: ScreenGuide = {
   title: 'Battle',
   parts: [
-    ['Top card', "The opponent's name and active SCP: object class, types, status, Equipment and HP. REALITY-BENT means its stats are flipped and its moves use their counter type."],
+    ['Top card', "The opponent's name and active SCP: object class, types, status, Equipment and HP. REALITY-BENT means its stats are flipped and its moves use their counter type. GIFT or ADMIN marks a Gift SCP, given only to some Accounts."],
     ['Yellow banner', "Against the Trainer: the move it has already committed to this turn."],
     ['Bottom card', 'Your active SCP.'],
     ['Dots', '● SCPs still standing on that side, ○ Neutralized.'],

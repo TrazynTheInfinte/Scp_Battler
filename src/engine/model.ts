@@ -60,6 +60,14 @@ export interface MoveData {
   /** Ignores types: always x1 effectiveness and never same-type boosted (Struggle). */
   typeless?: boolean
   effects?: readonly MoveEffect[]
+  /** Its power is rolled fresh each use, from min to max (`power` is then the average, for display and the AI). */
+  powerRange?: readonly [min: number, max: number]
+  /** On a miss, the user loses this fraction of its max HP. */
+  missRecoil?: number
+  /** Adds this much power per Crescendo stack, then the stacks reset (see the 'crescendo' rule). */
+  powerPerStack?: number
+  /** Deals no damage now: the hit lands at the end of the turn this many turns later, on whoever is active then. */
+  delay?: number
 }
 
 /**
@@ -106,6 +114,18 @@ export type AbilityRule =
   | { kind: 'opponentStagesOnEntry'; changes: Partial<StatStages> }
   /** Its moves never miss, whatever their accuracy or its accuracy stage. */
   | { kind: 'neverMisses' }
+  /** Its damaging hits are critical one time in `oneIn` (instead of the usual 1 in 24). */
+  | { kind: 'critChance'; oneIn: number }
+  /** The first time it's Neutralized in a battle, it comes back at `fraction` of max HP, its status and stat stages cleared. */
+  | { kind: 'rebirth'; fraction: number }
+  /**
+   * Each move it uses that differs from its previous one adds a stack (up to
+   * `maxStacks`); repeating a move resets them. Each stack adds `perStack` to
+   * its damage, except on moves with powerPerStack, which use the stacks up.
+   */
+  | { kind: 'crescendo'; perStack: number; maxStacks: number }
+  /** Once per battle, at end of turn below `below` of max HP, its HP returns to what it was two turns ago. */
+  | { kind: 'rewind'; below: number }
 
 export interface AbilityData {
   id: string
@@ -141,7 +161,12 @@ export interface SpeciesData {
    * The move's stats are unchanged; see moveName().
    */
   moveNames?: Readonly<Record<string, string>>
+  /** A Gift SCP: only Accounts holding a Grant for it may field it (enforced outside the engine). */
+  gift?: GiftKind
 }
+
+/** Who a Gift SCP was made for: playtesters, or the game's admin. */
+export type GiftKind = 'playtester' | 'admin'
 
 /** The name a move shows on a species: its own name for a shared move, or the move's name. */
 export function moveName(dex: Dex, speciesId: string, move: MoveData): string {
@@ -186,6 +211,13 @@ export interface Volatiles {
    * on the bench. Set by the 'withdraw' move effect or 'randomWithdraw' rule.
    */
   withdrawing: boolean
+  /** The id of the last move it used since entering (Crescendo), or null. */
+  lastMoveId: string | null
+  /** Crescendo stacks built since entering. */
+  stacks: number
+  /** Its HP at the end of the turn before last, and of last turn (or on entry, if it hasn't been in that long), for Rewind. */
+  hpTwoAgo: number
+  hpOneAgo: number
 }
 
 export interface Combatant {
@@ -208,6 +240,25 @@ export interface Combatant {
    * (see counterType). Absent on everyone else.
    */
   bent?: true
+  /** Rebirth has brought it back (once per battle). */
+  reborn?: true
+  /** Rewind has been used (once per battle). */
+  rewound?: true
+}
+
+/** A Foretold Strike on its way: fixed when the move was used, it lands on whoever `targetSide` has active then. */
+export interface DelayedStrike {
+  /** The side that used the move. */
+  side: SideIndex
+  moveId: string
+  /** It lands at the end of this turn. */
+  landsOnTurn: number
+  power: number
+  type: TypeName
+  category: MoveCategory
+  /** The user's effective attacking stat when it used the move. */
+  attack: number
+  sameType: boolean
 }
 
 export interface SideState {
@@ -228,6 +279,8 @@ export interface BattleState {
   needsReplacement: [boolean, boolean]
   winner: SideIndex | 'draw' | null
   rngState: number
+  /** Foretold Strikes still to land, in the order they were used. Absent when none. */
+  delayed?: DelayedStrike[]
 }
 
 /** What a side decides to do on a turn. */
@@ -280,6 +333,14 @@ export type BattleEvent =
   | { type: 'forfeit'; side: SideIndex }
   /** Will leave the field at the end of the turn (its side then picks a replacement). */
   | { type: 'withdraw'; side: SideIndex }
+  /** Rebirth: came back instead of being Neutralized. */
+  | { type: 'revive'; side: SideIndex; hpAfter: number }
+  /** Rewind: HP went back to an earlier value. */
+  | { type: 'rewind'; side: SideIndex; hpAfter: number }
+  /** A Foretold Strike: set by `side`, or landing on / missing `side` (its target). */
+  | { type: 'foretold'; side: SideIndex; phase: 'set' | 'lands' | 'fizzles' }
+  /** Crescendo stacks changed on `side`'s active. */
+  | { type: 'stacks'; side: SideIndex; stacks: number }
   /** The turn limit was reached; the following 'end' is decided by remaining HP. */
   | { type: 'timeout' }
   | { type: 'end'; winner: SideIndex | 'draw' }

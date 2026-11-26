@@ -15,10 +15,10 @@ import { ROSTER } from '../../data/roster'
 import { HOSTILE, PLAYER } from '../battleLog'
 import { playerMustReplace, type Step } from '../battleController'
 import type { BattleDriver, BattleView, DriverStatus } from '../battleDriver'
-import { ClassBadge, ContainmentCard, EquipmentTag, ScreenGuideButton, TypeBadge, TypeChartButton } from '../components'
+import { ClassBadge, ContainmentCard, EquipmentTag, GiftBadge, ScreenGuideButton, TypeBadge, TypeChartButton } from '../components'
 import { BATTLE_GUIDE } from '../screenGuides'
 import { framesFor, type Frame } from '../playback'
-import { TYPE_ABBR, describeMove, effectivenessTag } from '../text'
+import { TYPE_ABBR, describeMove, effectivenessTag, powerLabel } from '../text'
 
 const LONG_PRESS_MS = 450
 /** Delay between battle messages during playback. */
@@ -71,11 +71,22 @@ function SideInfo({ state, side, owner }: { state: BattleState; side: SideIndex;
       <div className="row" style={{ gap: 6 }}>
         <strong>{sp.name}</strong>
         <ClassBadge objectClass={sp.objectClass} />
+        <GiftBadge speciesId={sp.id} />
         {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
         {c.stages.acc < 0 && <span className="badge status-badge">ACC −{-c.stages.acc}</span>}
         {c.bent && (
           <span className="badge status-badge" title="Stats swapped by rank; moves use their counter type">
             REALITY-BENT
+          </span>
+        )}
+        {c.reborn && (
+          <span className="badge status-badge" title="Rebirth used: it has come back once already">
+            REBORN
+          </span>
+        )}
+        {c.volatiles.stacks > 0 && (
+          <span className="badge status-badge" title="Crescendo stacks">
+            {'♪'.repeat(c.volatiles.stacks)}
           </span>
         )}
       </div>
@@ -414,7 +425,7 @@ export function BattleScreen({
                     <span className="move-meta">
                       <span className={`type-${m.type}`}>{TYPE_ABBR[m.type]}</span>
                       <span className="muted">
-                        {m.category === 'Status' ? 'STATUS' : m.power} · {m.accuracy ?? '—'}
+                        {m.category === 'Status' ? 'STATUS' : powerLabel(m)} · {m.accuracy ?? '—'}
                         {m.accuracy !== null ? '%' : ''}
                       </span>
                       <span className={realActive.pp[i] <= 2 ? 'pp-low' : 'muted'}>

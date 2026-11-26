@@ -17,6 +17,17 @@ export function TypeBadge({ type }: { type: TypeName }) {
   return <span className={`badge type-${type}`}>{type}</span>
 }
 
+/** GIFT or ADMIN on a Gift SCP (so opponents know why they've never seen it); nothing otherwise. */
+export function GiftBadge({ speciesId }: { speciesId: string }) {
+  const gift = ROSTER.species[speciesId]?.gift
+  if (!gift) return null
+  return (
+    <span className="badge gift-badge" title="A Gift SCP: only Accounts given it can field it">
+      {gift === 'admin' ? 'ADMIN' : 'GIFT'}
+    </span>
+  )
+}
+
 /** The Equipment an SCP carries, with its effect on hover; nothing if it carries none. */
 export function EquipmentTag({ id }: { id: string | null }) {
   const piece = id ? ROSTER.equipment[id] : null
@@ -83,6 +94,7 @@ export function DossierCard({
           <span className="muted">{dossier.nickname}</span>
           <div className="row" style={{ gap: 4, marginTop: 4 }}>
             <ClassBadge objectClass={sp.objectClass} />
+            <GiftBadge speciesId={speciesId} />
             {sp.types.map((t) => (
               <TypeBadge key={t} type={t} />
             ))}
@@ -131,9 +143,13 @@ export function DossierCard({
           </div>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="small">
-              <a href={dossier.wikiUrl} target="_blank" rel="noreferrer">
-                Read the SCP Wiki article ↗
-              </a>
+              {dossier.wikiUrl ? (
+                <a href={dossier.wikiUrl} target="_blank" rel="noreferrer">
+                  Read the SCP Wiki article ↗
+                </a>
+              ) : (
+                <span className="muted">An original SCP, made for this game.</span>
+              )}
               {dossier.mature && <span className="mature-note"> · Mature content</span>}
             </span>
             {action}

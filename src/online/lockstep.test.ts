@@ -74,6 +74,23 @@ describe('lockstep', () => {
     expect(seats[0].applied).toBe(seats[1].applied)
   })
 
+  it.each([1, 2, 3, 4, 5, 6])('stays in sync with the Gift SCPs and their new mechanics (seed %i)', (seed) => {
+    const gifts = ['gift-hourglass', 'gift-phoenix', 'gift-conductor', 'gift-lucky-break']
+    const setup: MatchSetup = {
+      seed,
+      teams: [padTeam(ROSTER, gifts), padTeam(ROSTER, [...gifts].reverse())],
+      equipment: [[], []],
+      leads: [seed % 4, (seed + 1) % 4],
+    }
+    const { seats, log } = playThrough(setup)
+    expect(seats[0].state.phase).toBe('ended')
+    expect(hashState(seats[0].state)).toBe(hashState(seats[1].state))
+    // A browser that reloads mid-match rebuilds the same state from the log alone.
+    const rejoined = new Match(ROSTER, setup)
+    rejoined.sync(log)
+    expect(hashState(rejoined.state)).toBe(hashState(seats[0].state))
+  })
+
   it('lets a browser that reloads replay the whole log in one go', () => {
     const setup = setupFor(9)
     const { seats, log } = playThrough(setup)

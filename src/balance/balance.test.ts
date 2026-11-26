@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ROSTER, ROSTER_ORDER, SCPS } from '../data/roster'
+import { BALANCE_ORDER, ROSTER, SCPS } from '../data/roster'
 import { BATTLES_PER_SCP, balanceProblems, typeSpread, typeSpreadProblems } from './rules'
 import { simulateBalance } from './simulate'
 
@@ -13,11 +13,11 @@ const focus = SCPS.filter((s) => s.wave === newestWave).map((s) => s.id)
 
 describe(`balance gate (wave ${newestWave}: ${focus.length} SCPs)`, () => {
   it('every type is spread evenly enough across SCPs and moves', () => {
-    expect(typeSpreadProblems(typeSpread(ROSTER, ROSTER_ORDER))).toEqual([])
+    expect(typeSpreadProblems(typeSpread(ROSTER, BALANCE_ORDER))).toEqual([])
   })
 
   it('no sweeps over the limit, win rates in the band, and no dominant team makeup', () => {
-    const result = simulateBalance(ROSTER, ROSTER_ORDER, focus, BATTLES_PER_SCP)
+    const result = simulateBalance(ROSTER, BALANCE_ORDER, focus, BATTLES_PER_SCP)
     // Equipment spending bands are judged in the full report only (see balanceProblems).
     expect(balanceProblems(result, focus, { spendBands: false })).toEqual([])
     expect(result.timeouts / result.battles).toBeLessThan(0.02)

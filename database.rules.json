@@ -35,6 +35,11 @@
         }
       }
     },
+    "grants": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid"
+      }
+    },
     "rooms": {
       "$code": {
         ".read": "auth != null",
@@ -62,7 +67,7 @@
             "team": {
               "speciesIds": {
                 "$j": {
-                  ".validate": "$j.matches(/^[0-5]$/) && newData.isString() && newData.val().length <= 32"
+                  ".validate": "$j.matches(/^[0-5]$/) && newData.isString() && newData.val().length <= 32 && (!newData.val().beginsWith('gift-') || root.child('grants/' + auth.uid + '/' + newData.val()).val() === true)"
                 }
               },
               "equipment": {

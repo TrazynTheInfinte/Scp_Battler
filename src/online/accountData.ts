@@ -70,3 +70,21 @@ function asArray(raw: unknown): unknown[] {
   }
   return []
 }
+
+/**
+ * An Account's Grants (see GLOSSARY.md), from what the database holds under
+ * `grants/<uid>`: `{ "<gift id>": true, … }`. Only ids of real Gift SCPs
+ * count; anything else is ignored. Sorted, so the result is stable.
+ */
+export function decodeGrants(raw: unknown, dex: Dex): string[] {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return []
+  return Object.entries(raw)
+    .filter(([id, v]) => v === true && dex.species[id]?.gift !== undefined)
+    .map(([id]) => id)
+    .sort()
+}
+
+/** Gift SCPs on `team` that the Account (holding `grants`) may not field. */
+export function lockedGifts(team: readonly string[], grants: readonly string[], dex: Dex): string[] {
+  return team.filter((id) => dex.species[id]?.gift !== undefined && !grants.includes(id))
+}

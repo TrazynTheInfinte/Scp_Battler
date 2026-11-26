@@ -991,3 +991,8 @@ button.preview-card:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+/* Gift SCPs: GIFT / ADMIN */
+.gift-badge {
+  color: var(--accent);
+  border-color: var(--accent);
+}

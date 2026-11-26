@@ -40,6 +40,9 @@ import {
   tutorialDriver,
 } from './ui/tutorial'
 
+/** No Gift SCPs (signed out). One shared array, so the Team Builder's list doesn't rebuild each render. */
+const NO_GRANTS: readonly string[] = []
+
 type Screen = 'title' | 'builder' | 'credits' | 'howto' | 'preview' | 'battle' | 'result' | 'online'
 
 /** A fresh battle seed; battles only need to differ, not be secret. */
@@ -120,6 +123,7 @@ export default function App() {
   const [result, setResult] = useState<BattleState | null>(dev.result)
   const account = useSyncExternalStore(accountStore.subscribe, accountStore.getSnapshot)
   const shelf = useTeamShelf(account)
+  const grants = account.status === 'signedIn' ? account.grants : NO_GRANTS
 
   const go = (next: Screen) => {
     setScreen(next)
@@ -159,6 +163,7 @@ export default function App() {
           uid={account.uid}
           callsign={account.callsign}
           teams={shelf.teams}
+          grants={account.grants}
           onExit={() => go('title')}
         />
       )
@@ -174,6 +179,7 @@ export default function App() {
           equipment={equipment}
           setEquipment={setEquipment}
           shelf={shelf}
+          grants={grants}
           onBack={() => go('title')}
           onBattle={(kind) => toPreview(newMatch(kind))}
         />

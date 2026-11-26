@@ -4,7 +4,16 @@ import { ROSTER } from '../data/roster'
 import { TEAM_SIZE } from '../engine'
 import { padTeam } from '../engine/testing/teams'
 import { MAX_NAME_LENGTH, MAX_SAVED_TEAMS } from '../ui/savedTeams'
-import { CALLSIGN_MAX, CALLSIGN_MIN, checkCallsign, decodeTeams, encodeTeams, suggestCallsign } from './accountData'
+import {
+  CALLSIGN_MAX,
+  CALLSIGN_MIN,
+  checkCallsign,
+  decodeGrants,
+  decodeTeams,
+  encodeTeams,
+  lockedGifts,
+  suggestCallsign,
+} from './accountData'
 
 const TEAM = padTeam(ROSTER, ['scp-173', 'scp-999', 'scp-914', 'scp-131'])
 
@@ -52,5 +61,36 @@ describe('database rules', () => {
     expect(rules).toContain(`length <= ${MAX_NAME_LENGTH}`)
     expect(rules).toContain(`$i.matches(/^[0-${MAX_SAVED_TEAMS - 1}]$/)`)
     expect(rules).toContain(`$j.matches(/^[0-${TEAM_SIZE - 1}]$/)`)
+  })
+})
+
+describe('Grants', () => {
+  it('keep only real Gift SCPs granted with true', () => {
+    expect(
+      decodeGrants({ 'gift-phoenix': true, 'gift-hourglass': 'true', 'scp-173': true, 'gift-nope': true, 'gift-conductor': true }, ROSTER),
+    ).toEqual(['gift-conductor', 'gift-phoenix'])
+    for (const junk of [null, undefined, 'gift-phoenix', ['gift-phoenix'], 7]) expect(decodeGrants(junk, ROSTER)).toEqual([])
+  })
+
+  it('lock only the Gift SCPs the Account does not hold', () => {
+    const team = ['gift-phoenix', 'scp-173', 'gift-lucky-break']
+    expect(lockedGifts(team, [], ROSTER)).toEqual(['gift-phoenix', 'gift-lucky-break'])
+    expect(lockedGifts(team, ['gift-lucky-break'], ROSTER)).toEqual(['gift-phoenix'])
+    expect(lockedGifts(['scp-173'], [], ROSTER)).toEqual([])
+  })
+})
+
+describe('database rules for Grants', () => {
+  const rules = JSON.parse(readFileSync('database.rules.json', 'utf8')).rules
+
+  it('let an Account read only its own Grants, and never write them', () => {
+    expect(rules.grants.$uid['.read']).toBe('auth != null && auth.uid === $uid')
+    expect(JSON.stringify(rules.grants)).not.toContain('.write')
+  })
+
+  it('refuse a Room seat with a Gift SCP the Account does not hold', () => {
+    const v = rules.rooms.$code.seats.$s.team.speciesIds.$j['.validate']
+    expect(v).toContain("beginsWith('gift-')")
+    expect(v).toContain("root.child('grants/' + auth.uid + '/' + newData.val()).val() === true")
   })
 })

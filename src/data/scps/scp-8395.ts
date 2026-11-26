@@ -7,7 +7,7 @@ export default {
   objectClass: 'Apollyon',
   wave: 8,
   types: ['Mechanical', 'Kinetic'],
-  stats: { template: 'physicalBruiser' },
+  stats: { template: 'physicalBruiser', tweaks: { atk: -20, spd: 20 } },
   moves: ['gravity-well', 'roll-out', 'corrosive-touch', 'flank'],
   moveNames: { 'roll-out': 'Planetary Roll', 'corrosive-touch': 'Eroding Hull', flank: 'Orbit' },
   signatureMove: phys('gravity-well', 'Gravity Well', 'Kinetic', 90, 90, [foe({ spe: -1 }, 30)]),
