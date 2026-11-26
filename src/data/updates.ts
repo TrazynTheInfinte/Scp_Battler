@@ -22,7 +22,6 @@ export const UPDATES: readonly Update[] = [
     added: [
       '24 new SCPs: wave 10 (097, 102, 134, 146, 166, 169, 191, 219, 233, 234, 236, 239) and wave 12 (244, 247, 250, 252, 255, 262, 263, 265, 266, 273, 274, 275).',
       'Pick your single-player opponent in the Team Builder: Scientist, Trainer, Mobile Task Force, O5 Council Member or Reality Bender.',
-      'Every SCP now gives its shared moves names that fit it.',
       "This What's New popup.",
     ],
     changed: ['SCP-8395: Attack down, Special Defense up.'],
