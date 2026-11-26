@@ -7,7 +7,7 @@ export default {
   objectClass: 'Apollyon',
   wave: 8,
   types: ['Reality', 'Biological'],
-  stats: { template: 'specialBruiser' },
+  stats: { template: 'specialBruiser', tweaks: { spa: -20, spd: 20 } },
   moves: ['dissolution', 'acidic-bile', 'turn-back-time', 'blinding-light'],
   moveNames: { 'acidic-bile': 'Dissolving Touch', 'turn-back-time': 'Chrysalis', 'blinding-light': 'Wing Flash' },
   signatureMove: spec('dissolution', 'Dissolution', 'Reality', 90, 100),

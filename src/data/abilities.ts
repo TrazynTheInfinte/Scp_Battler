@@ -1199,6 +1199,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "Nothing breaks her skin: takes 0.75x damage from Physical moves.",
     rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
   },
+  // wave 13
+  {
+    id: 'steamVents',
+    name: "Steam Vents",
+    description: "Its engines fire up: the first time it survives a damaging hit after entering, Speed +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { spe: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'lightsOut',
+    name: "Lights Out",
+    description: "When it enters the field, the lights go out: the opponent's Accuracy −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }],
+  },
+  {
+    id: 'mutatingBody',
+    name: "Mutating Body",
+    description: "It grows something new: the first time it survives a damaging hit after entering, Defense +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'gnawingObsession',
+    name: "Gnawing Obsession",
+    description: "At the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'hungryForFuel',
+    name: "Hungry for Fuel",
+    description: "Deals 1.3x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'blackThorns',
+    name: "Black Thorns",
+    description: "An attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'alwaysBehindYou',
+    name: "Always Behind You",
+    description: "It is always just behind the door: its moves never miss.",
+    rules: [{ kind: 'neverMisses' }],
+  },
+  {
+    id: 'stoneBody',
+    name: "Stone Body",
+    description: "It is only rock: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'ensnaredPrey',
+    name: "Ensnared Prey",
+    description: "Deals 1.3x damage to prey that has a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'dontTouch',
+    name: "Don't Touch",
+    description: "An attacker that hits it with a Physical move has a 30% chance to be Stunned.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Stunned', chance: 30 }],
+  },
+  {
+    id: 'highAbove',
+    name: "High Above",
+    description: "It floats far overhead: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'motionSeeking',
+    name: "Motion-Seeking",
+    description: "Anything that moves gets cut: an attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(
