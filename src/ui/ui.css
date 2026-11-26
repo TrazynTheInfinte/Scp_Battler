@@ -1013,3 +1013,19 @@ button.preview-card:disabled {
   margin: 4px 0 8px;
   padding-left: 18px;
 }
+
+/* ---------- SCP details (battle / preview) ---------- */
+.info-btn {
+  min-height: 0;
+  padding: 0 6px;
+  line-height: 1.4;
+}
+.bench-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+.bench-row .bench-item {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { ALL_TYPES, MUNDANE, OBJECT_CLASS_COST, matchup, moveName, type ObjectClass, type TypeName } from '../engine'
+import {
+  ALL_TYPES,
+  MUNDANE,
+  OBJECT_CLASS_COST,
+  matchup,
+  moveName,
+  type Combatant,
+  type ObjectClass,
+  type TypeName,
+} from '../engine'
+import { stageSummary, type Redaction } from './scpInfo'
 import { ART_SOURCE, DOSSIERS } from '../data/dossiers'
 import { ROSTER, isExplained, isOperative } from '../data/roster'
 import type { ScreenGuide } from './screenGuides'
@@ -80,7 +90,6 @@ export function DossierCard({
 }) {
   const sp = ROSTER.species[speciesId]
   const dossier = DOSSIERS[speciesId]
-  const ability = sp.ability ? ROSTER.abilities[sp.ability] : null
   return (
     <article className={`dossier${inTeam ? ' in-team' : ''}`}>
       <button className="dossier-head" onClick={onToggle} aria-expanded={open}>
@@ -106,41 +115,7 @@ export function DossierCard({
       </button>
       {open && (
         <div className="dossier-body">
-          <div className="dossier-top">
-            <ContainmentCard speciesId={speciesId} />
-            <div className="stack" style={{ gap: 4 }}>
-              {STAT_ORDER.map((stat) => (
-                <div className="stat-row" key={stat}>
-                  <span className="muted">{STAT_LABEL[stat]}</span>
-                  <span>{sp.baseStats[stat]}</span>
-                  <div className="stat-bar">
-                    <span style={{ width: `${Math.min(100, (sp.baseStats[stat] / STAT_MAX) * 100)}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          {ability && (
-            <div>
-              <p className="section-label">ABILITY</p>
-              <strong>{ability.name}</strong>
-              <span className="muted small"> — {ability.description}</span>
-            </div>
-          )}
-          <div>
-            <p className="section-label">MOVES</p>
-            <ul className="move-list">
-              {sp.moves.map((id) => {
-                const m = ROSTER.moves[id]
-                return (
-                  <li key={id}>
-                    <strong>{moveName(ROSTER, speciesId, m)}</strong> <TypeBadge type={m.type} />
-                    <span className="muted">{describeMove(m)}</span>
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
+          <ScpDetails speciesId={speciesId} redaction={null} />
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="small">
               {dossier.wikiUrl ? (
@@ -157,6 +132,98 @@ export function DossierCard({
         </div>
       )}
     </article>
+  )
+}
+
+const BLOCK = '█████'
+
+/** Card, base stats, ability and moves; Gift SCPs may be partly redacted (see redactionFor). */
+export function ScpDetails({ speciesId, redaction }: { speciesId: string; redaction: Redaction | null }) {
+  const sp = ROSTER.species[speciesId]
+  const ability = sp.ability ? ROSTER.abilities[sp.ability] : null
+  return (
+    <>
+      <div className="dossier-top">
+        <ContainmentCard speciesId={speciesId} />
+        <div className="stack" style={{ gap: 4 }}>
+          {STAT_ORDER.map((stat) => (
+            <div className="stat-row" key={stat}>
+              <span className="muted">{STAT_LABEL[stat]}</span>
+              <span>{redaction?.stats ? '███' : sp.baseStats[stat]}</span>
+              <div className="stat-bar">
+                {!redaction?.stats && (
+                  <span
+                    style={{
+                      width: `${Math.min(100, (sp.baseStats[stat] / STAT_MAX) * 100)}%`,
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {ability && (
+        <div>
+          <p className="section-label">ABILITY</p>
+          <strong>{ability.name}</strong>
+          <span className="muted small"> — {redaction?.ability ? '[DATA EXPUNGED]' : ability.description}</span>
+        </div>
+      )}
+      <div>
+        <p className="section-label">MOVES</p>
+        <ul className="move-list">
+          {sp.moves.map((id, i) => {
+            const m = ROSTER.moves[id]
+            return redaction?.moves[i] ? (
+              <li key={id}>
+                <strong>{BLOCK + BLOCK}</strong>
+                <span className="muted">[REDACTED]</span>
+              </li>
+            ) : (
+              <li key={id}>
+                <strong>{moveName(ROSTER, speciesId, m)}</strong> <TypeBadge type={m.type} />
+                <span className="muted">{describeMove(m)}</span>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </>
+  )
+}
+
+/** A popup with an SCP's details: in battle, `combatant` adds its status and stat changes. */
+export function ScpInfoOverlay({
+  speciesId,
+  equipment,
+  combatant,
+  redaction,
+  onClose,
+}: {
+  speciesId: string
+  equipment: string | null
+  combatant?: Combatant
+  redaction: Redaction | null
+  onClose: () => void
+}) {
+  const sp = ROSTER.species[speciesId]
+  const stages = combatant ? stageSummary(combatant.stages) : ''
+  return (
+    <Overlay title={sp.name} onClose={onClose}>
+      <span className="muted">{DOSSIERS[speciesId].nickname}</span>
+      <div className="row" style={{ gap: 4 }}>
+        <ClassBadge objectClass={sp.objectClass} />
+        <GiftBadge speciesId={speciesId} />
+        {sp.types.map((t) => (
+          <TypeBadge key={t} type={t} />
+        ))}
+        <EquipmentTag id={equipment} />
+        {combatant?.status && <span className="badge status-badge">{combatant.status.name.toUpperCase()}</span>}
+      </div>
+      {combatant && <p className="small">{stages ? `Stat changes: ${stages}` : 'No stat changes.'}</p>}
+      <ScpDetails speciesId={speciesId} redaction={redaction} />
+    </Overlay>
   )
 }
 

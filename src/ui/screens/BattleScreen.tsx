@@ -15,7 +15,17 @@ import { ROSTER } from '../../data/roster'
 import { HOSTILE, PLAYER } from '../battleLog'
 import { playerMustReplace, type Step } from '../battleController'
 import type { BattleDriver, BattleView, DriverStatus } from '../battleDriver'
-import { ClassBadge, ContainmentCard, EquipmentTag, GiftBadge, ScreenGuideButton, TypeBadge, TypeChartButton } from '../components'
+import {
+  ClassBadge,
+  ContainmentCard,
+  EquipmentTag,
+  GiftBadge,
+  ScpInfoOverlay,
+  ScreenGuideButton,
+  TypeBadge,
+  TypeChartButton,
+} from '../components'
+import { abilityReveals, abilityRevealed, redactionFor } from '../scpInfo'
 import { BATTLE_GUIDE } from '../screenGuides'
 import { framesFor, type Frame } from '../playback'
 import { TYPE_ABBR, describeMove, effectivenessTag, powerLabel } from '../text'
@@ -61,7 +71,17 @@ function HpBar({ c, exact }: { c: Combatant; exact: boolean }) {
   )
 }
 
-function SideInfo({ state, side, owner }: { state: BattleState; side: SideIndex; owner?: string }) {
+function SideInfo({
+  state,
+  side,
+  owner,
+  onInspect,
+}: {
+  state: BattleState
+  side: SideIndex
+  owner?: string
+  onInspect: () => void
+}) {
   const c = activeOf(state, side)
   const sp = ROSTER.species[c.speciesId]
   const remaining = state.sides[side].team.filter((m) => m.hp > 0).length
@@ -70,6 +90,16 @@ function SideInfo({ state, side, owner }: { state: BattleState; side: SideIndex;
       {owner && <span className="muted small">{owner}</span>}
       <div className="row" style={{ gap: 6 }}>
         <strong>{sp.name}</strong>
+        <button
+          className="btn btn-small info-btn"
+          aria-label={`${sp.name} details`}
+          onClick={(e) => {
+            e.stopPropagation() // not a tap to skip playback
+            onInspect()
+          }}
+        >
+          ⓘ
+        </button>
         <ClassBadge objectClass={sp.objectClass} />
         <GiftBadge speciesId={sp.id} />
         {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
@@ -109,10 +139,12 @@ function SideInfo({ state, side, owner }: { state: BattleState; side: SideIndex;
 function BenchList({
   state,
   onPick,
+  onInspect,
   only,
 }: {
   state: BattleState
   onPick: (teamIndex: number) => void
+  onInspect: (teamIndex: number) => void
   /** Tutorial: the one team member that may be picked. */
   only?: number
 }) {
@@ -122,28 +154,32 @@ function BenchList({
       {state.sides[PLAYER].team.map((c, i) => {
         const sp = ROSTER.species[c.speciesId]
         return (
-          <button
-            key={i}
-            className={`bench-item${only === i ? ' guided' : ''}`}
-            disabled={!options.includes(i)}
-            onClick={() => onPick(i)}
-          >
-            <span className="stack" style={{ gap: 4 }}>
-              <span>
-                <strong>{sp.name}</strong>
-                {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
-                {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+          <div key={i} className="bench-row">
+            <button
+              className={`bench-item${only === i ? ' guided' : ''}`}
+              disabled={!options.includes(i)}
+              onClick={() => onPick(i)}
+            >
+              <span className="stack" style={{ gap: 4 }}>
+                <span>
+                  <strong>{sp.name}</strong>
+                  {i === state.sides[PLAYER].active && <span className="muted small"> · ACTIVE</span>}
+                  {c.status && <span className="badge status-badge">{c.status.name.toUpperCase()}</span>}
+                </span>
+                <span className="row" style={{ gap: 4 }}>
+                  {sp.types.map((t) => (
+                    <TypeBadge key={t} type={t} />
+                  ))}
+                </span>
               </span>
-              <span className="row" style={{ gap: 4 }}>
-                {sp.types.map((t) => (
-                  <TypeBadge key={t} type={t} />
-                ))}
+              <span className={c.hp > 0 ? 'small' : 'small muted'}>
+                {c.hp > 0 ? `${c.hp}/${c.stats.hp}` : 'NEUTRALIZED'}
               </span>
-            </span>
-            <span className={c.hp > 0 ? 'small' : 'small muted'}>
-              {c.hp > 0 ? `${c.hp}/${c.stats.hp}` : 'NEUTRALIZED'}
-            </span>
-          </button>
+            </button>
+            <button className="btn btn-small info-btn" aria-label={`${sp.name} details`} onClick={() => onInspect(i)}>
+              ⓘ
+            </button>
+          </div>
         )
       })}
     </div>
@@ -174,6 +210,9 @@ export function BattleScreen({
   const [switching, setSwitching] = useState(false)
   const [confirmForfeit, setConfirmForfeit] = useState(false)
   const [info, setInfo] = useState<string | null>(null)
+  // The SCP whose details are open, and team members whose ability has visibly triggered.
+  const [inspect, setInspect] = useState<{ side: SideIndex; teamIndex: number } | null>(null)
+  const [abilityShown, setAbilityShown] = useState<ReadonlySet<string>>(() => new Set())
   const logRef = useRef<HTMLDivElement>(null)
   const pressTimer = useRef<number | null>(null)
   const longPressed = useRef(false)
@@ -225,6 +264,8 @@ export function BattleScreen({
 
   const play = (steps: Step[], view: BattleView) => {
     setReal(view)
+    const reveals = abilityReveals(steps)
+    if (reveals.length > 0) setAbilityShown((shown) => new Set([...shown, ...reveals]))
     final.current = { view: view.state, log: view.log }
     queue.current = [...queue.current, ...framesFor(steps, ROSTER, driver.hostileTag)]
     setPlaying(true)
@@ -308,7 +349,12 @@ export function BattleScreen({
 
       <section className={`field${playing ? ' skippable' : ''}`} onClick={skip}>
         <div className="field-row hostile">
-          <SideInfo state={state} side={HOSTILE} owner={driver.opponent} />
+          <SideInfo
+            state={state}
+            side={HOSTILE}
+            owner={driver.opponent}
+            onInspect={() => setInspect({ side: HOSTILE, teamIndex: state.sides[HOSTILE].active })}
+          />
           <div
             key={`h${hit?.side === HOSTILE ? hit.n : 0}`}
             className={`field-art${hit?.side === HOSTILE ? ' hit' : ''}${foe.hp <= 0 ? ' down' : ''}`}
@@ -323,7 +369,11 @@ export function BattleScreen({
           >
             <ContainmentCard speciesId={me.speciesId} />
           </div>
-          <SideInfo state={state} side={PLAYER} />
+          <SideInfo
+            state={state}
+            side={PLAYER}
+            onInspect={() => setInspect({ side: PLAYER, teamIndex: state.sides[PLAYER].active })}
+          />
         </div>
       </section>
 
@@ -378,12 +428,17 @@ export function BattleScreen({
         ) : mustReplace ? (
           <div className="stack">
             <p className="section-label">DEPLOY A REPLACEMENT</p>
-            <BenchList state={real} onPick={replace} />
+            <BenchList state={real} onPick={replace} onInspect={(i) => setInspect({ side: PLAYER, teamIndex: i })} />
           </div>
         ) : switching ? (
           <div className="stack">
             <p className="section-label">SWITCH TO</p>
-            <BenchList state={real} onPick={(i) => act({ kind: 'switch', teamIndex: i })} only={switchOnly} />
+            <BenchList
+              state={real}
+              onPick={(i) => act({ kind: 'switch', teamIndex: i })}
+              onInspect={(i) => setInspect({ side: PLAYER, teamIndex: i })}
+              only={switchOnly}
+            />
             <button className="btn" onClick={() => setSwitching(false)}>
               Cancel
             </button>
@@ -447,6 +502,23 @@ export function BattleScreen({
           </div>
         )}
       </section>
+      {inspect &&
+        (() => {
+          const c = state.sides[inspect.side].team[inspect.teamIndex]
+          return (
+            <ScpInfoOverlay
+              speciesId={c.speciesId}
+              equipment={c.equipment}
+              combatant={c}
+              redaction={redactionFor(c.speciesId, {
+                own: inspect.side === PLAYER,
+                combatant: c,
+                abilityRevealed: abilityRevealed(abilityShown, inspect.side, inspect.teamIndex),
+              })}
+              onClose={() => setInspect(null)}
+            />
+          )
+        })()}
     </main>
   )
 }

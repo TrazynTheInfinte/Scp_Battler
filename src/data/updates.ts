@@ -16,6 +16,15 @@ export interface Update {
 
 export const UPDATES: readonly Update[] = [
   {
+    id: '2026-11-26-scp-details',
+    date: '2026-11-26',
+    title: 'Scout the opposition',
+    added: [
+      "Tap an opponent's SCP in Team Preview to see its stats, ability and moves.",
+      "In battle, tap ⓘ next to either active SCP, or beside your SCPs when switching, to see the same plus its current stat changes.",
+    ],
+  },
+  {
     id: '2026-11-26-waves-10-12',
     date: '2026-11-26',
     title: 'Waves 10–12 and new opponents',

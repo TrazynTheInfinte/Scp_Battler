@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ROSTER } from '../../data/roster'
-import { ClassBadge, ContainmentCard, EquipmentTag, TypeBadge, TypeChartButton } from '../components'
+import { ClassBadge, ContainmentCard, EquipmentTag, ScpInfoOverlay, TypeBadge, TypeChartButton } from '../components'
+import { redactionFor } from '../scpInfo'
 
 function TeamGrid({
   team,
@@ -8,6 +9,7 @@ function TeamGrid({
   selected,
   onSelect,
   only,
+  onInspect,
 }: {
   team: readonly string[]
   equipment: readonly (string | null)[]
@@ -15,6 +17,8 @@ function TeamGrid({
   onSelect?: (i: number) => void
   /** Tutorial: the one SCP that may be picked. */
   only?: number
+  /** Tap a card to see its details (the opponent's team). */
+  onInspect?: (i: number) => void
 }) {
   return (
     <div className="preview-grid">
@@ -41,6 +45,10 @@ function TeamGrid({
             onClick={() => onSelect(i)}
             aria-pressed={selected === i}
           >
+            {content}
+          </button>
+        ) : onInspect ? (
+          <button key={id} className="preview-card" onClick={() => onInspect(i)} aria-label={`${sp.name} details`}>
             {content}
           </button>
         ) : (
@@ -76,6 +84,7 @@ export function TeamPreviewScreen({
   guide?: { text: string; lead: number }
 }) {
   const [lead, setLead] = useState<number | null>(null)
+  const [inspect, setInspect] = useState<number | null>(null)
   return (
     <main className="screen">
       <div className="screen-head">
@@ -86,9 +95,17 @@ export function TeamPreviewScreen({
         <TypeChartButton />
       </div>
       <section className="stack">
-        <p className="section-label">{opponentLabel}</p>
-        <TeamGrid team={aiTeam} equipment={aiEquipment} />
+        <p className="section-label">{opponentLabel} — TAP AN SCP FOR DETAILS</p>
+        <TeamGrid team={aiTeam} equipment={aiEquipment} onInspect={setInspect} />
       </section>
+      {inspect !== null && (
+        <ScpInfoOverlay
+          speciesId={aiTeam[inspect]}
+          equipment={aiEquipment[inspect] ?? null}
+          redaction={redactionFor(aiTeam[inspect], { own: false })}
+          onClose={() => setInspect(null)}
+        />
+      )}
       <section className="stack">
         <p className="section-label">YOUR TEAM — CHOOSE WHO DEPLOYS FIRST</p>
         {guide && (

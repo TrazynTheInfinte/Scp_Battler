@@ -29,6 +29,7 @@ export const BATTLE_GUIDE: ScreenGuide = {
     ['Top card', "The opponent's name and active SCP: object class, types, status, Equipment and HP. REALITY-BENT means its stats are flipped and its moves use their counter type. GIFT or ADMIN marks a Gift SCP, given only to some Accounts."],
     ['Yellow banner', "Against the Trainer: the move it has already committed to this turn."],
     ['Bottom card', 'Your active SCP.'],
+    ['ⓘ', "An SCP's stats, ability, moves and current stat changes; also beside each SCP when switching. Gift SCPs are partly redacted: a move is revealed once it's used, the ability once it shows itself."],
     ['Dots', '● SCPs still standing on that side, ○ Neutralized.'],
     ['Log', 'What just happened. Click it while a turn plays to skip ahead.'],
     ['Move buttons', 'Type, power, accuracy and PP left. ▲ means super effective against the foe, ▼ resisted. Hold one to read what it does.'],
