@@ -1272,6 +1272,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "Anything that moves gets cut: an attacker that damages it with a move loses 1/16 of its own max HP.",
     rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
   },
+  // wave 14
+  {
+    id: 'takesHold',
+    name: "Takes Hold",
+    description: "The hunger takes hold: the first time it survives a damaging hit after entering, Attack +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'scarsRupture',
+    name: "Scars Rupture",
+    description: "Anger brings out the bone: the first time she survives a damaging hit after entering, Speed +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { spe: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'superheated',
+    name: "Superheated",
+    description: "An attacker that hits it with a Physical move has a 30% chance to Bleed.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'thousandStrands',
+    name: "A Thousand Strands",
+    description: "Blows sink into the hair: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'noiseProvokesIt',
+    name: "Noise Provokes It",
+    description: "Every impact makes noise: an attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'wingedDart',
+    name: "Winged Dart",
+    description: "Speed +1 whenever it enters the field.",
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
+  {
+    id: 'oldGrudges',
+    name: "Old Grudges",
+    description: "Nothing softens her: opponents can't lower her stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'outbreak',
+    name: "Outbreak",
+    description: "Deals 1.3x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'barefootPeril',
+    name: "Barefoot Peril",
+    description: "An attacker that hits it with a Physical move has a 30% chance to Bleed.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'huntersEye',
+    name: "Hunter's Eye",
+    description: "It sees anything that moves: its moves never miss.",
+    rules: [{ kind: 'neverMisses' }],
+  },
+  {
+    id: 'darkGrowth',
+    name: "Dark Growth",
+    description: "It grows in the dark: the first time it survives a damaging hit after entering, Defense +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'hijackedCells',
+    name: "Hijacked Cells",
+    description: "It rebuilds itself from its prey: heals 1/16 of its max HP at the end of each turn when hurt.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

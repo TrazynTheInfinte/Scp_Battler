@@ -185,6 +185,6 @@ describe('roster filter', () => {
     expect(bioOrMemetic).toContain('scp-079') // Mechanical/Memetic
     expect(bioOrMemetic).not.toContain('scp-173')
     // Biological AND Keter: only these.
-    expect(ids({ types: new Set(['Biological'] as const), classes: new Set(['Keter'] as const) })).toEqual(['scp-016', 'scp-058', 'scp-129', 'scp-149', 'scp-150', 'scp-165', 'scp-169', 'scp-236', 'scp-299', 'scp-307', 'scp-682'])
+    expect(ids({ types: new Set(['Biological'] as const), classes: new Set(['Keter'] as const) })).toEqual(['scp-016', 'scp-058', 'scp-129', 'scp-149', 'scp-150', 'scp-165', 'scp-169', 'scp-236', 'scp-299', 'scp-307', 'scp-353', 'scp-363', 'scp-682'])
   })
 })
