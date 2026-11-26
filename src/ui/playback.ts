@@ -35,6 +35,7 @@ export function applyEventToView(view: BattleState, e: BattleEvent): BattleState
     case 'heal':
     case 'revive':
     case 'rewind':
+    case 'trapHurt':
       activeOf(e.side).hp = e.hpAfter
       if (e.type === 'revive') activeOf(e.side).reborn = true
       break

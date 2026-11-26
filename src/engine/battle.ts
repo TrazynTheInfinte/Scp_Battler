@@ -52,6 +52,14 @@ const SIDES: readonly SideIndex[] = [0, 1]
  */
 export const TURN_LIMIT = 100
 
+/** Traps: each layer costs an incoming SCP this fraction of its max HP; at most MAX_TRAP_LAYERS layers. */
+export const TRAP_FRACTION = 1 / 8
+export const MAX_TRAP_LAYERS = 2
+/** Multi-hit moves: the chance (percent) of each hit count from 2 to 5. */
+export const MULTI_HIT_WEIGHTS: Readonly<Record<number, number>> = { 2: 35, 3: 35, 4: 15, 5: 15 }
+/** The average hit count of a 2-5 multi-hit move, for estimates. */
+export const AVERAGE_HITS = 3.1
+
 const STAGEABLE: readonly StageName[] = ['atk', 'def', 'spa', 'spd', 'spe', 'acc']
 const ZERO_STAGES: StatStages = { atk: 0, def: 0, spa: 0, spd: 0, spe: 0, acc: 0 }
 /** Fresh volatiles for an SCP entering the field with `hp` HP. */
@@ -66,6 +74,7 @@ const freshVolatiles = (hp: number): Volatiles => ({
   hpTwoAgo: hp,
   hpOneAgo: hp,
   radTicks: 0,
+  charging: null,
 })
 
 /**
@@ -267,8 +276,10 @@ export function attacksBlocked(dex: Dex, user: Combatant, target: Combatant): bo
 export function legalChoices(state: BattleState, side: SideIndex): Choice[] {
   if (state.phase !== 'choose') return []
   const active = activeOf(state, side)
+  // Charging: the only move is the strike (switching out still works, and wastes the charge).
+  const charging = active.volatiles.charging
   const moves: Choice[] = [0, 1, 2, 3]
-    .filter((i) => isStruggling(active) || active.pp[i] > 0)
+    .filter((i) => (charging !== null ? i === charging : isStruggling(active) || active.pp[i] > 0))
     .map((moveIndex) => ({ kind: 'move', moveIndex }))
   if (activeOf(state, side).status?.name === 'Contained') return moves
   const switches: Choice[] = switchTargets(state, side).map((teamIndex) => ({
@@ -336,7 +347,12 @@ export function resolveTurn(
   // 2. Moves, ordered by whoever is active now (after switches).
   const usedStatusMove: [boolean, boolean] = [false, false]
   const movers = SIDES.filter((side) => choices[side].kind === 'move')
-  for (const side of orderMovers(s, dex, movers, rng, events)) {
+  const chosenMove = (side: SideIndex): MoveData => {
+    const c = activeOf(s, side)
+    const choice = choices[side] as Extract<Choice, { kind: 'move' }>
+    return isStruggling(c) ? STRUGGLE : combatantMove(dex, c, species(dex, c.speciesId).moves[choice.moveIndex])
+  }
+  for (const side of orderMovers(s, dex, movers, rng, events, chosenMove)) {
     if (isNeutralized(activeOf(s, side))) continue
     const choice = choices[side] as Extract<Choice, { kind: 'move' }>
     usedStatusMove[side] = executeMove(s, dex, side, choice.moveIndex, rng, events)
@@ -398,10 +414,24 @@ export function resolveReplacements(
     events.push({ type: 'replace', side, to: pick })
     runSwitchIn(s, dex, side, rng, events)
   }
+  s.rngState = rng.state
+  // Traps may Neutralize a replacement as it arrives: end the battle, or ask again.
+  const outcome = checkOutcome(s)
+  if (outcome !== null) {
+    s.phase = 'ended'
+    s.winner = outcome
+    s.needsReplacement = [false, false]
+    events.push({ type: 'end', winner: outcome })
+    return { state: s, events }
+  }
+  const again: [boolean, boolean] = [isNeutralized(activeOf(s, 0)), isNeutralized(activeOf(s, 1))]
+  if (again[0] || again[1]) {
+    s.needsReplacement = again
+    return { state: s, events }
+  }
   s.needsReplacement = [false, false]
   s.phase = 'choose'
   s.turn += 1
-  s.rngState = rng.state
   return { state: s, events }
 }
 
@@ -484,8 +514,9 @@ function orderBySpeed(s: BattleState, sides: readonly SideIndex[], rng: Rng): Si
 }
 
 /**
- * Move order: an ability granting priority beats Speed (unless the opponent's
- * ability suppresses it); otherwise by Speed.
+ * Move order: an ability granting priority (Unobserved) beats everything,
+ * unless the opponent's ability suppresses it; then the chosen moves'
+ * priority; then Speed.
  */
 function orderMovers(
   s: BattleState,
@@ -493,6 +524,7 @@ function orderMovers(
   sides: readonly SideIndex[],
   rng: Rng,
   events: BattleEvent[],
+  chosenMove: (side: SideIndex) => MoveData,
 ): SideIndex[] {
   if (sides.length < 2) return [...sides]
   const priority = (side: SideIndex): Ability | null => {
@@ -514,6 +546,9 @@ function orderMovers(
     events.push(triggered(first, (pa ?? pb) as Ability))
     return [first, other(first)]
   }
+  const qa = chosenMove(a).priority ?? 0
+  const qb = chosenMove(b).priority ?? 0
+  if (qa !== qb) return qa > qb ? [a, b] : [b, a]
   return orderBySpeed(s, sides, rng)
 }
 
@@ -535,6 +570,15 @@ function switchIn(
 }
 
 function runSwitchIn(s: BattleState, dex: Dex, side: SideIndex, rng: Rng, events: BattleEvent[]) {
+  // Traps first: an SCP they Neutralize never gets its switch-in ability.
+  const layers = s.sides[side].traps ?? 0
+  const c = activeOf(s, side)
+  if (layers > 0 && !effectsOf(dex, c).some((e) => e.ignoresTraps)) {
+    const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * TRAP_FRACTION * layers)))
+    c.hp -= amount
+    events.push({ type: 'trapHurt', side, amount, hpAfter: c.hp })
+    if (isNeutralized(c) && knockedOut(s, dex, side, events)) return
+  }
   for (const effect of effectsOf(dex, activeOf(s, side))) {
     effect.onSwitchIn?.(abilityContext(s, dex, side, effect, rng, events))
   }
@@ -559,6 +603,8 @@ function executeMove(
   const userSpecies = species(dex, user.speciesId)
 
   if (user.status?.name === 'Stunned' && rng.chance(STUN_SKIP_CHANCE)) {
+    // A Stun on the strike turn wastes the charge.
+    user.volatiles.charging = null
     events.push({ type: 'stunned', side })
     return false
   }
@@ -572,7 +618,8 @@ function executeMove(
       events.push({ type: 'statusEnded', side, status: 'Amnesiac' })
     } else {
       user.status.turnsLeft = left
-      if (!struggling && rng.chance(AMNESIA_RANDOM_MOVE_CHANCE)) {
+      // A charged strike goes ahead whatever it forgets.
+      if (!struggling && user.volatiles.charging === null && rng.chance(AMNESIA_RANDOM_MOVE_CHANCE)) {
         // A random move that still has PP.
         const usable = user.pp.flatMap((n, i) => (n > 0 ? [i] : []))
         moveIndex = usable[rng.int(0, usable.length - 1)]
@@ -592,8 +639,19 @@ function executeMove(
     return false
   }
 
+  // An attack with nobody to hit (the target fell to Traps as it switched in) does nothing.
+  if (!isStatusMove && isNeutralized(activeOf(s, targetSide))) return false
+
+  // Charge: the first turn spends the PP and charges; the strike turn costs nothing more.
+  const striking = !struggling && !!move.charge && user.volatiles.charging === moveIndex
+  user.volatiles.charging = null
   events.push({ type: 'move', side, moveId: move.id })
-  if (!struggling) user.pp[moveIndex] -= 1
+  if (!struggling && !striking) user.pp[moveIndex] -= 1
+  if (move.charge && !struggling && !striking) {
+    user.volatiles.charging = moveIndex
+    events.push({ type: 'charging', side })
+    return false
+  }
   if (!struggling) countCrescendo(dex, side, user, move, events)
   // Finale spends the stacks, hit or miss; its power is fixed before they reset.
   const stackPower = move.powerPerStack ? move.power + move.powerPerStack * user.volatiles.stacks : null
@@ -626,31 +684,63 @@ function executeMove(
   const power = move.powerRange ? rng.int(move.powerRange[0], move.powerRange[1]) : stackPower
   const hit = power === null ? move : { ...move, power }
   const critOneIn = Math.min(...effectsOf(dex, user).map((e) => e.critOneIn ?? Infinity))
-  const crit = rng.chance(critOneIn === Infinity ? CRIT_CHANCE : 1 / critOneIn)
-  const { damage, effectiveness } = damageFor(dex, s.level, user, target, hit, crit, rng.int(MIN_ROLL, MAX_ROLL))
+  const hits = move.hits ? rollHits(rng, move.hits) : 1
 
-  const dealt = Math.min(damage, target.hp)
-  target.hp -= dealt
-  events.push({
-    type: 'damage',
-    side: targetSide,
-    amount: dealt,
-    hpAfter: target.hp,
-    effectiveness,
-    crit,
-  })
-  if (isNeutralized(target) && knockedOut(s, dex, targetSide, events)) {
+  // Each hit rolls its own crit and damage, and sets off the target's reactions
+  // (retaliation, Reactive Plating) and the user's on-hit Equipment.
+  let total = 0
+  let landed = 0
+  let targetDown = false
+  for (let i = 0; i < hits; i++) {
+    const crit = rng.chance(critOneIn === Infinity ? CRIT_CHANCE : 1 / critOneIn)
+    const { damage, effectiveness } = damageFor(dex, s.level, user, target, hit, crit, rng.int(MIN_ROLL, MAX_ROLL))
+    const dealt = Math.min(damage, target.hp)
+    target.hp -= dealt
+    total += dealt
+    landed++
+    events.push({ type: 'damage', side: targetSide, amount: dealt, hpAfter: target.hp, effectiveness, crit })
+    if (isNeutralized(target) && knockedOut(s, dex, targetSide, events)) {
+      targetDown = true
+      break
+    }
+    for (const effect of effectsOf(dex, target)) {
+      effect.afterDamagedByMove?.(abilityContext(s, dex, targetSide, effect, rng, events), move)
+    }
+    for (const effect of effectsOf(dex, user)) {
+      effect.afterHitting?.(abilityContext(s, dex, side, effect, rng, events), move)
+    }
+    // Retaliation can Neutralize the attacker mid-flurry.
+    if (isNeutralized(user)) break
+  }
+  if (move.hits) events.push({ type: 'multiHit', side, hits: landed })
+
+  if (move.drain && total > 0 && !isNeutralized(user)) {
+    const amount = Math.min(user.stats.hp - user.hp, Math.max(1, Math.floor(total * move.drain)))
+    if (amount > 0) {
+      user.hp += amount
+      events.push({ type: 'heal', side, amount, hpAfter: user.hp })
+    }
+  }
+
+  if (targetDown) {
     if (move === STRUGGLE) struggleRecoil(s, dex, side, events)
     return false
   }
-
-  for (const effect of effectsOf(dex, target)) {
-    effect.afterDamagedByMove?.(abilityContext(s, dex, targetSide, effect, rng, events), move)
-  }
-
   applyEffects(s, dex, side, move, rng, events)
   if (move === STRUGGLE) struggleRecoil(s, dex, side, events)
   return false
+}
+
+/** A multi-hit move's hit count, weighted by MULTI_HIT_WEIGHTS (clamped to the move's own range). */
+function rollHits(rng: Rng, [min, max]: readonly [number, number]): number {
+  const counts = Object.keys(MULTI_HIT_WEIGHTS).map(Number).filter((n) => n >= min && n <= max)
+  const total = counts.reduce((sum, n) => sum + MULTI_HIT_WEIGHTS[n], 0)
+  let roll = rng.int(1, total)
+  for (const n of counts) {
+    roll -= MULTI_HIT_WEIGHTS[n]
+    if (roll <= 0) return n
+  }
+  return counts[counts.length - 1]
 }
 
 function struggleRecoil(s: BattleState, dex: Dex, side: SideIndex, events: BattleEvent[]): void {
@@ -828,6 +918,14 @@ function applyEffects(
         if (withdraw(s, side, events)) changed = true
         break
       }
+      case 'trap': {
+        const layers = s.sides[targetSide].traps ?? 0
+        if (layers >= MAX_TRAP_LAYERS) break
+        s.sides[targetSide].traps = layers + 1
+        events.push({ type: 'trapSet', side: targetSide, layers: layers + 1 })
+        changed = true
+        break
+      }
     }
   }
   return changed
@@ -949,7 +1047,8 @@ export function expectedDamage(
   level: number = LEVEL,
 ): number {
   if (move.category === 'Status') return 0
-  return damageFor(dex, level, user, target, move, false, AVERAGE_ROLL).damage
+  const one = damageFor(dex, level, user, target, move, false, AVERAGE_ROLL).damage
+  return move.hits ? one * AVERAGE_HITS : one
 }
 
 /** Whether `c` could receive `status` right now (no current status, not immune). */
@@ -1168,6 +1267,7 @@ function finishStep(s: BattleState, events: BattleEvent[]): void {
 function cloneState(state: BattleState): BattleState {
   const cloneSide = (side: SideState): SideState => ({
     active: side.active,
+    ...(side.traps ? { traps: side.traps } : {}),
     team: side.team.map((c) => ({
       ...c,
       stats: { ...c.stats },

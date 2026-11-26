@@ -130,6 +130,18 @@ _Avoid_: Passive, trait, perk, power
 A lasting affliction on an SCP — Bleeding, Stunned, Amnesiac, Contained, Burning, or Irradiated — of which it can have at most one.
 _Avoid_: Ailment, debuff, effect
 
+**Traps**:
+Hazards laid on one side of the field by a move; every SCP that switches in on that side is hurt, more for each layer. They last the whole battle.
+_Avoid_: Hazards, spikes, mines
+
+**Priority**:
+A move quality that makes it go before moves without it, whatever the Speed. An ability that always moves first (Unobserved) still beats it.
+_Avoid_: Quick move, first strike
+
+**Charge Move**:
+A move that spends its first turn charging and strikes on the next; switching out or being Stunned wastes the charge.
+_Avoid_: Two-turn move, wind-up
+
 **Stat Stage**:
 A temporary in-battle boost or drop to a stat, from -6 to +6, cleared when the SCP switches out.
 _Avoid_: Buff, debuff, modifier

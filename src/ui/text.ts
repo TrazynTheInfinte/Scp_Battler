@@ -1,4 +1,4 @@
-import type { MoveData, MoveEffect, StageName, TypeName } from '../engine'
+import { MAX_TRAP_LAYERS, type MoveData, type MoveEffect, type StageName, type TypeName } from '../engine'
 
 export const STAT_LABEL: Readonly<Record<StageName | 'hp', string>> = {
   hp: 'HP',
@@ -67,6 +67,8 @@ export function describeEffect(e: MoveEffect): string {
       return 'Clears its own status condition and stat changes.'
     case 'withdraw':
       return 'Then withdraws at the end of the turn, and you choose who comes in.'
+    case 'trap':
+      return `Lays a Trap on the opponent's side: each SCP that switches in there loses 1/8 of its max HP per layer (up to ${MAX_TRAP_LAYERS} layers).`
   }
 }
 
@@ -91,6 +93,10 @@ function mechanicsText(m: MoveData): string[] {
   if (m.powerPerStack) out.push(`+${m.powerPerStack} power per Crescendo stack, then the stacks reset.`)
   if (m.delay) out.push(`Lands ${m.delay} turns later, on whoever is in then.`)
   if (m.missRecoil) out.push(`If it misses, the user loses ${Math.round(m.missRecoil * 100)}% of its max HP.`)
+  if (m.priority) out.push('Goes first, whatever the Speed')
+  if (m.hits) out.push(`Hits ${m.hits[0]}–${m.hits[1]} times`)
+  if (m.drain) out.push(`Heals the user ${Math.round(m.drain * 100)}% of the damage dealt`)
+  if (m.charge) out.push('Charges on the first turn, then strikes on the next')
   return out
 }
 

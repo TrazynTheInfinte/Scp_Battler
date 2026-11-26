@@ -114,4 +114,12 @@ export const MOVE_POOL: readonly MoveData[] = [
   status('flashbang', 'Flashbang', 'Mundane', 100, [foe({ acc: -1 })]),
   status('blinding-light', 'Blinding Light', 'Reality', 100, [foe({ acc: -1 })]),
   spec('obscure', 'Obscure', 'Antimemetic', 55, 100, [foe({ acc: -1 }, 50)]),
+  // wave 16: one shared move for each new mechanic. Apollyons never get Leech
+  // (no healing on Apollyons); the two Charge moves suit them best.
+  { ...phys('quick-strike', 'Quick Strike', 'Kinetic', 40, 100), priority: 1 },
+  { ...phys('leech', 'Leech', 'Biological', 70, 100), drain: 0.5 },
+  { ...phys('flurry', 'Flurry', 'Kinetic', 25, 100), hits: [2, 5] as const },
+  { ...spec('overcharge', 'Overcharge', 'Reality', 130, 100), charge: true },
+  { ...phys('colossal-blow', 'Colossal Blow', 'Kinetic', 130, 100), charge: true },
+  status('lay-snare', 'Lay Snare', 'Thaumic', null, [{ kind: 'trap' }]),
 ]

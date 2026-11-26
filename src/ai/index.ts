@@ -20,6 +20,7 @@ import {
   isNeutralized,
   isStruggling,
   legalChoices,
+  MAX_TRAP_LAYERS,
   speedOf,
   switchTargets,
   typeEffectiveness,
@@ -120,6 +121,9 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
   const moves = movesOf(dex, me)
   const usable = (i: number) => legal.some((c) => c.kind === 'move' && c.moveIndex === i)
 
+  // 0. A charged move strikes this turn.
+  if (me.volatiles.charging !== null && usable(me.volatiles.charging)) return { kind: 'move', moveIndex: me.volatiles.charging }
+
   // 1. Escape: get out if our attacks can't work here (frozen by a watcher),
   // or away from a x4 weakness if a teammate resists it and we didn't just come in.
   const switchTo = blockedSwitch(dex, state, side, me, opp, legal, rng) ?? escapeSwitch(state, dex, side, me, opp, legal, rng)
@@ -134,16 +138,35 @@ export function chooseAction(state: BattleState, dex: Dex, side: SideIndex, rng:
     if (heal >= 0) return { kind: 'move', moveIndex: heal }
   }
 
+  // 2b. Finish a foe that would otherwise move first with a priority attack.
+  if (speedOf(opp) >= speedOf(me)) {
+    const finisher = moves.flatMap((m, i) =>
+      usable(i) && (m.priority ?? 0) > 0 && expectedShare(dex, me, opp, m) >= 1 ? [{ value: i, score: hitChance(dex, m, me) }] : [],
+    )
+    if (finisher.length > 0) return { kind: 'move', moveIndex: pickBest(finisher, rng) }
+  }
+
   // 3. Boost when it's safe to spend a turn on it.
   const boost = safeBoost(dex, me, opp, moves, usable, rng)
   if (boost !== null) return { kind: 'move', moveIndex: boost }
+
+  // 3a. Lay Traps while the foe still has SCPs to send in, if it's safe to spend a turn.
+  const trap = safeTrap(dex, state, side, me, opp, moves, usable, rng)
+  if (trap !== null) return { kind: 'move', moveIndex: trap }
 
   // 3b. Lower the foe's accuracy once, if its best attack can miss and it's safe to spend a turn.
   const blind = safeBlind(dex, me, opp, moves, usable, rng)
   if (blind !== null) return { kind: 'move', moveIndex: blind }
 
   // 4. Inflict a status when attacks are weak against this target.
-  const attackScores = moves.map((m) => expectedShare(dex, me, opp, m))
+  // Don't start charging into a knockout; a draining attack is worth more the more we're hurt.
+  const threatened = bestShare(dex, opp, me) >= 1
+  const missing = 1 - me.hp / me.stats.hp
+  const attackScores = moves.map((m) => {
+    if (m.charge && threatened) return 0
+    const share = expectedShare(dex, me, opp, m)
+    return m.drain ? share * (1 + m.drain * missing) : share
+  })
   const usableScores = attackScores.filter((_, i) => usable(i))
   if (Math.max(0, ...usableScores) < STATUS_DAMAGE_THRESHOLD) {
     const statusMoves = moves.flatMap((m, i) => {
@@ -199,7 +222,40 @@ function movesOf(dex: Dex, c: Combatant): MoveData[] {
 function expectedShare(dex: Dex, user: Combatant, target: Combatant, move: MoveData): number {
   if (move.category === 'Status' || target.hp <= 0 || attacksBlocked(dex, user, target)) return 0
   const dmg = expectedDamage(dex, user, target, move) * hitChance(dex, move, user)
-  return Math.min(1, dmg / target.hp)
+  // A Charge move takes two turns to land.
+  return Math.min(1, dmg / target.hp) / (move.charge ? 2 : 1)
+}
+
+/** A move that lays Traps (and does nothing else), or false. */
+function isTrapMove(m: MoveData): boolean {
+  return m.category === 'Status' && !!m.effects?.length && m.effects.every((e) => e.kind === 'trap')
+}
+
+/**
+ * A Trap-laying move to use now, or null: only while the foe's side has room
+ * for another layer and at least two SCPs left to send in, and under the same
+ * safety checks as boosting.
+ */
+function safeTrap(
+  dex: Dex,
+  state: BattleState,
+  side: SideIndex,
+  me: Combatant,
+  opp: Combatant,
+  moves: readonly MoveData[],
+  usable: (i: number) => boolean,
+  rng: Rng,
+): number | null {
+  const oppSide = side === 0 ? 1 : 0
+  if ((state.sides[oppSide].traps ?? 0) >= MAX_TRAP_LAYERS) return null
+  if (switchTargets(state, oppSide).length < 2) return null
+  const mine = bestShare(dex, me, opp)
+  if (mine >= 1) return null
+  const theirs = bestShare(dex, opp, me)
+  if (theirs >= BOOST_SAFE_SHARE) return null
+  if (speedOf(opp) > speedOf(me) && theirs > mine) return null
+  const options = moves.flatMap((m, i) => (isTrapMove(m) && usable(i) ? [{ value: i, score: hitChance(dex, m, me) }] : []))
+  return options.length > 0 ? pickBest(options, rng) : null
 }
 
 /** Chance (0-1) that `user` hits with `move`, after its accuracy stage and ability. */

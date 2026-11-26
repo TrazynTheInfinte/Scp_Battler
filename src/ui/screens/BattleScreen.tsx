@@ -114,6 +114,16 @@ function SideInfo({
             REBORN
           </span>
         )}
+        {c.volatiles.charging !== null && (
+          <span className="badge status-badge" title="Strikes next turn">
+            CHARGING
+          </span>
+        )}
+        {(state.sides[side].traps ?? 0) > 0 && (
+          <span className="badge status-badge" title="Each SCP that switches in on this side is hurt">
+            TRAPS ×{state.sides[side].traps}
+          </span>
+        )}
         {c.volatiles.stacks > 0 && (
           <span className="badge status-badge" title="Crescendo stacks">
             {'♪'.repeat(c.volatiles.stacks)}
@@ -229,6 +239,8 @@ export function BattleScreen({
   const mustReplace = playerMustReplace(real)
   const realActive = activeOf(real, PLAYER)
   const contained = realActive.status?.name === 'Contained'
+  // Charging: only the strike can be chosen (switching still works, and wastes the charge).
+  const charging = realActive.volatiles.charging
   const struggling = isStruggling(realActive)
   const benchOptions = switchTargets(real, PLAYER)
   // Tutorial: the current hint, and the one action it allows.
@@ -466,7 +478,7 @@ export function BattleScreen({
                     key={id}
                     className={`move-btn${allow.kind === 'move' && moveAllowed(i) ? ' guided' : ''}`}
                     title={desc}
-                    disabled={realActive.pp[i] <= 0 || !moveAllowed(i)}
+                    disabled={(charging !== null ? charging !== i : realActive.pp[i] <= 0) || !moveAllowed(i)}
                     onPointerDown={() => startPress(desc)}
                     onPointerUp={endPress}
                     onPointerLeave={endPress}

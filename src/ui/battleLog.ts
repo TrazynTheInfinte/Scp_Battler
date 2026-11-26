@@ -1,4 +1,4 @@
-import { STRUGGLE, moveName, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
+import { MAX_TRAP_LAYERS, STRUGGLE, moveName, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
 import { STAT_LABEL } from './text'
 
 /** What end-of-turn status damage is called in the log. */
@@ -157,6 +157,20 @@ export function formatEvents(
             ? `${name(e.side)}'s music swells (${'♪'.repeat(e.stacks)}).`
             : `${name(e.side)}'s music falls silent.`,
         )
+        break
+      case 'charging':
+        lines.push(`${name(e.side)} is charging up!`)
+        break
+      case 'multiHit':
+        lines.push(`Hit ${e.hits} time${e.hits === 1 ? '' : 's'}!`)
+        break
+      case 'trapSet':
+        lines.push(
+          `${e.side === PLAYER ? 'Traps now line your side' : `Traps now line ${site === 'The hostile site' ? "the hostile site's" : `${site}'s`} side`} (${e.layers}/${MAX_TRAP_LAYERS}).`,
+        )
+        break
+      case 'trapHurt':
+        lines.push(`${name(e.side)} is hurt by the TRAPS. ${damageLine('', e.side, e.amount, maxHp(e.side)).trim()}`)
         break
       case 'timeout':
         lines.push('CONTAINMENT TIMEOUT — decided by remaining HP.')

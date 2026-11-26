@@ -62,6 +62,8 @@ interface AbilityHooks {
   rebirthFraction?: number
   /** Crescendo: stacks built by varying its moves. */
   crescendo?: { perStack: number; maxStacks: number }
+  /** Takes no damage from Traps when it switches in. */
+  ignoresTraps?: boolean
 
   // --- Hooks ---
   /** Turn order: return true to move before a non-prioritized opponent. */
@@ -72,6 +74,8 @@ interface AbilityHooks {
   outgoingDamageMultiplier?(self: Combatant, target: Combatant, move: MoveData): number
   /** After this SCP takes move damage and survives. `opponent` is the attacker. */
   afterDamagedByMove?(ctx: AbilityContext, move: MoveData): void
+  /** After this SCP lands a damaging hit on a target that survives (once per hit). `opponent` is the target. */
+  afterHitting?(ctx: AbilityContext, move: MoveData): void
   /** When this SCP enters the field (battle start, switch, or replacement). */
   onSwitchIn?(ctx: AbilityContext): void
   /** At end of turn, after this SCP's status damage. */
@@ -231,6 +235,17 @@ function hooksFor(rule: AbilityRule): AbilityHooks {
       }
     case 'extraPp':
       return { ppMultiplier: 1 + rule.fraction }
+    case 'ignoresTraps':
+      return { ignoresTraps: true }
+    case 'afflictOnHit':
+      return {
+        afterHitting(ctx) {
+          if (!ctx.rng.chance(rule.chance / 100)) return
+          if (!ctx.canInflict('opponent', rule.status)) return
+          ctx.announce()
+          ctx.inflictStatus('opponent', rule.status)
+        },
+      }
     case 'clearOpponentBoostsOnEntry':
       return {
         onSwitchIn(ctx) {
@@ -257,6 +272,7 @@ export function compileAbility(data: AbilityData, source: Ability['source'] = 'a
   if (parts.some((p) => p.watchesOpponent)) ability.watchesOpponent = true
   if (parts.some((p) => p.frozenWhileWatched)) ability.frozenWhileWatched = true
   if (parts.some((p) => p.healsEachTurn)) ability.healsEachTurn = true
+  if (parts.some((p) => p.ignoresTraps)) ability.ignoresTraps = true
   const crits = parts.flatMap((p) => (p.critOneIn ? [p.critOneIn] : []))
   if (crits.length > 0) ability.critOneIn = Math.min(...crits)
   const rebirth = parts.find((p) => p.rebirthFraction)
@@ -278,6 +294,8 @@ export function compileAbility(data: AbilityData, source: Ability['source'] = 'a
   }
   const afterHit = fns('afterDamagedByMove')
   if (afterHit.length > 0) ability.afterDamagedByMove = (ctx, move) => afterHit.forEach((f) => f(ctx, move))
+  const hitting = fns('afterHitting')
+  if (hitting.length > 0) ability.afterHitting = (ctx, move) => hitting.forEach((f) => f(ctx, move))
   const entry = fns('onSwitchIn')
   if (entry.length > 0) ability.onSwitchIn = (ctx) => entry.forEach((f) => f(ctx))
   const endTurn = fns('onEndOfTurn')

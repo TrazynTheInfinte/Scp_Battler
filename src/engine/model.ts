@@ -45,6 +45,8 @@ export type MoveEffect =
   | { kind: 'resetSelf' }
   /** The user withdraws at the end of the turn, and its side chooses who comes in (see Volatiles.withdrawing). */
   | { kind: 'withdraw' }
+  /** Lays one layer of Traps on the opponent's side (see SideState.traps). */
+  | { kind: 'trap' }
 
 export interface MoveData {
   id: string
@@ -68,6 +70,14 @@ export interface MoveData {
   powerPerStack?: number
   /** Deals no damage now: the hit lands at the end of the turn this many turns later, on whoever is active then. */
   delay?: number
+  /** Priority: goes before any move with lower priority, whatever the Speed (Speed decides ties). Default 0. */
+  priority?: number
+  /** Draining: the user heals this fraction of the damage it deals. */
+  drain?: number
+  /** Multi-hit: strikes a rolled number of times, from min to max (see MULTI_HIT_WEIGHTS). */
+  hits?: readonly [min: number, max: number]
+  /** Charge: the first turn only charges; the next turn it strikes automatically. */
+  charge?: boolean
 }
 
 /**
@@ -126,6 +136,10 @@ export type AbilityRule =
   | { kind: 'crescendo'; perStack: number; maxStacks: number }
   /** Once per battle, at end of turn below `below` of max HP, its HP returns to what it was two turns ago. */
   | { kind: 'rewind'; below: number }
+  /** Takes no damage from Traps when it switches in. */
+  | { kind: 'ignoresTraps' }
+  /** Each damaging hit it lands has `chance`% to give the target `status`. */
+  | { kind: 'afflictOnHit'; status: StatusName; chance: number }
 
 export interface AbilityData {
   id: string
@@ -220,6 +234,8 @@ export interface Volatiles {
   hpOneAgo: number
   /** Irradiated: end-of-turn ticks taken since entering; the damage grows with each (resets on switching). */
   radTicks: number
+  /** The index of the Charge move it is charging (it strikes with it next turn), or null. */
+  charging: number | null
 }
 
 export interface Combatant {
@@ -267,6 +283,8 @@ export interface SideState {
   team: Combatant[]
   /** Index into `team` of the active SCP. */
   active: number
+  /** Layers of Traps lying on this side (0 to MAX_TRAP_LAYERS); each SCP that switches in here is hurt. Absent = 0. */
+  traps?: number
 }
 
 export type BattlePhase = 'choose' | 'replace' | 'ended'
@@ -343,6 +361,14 @@ export type BattleEvent =
   | { type: 'foretold'; side: SideIndex; phase: 'set' | 'lands' | 'fizzles' }
   /** Crescendo stacks changed on `side`'s active. */
   | { type: 'stacks'; side: SideIndex; stacks: number }
+  /** A Charge move's first turn: `side`'s active is charging, and strikes next turn. */
+  | { type: 'charging'; side: SideIndex }
+  /** A multi-hit move struck `side`'s opponent this many times. */
+  | { type: 'multiHit'; side: SideIndex; hits: number }
+  /** Traps now lie on `side`, `layers` deep. */
+  | { type: 'trapSet'; side: SideIndex; layers: number }
+  /** `side`'s incoming SCP was hurt by the Traps on its side. */
+  | { type: 'trapHurt'; side: SideIndex; amount: number; hpAfter: number }
   /** The turn limit was reached; the following 'end' is decided by remaining HP. */
   | { type: 'timeout' }
   | { type: 'end'; winner: SideIndex | 'draw' }

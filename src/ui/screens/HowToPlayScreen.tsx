@@ -9,6 +9,8 @@ import {
   RAD_FRACTION_STEP,
   RAD_MAX_STEPS,
   CLASS_LIMIT,
+  MAX_TRAP_LAYERS,
+  TRAP_FRACTION,
   CONTAINED_FRACTION,
   CONTAINED_TURNS,
   EQUIPMENT_ALLOWANCE,
@@ -113,6 +115,13 @@ export function HowToPlayScreen({ onBack, onTutorial }: { onBack: () => void; on
           status.
         </li>
         <li>Each move has power, accuracy (some never miss), and PP: how many times it can be used.</li>
+        <li>
+          Some moves bend the rules: <strong>Priority</strong> moves go first whatever the Speed;{' '}
+          <strong>Multi-hit</strong> moves strike 2–5 times; <strong>Draining</strong> moves heal the user part of the
+          damage; <strong>Charge</strong> moves spend a turn charging, then strike the next turn (switching out wastes
+          the charge); and <strong>Traps</strong> hurt every SCP that switches in on that side, {fraction(TRAP_FRACTION)}{' '}
+          of its max HP per layer (up to {MAX_TRAP_LAYERS}).
+        </li>
         <li>Hold (or long-press) a move in battle to see what it does.</li>
       </Section>
 

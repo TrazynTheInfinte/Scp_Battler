@@ -126,6 +126,20 @@ const EQUIPMENT_LIST: EquipmentData[] = [
     cost: 1,
     rules: [{ kind: 'statusImmunity', statuses: ['Irradiated'] }],
   },
+  {
+    id: 'mineDetector',
+    name: 'Mine Detector',
+    description: 'Takes no damage from Traps when it switches in.',
+    cost: 1,
+    rules: [{ kind: 'ignoresTraps' }],
+  },
+  {
+    id: 'tranquilizerRounds',
+    name: 'Tranquilizer Rounds',
+    description: 'Each damaging hit it lands has a 10% chance to Stun the target.',
+    cost: 2,
+    rules: [{ kind: 'afflictOnHit', status: 'Stunned', chance: 10 }],
+  },
 ]
 
 export const EQUIPMENT: Readonly<Record<string, EquipmentData>> = Object.fromEntries(
