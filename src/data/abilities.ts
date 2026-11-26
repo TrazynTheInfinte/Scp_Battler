@@ -1126,6 +1126,79 @@ const ABILITY_LIST: AbilityData[] = [
       'Once per battle, at the end of a turn below 1/4 HP, its HP returns to what it was two turns ago. Time runs the other way: opponents raising its stats instead of lowering them.',
     rules: [{ kind: 'rewind', below: 1 / 4 }, { kind: 'reverseStatDrops' }],
   },
+  // wave 12
+  {
+    id: 'freezingFog',
+    name: "Freezing Fog",
+    description: "When it enters the field, the fog slows the opponent: Speed −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spe: -1 } }],
+  },
+  {
+    id: 'harmlessLooking',
+    name: "Harmless-Looking",
+    description: "When she enters the field, the opponent drops its guard: Defense −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { def: -1 } }],
+  },
+  {
+    id: 'bareBones',
+    name: "Bare Bones",
+    description: "It has no blood to lose: it can never Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'whenThreatened',
+    name: "When Threatened",
+    description: "It swells to monstrous size: the first time it survives a damaging hit after entering, Attack +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'unskippable',
+    name: "Unskippable",
+    description: "You can't skip it: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'graspingLining',
+    name: "Grasping Lining",
+    description: "Arms lash out from the lining: an attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'finalRound',
+    name: "Final Round",
+    description: "Deals 1.3x damage to contestants that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'curtainedWindows',
+    name: "Curtained Windows",
+    description: "No one sees inside: takes 0.75x damage from Special moves.",
+    rules: [{ kind: 'damageTaken', category: 'Special', multiplier: 0.75 }],
+  },
+  {
+    id: 'endothermic',
+    name: "Endothermic",
+    description: "It draws the warmth out of the opponent: at the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'theHunger',
+    name: "The Hunger",
+    description: "She feeds on what she burns: heals 1/16 of her max HP at the end of each turn when hurt.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'acidWalls',
+    name: "Acid Walls",
+    description: "An attacker that hits it with a Physical move has a 30% chance to Bleed.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'ironskin',
+    name: "Ironskin",
+    description: "Nothing breaks her skin: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(
