@@ -21,7 +21,7 @@ export type StatStages = Record<StageName, number>
 
 export type MoveCategory = 'Physical' | 'Special' | 'Status'
 
-export type StatusName = 'Bleeding' | 'Stunned' | 'Amnesiac' | 'Contained'
+export type StatusName = 'Bleeding' | 'Stunned' | 'Amnesiac' | 'Contained' | 'Burning' | 'Irradiated'
 
 /**
  * Extra effects a move can carry. On a damaging move they apply only if it
@@ -218,6 +218,8 @@ export interface Volatiles {
   /** Its HP at the end of the turn before last, and of last turn (or on entry, if it hasn't been in that long), for Rewind. */
   hpTwoAgo: number
   hpOneAgo: number
+  /** Irradiated: end-of-turn ticks taken since entering; the damage grows with each (resets on switching). */
+  radTicks: number
 }
 
 export interface Combatant {

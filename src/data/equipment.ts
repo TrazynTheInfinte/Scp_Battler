@@ -98,6 +98,34 @@ const EQUIPMENT_LIST: EquipmentData[] = [
     cost: 2,
     rules: [{ kind: 'boostOnEntry', changes: { atk: 1 } }],
   },
+  {
+    id: 'kevlarVest',
+    name: 'Kevlar Vest',
+    description: 'Takes 0.85x damage from Physical moves.',
+    cost: 1,
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.85 }],
+  },
+  {
+    id: 'psionicDampener',
+    name: 'Psionic Dampener',
+    description: 'Takes 0.85x damage from Special moves.',
+    cost: 1,
+    rules: [{ kind: 'damageTaken', category: 'Special', multiplier: 0.85 }],
+  },
+  {
+    id: 'thermalBlanket',
+    name: 'Thermal Blanket',
+    description: "Can't Burn.",
+    cost: 1,
+    rules: [{ kind: 'statusImmunity', statuses: ['Burning'] }],
+  },
+  {
+    id: 'leadLinedSuit',
+    name: 'Lead-Lined Suit',
+    description: "Can't be Irradiated.",
+    cost: 1,
+    rules: [{ kind: 'statusImmunity', statuses: ['Irradiated'] }],
+  },
 ]
 
 export const EQUIPMENT: Readonly<Record<string, EquipmentData>> = Object.fromEntries(

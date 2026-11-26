@@ -36,6 +36,8 @@ const STATUS_VERB: Readonly<Record<string, string>> = {
   Stunned: 'Stun the target',
   Amnesiac: 'make the target Amnesiac',
   Contained: 'Contain the target',
+  Burning: 'Burn the target',
+  Irradiated: 'Irradiate the target',
 }
 
 function stageText(changes: MoveEffect & { kind: 'stages' }): string {

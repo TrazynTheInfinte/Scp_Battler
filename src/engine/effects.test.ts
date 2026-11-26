@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { activeOf, createBattle, legalChoices, resolveTurn, speedOf } from './battle'
 import type { BattleEvent, BattleState, Choice, StatusName } from './model'
-import { ADAPTIVE_MULTIPLIER, ERASER, FOCUS, HEX, JAB, MEDIC, dex } from './testing/fixtures'
+import { ADAPTIVE_MULTIPLIER, ERASER, FOCUS, HEX, JAB, MEDIC, SMASH, dex } from './testing/fixtures'
 import { padTeam } from './testing/teams'
 
 const move = (moveIndex: number): Choice => ({ kind: 'move', moveIndex })
@@ -47,6 +47,44 @@ describe('Bleeding', () => {
     expect(ofType(r.events, 'residual')).toEqual([
       { type: 'residual', side: 1, status: 'Bleeding', amount: 22, hpAfter: 136 },
     ])
+  })
+})
+
+describe('Burning', () => {
+  it('deals 1/16 max HP at end of turn', () => {
+    const s = battle([HEXER_TEAM, SLOW_TEAM])
+    setStatus(activeOf(s, 1), 'Burning')
+    const r = resolveTurn(s, dex, [move(FOCUS), move(FOCUS)])
+    expect(ofType(r.events, 'residual')).toContainEqual({ type: 'residual', side: 1, status: 'Burning', amount: 11, hpAfter: 169 })
+  })
+
+  it('weakens its Physical moves to 0.75x', () => {
+    const hit = (burning: boolean) => {
+      const s = battle([HEXER_TEAM, SLOW_TEAM], [0, 0], 7)
+      if (burning) setStatus(activeOf(s, 1), 'Burning')
+      return ofType(resolveTurn(s, dex, [move(FOCUS), move(SMASH)]).events, 'damage').find((e) => e.side === 0)!.amount
+    }
+    const ratio = hit(true) / hit(false)
+    expect(ratio).toBeGreaterThan(0.7)
+    expect(ratio).toBeLessThan(0.8)
+  })
+})
+
+describe('Irradiated', () => {
+  it('hurts more each turn, up to 1/4, and the count resets on switching', () => {
+    let s = battle([['gear', 'warder', 'fast', 'slow'], SLOW_TEAM])
+    setStatus(activeOf(s, 1), 'Irradiated')
+    const amounts: number[] = []
+    for (let i = 0; i < 5; i++) {
+      const r = resolveTurn(s, dex, [move(FOCUS), move(FOCUS)])
+      amounts.push(ofType(r.events, 'residual').find((e) => e.side === 1)!.amount)
+      s = r.state
+      activeOf(s, 1).hp = activeOf(s, 1).stats.hp // keep it alive
+    }
+    expect(amounts).toEqual([11, 22, 33, 45, 45])
+    s = resolveTurn(s, dex, [move(FOCUS), sw(1)]).state
+    const r = resolveTurn(s, dex, [move(FOCUS), sw(0)])
+    expect(ofType(r.events, 'residual').find((e) => e.side === 1)?.amount).toBe(11)
   })
 })
 

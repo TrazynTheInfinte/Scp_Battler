@@ -127,7 +127,7 @@ An SCP's single passive trait that modifies battle rules for it, reflecting its 
 _Avoid_: Passive, trait, perk, power
 
 **Status Condition**:
-A lasting affliction on an SCP — Bleeding, Stunned, Amnesiac, or Contained — of which it can have at most one.
+A lasting affliction on an SCP — Bleeding, Stunned, Amnesiac, Contained, Burning, or Irradiated — of which it can have at most one.
 _Avoid_: Ailment, debuff, effect
 
 **Stat Stage**:

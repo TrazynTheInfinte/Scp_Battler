@@ -24,8 +24,12 @@ import {
   AMNESIAC_MIN_TURNS,
   AMNESIA_RANDOM_MOVE_CHANCE,
   BLEED_FRACTION,
+  BURN_FRACTION,
+  BURN_PHYSICAL_MULTIPLIER,
   CONTAINED_FRACTION,
   CONTAINED_TURNS,
+  RAD_FRACTION_STEP,
+  RAD_MAX_STEPS,
   STUN_SKIP_CHANCE,
   STUN_SPEED_MULTIPLIER,
   isImmuneToStatus,
@@ -61,6 +65,7 @@ const freshVolatiles = (hp: number): Volatiles => ({
   stacks: 0,
   hpTwoAgo: hp,
   hpOneAgo: hp,
+  radTicks: 0,
 })
 
 /**
@@ -913,9 +918,11 @@ function damageFor(
   const targetSpecies = species(dex, target.speciesId)
   const { attack, defense } = attackAndDefense(user, target, move, crit)
   const effectiveness = move.typeless ? 1 : typeEffectiveness(move.type, targetSpecies.types)
+  const burnMultiplier = user.status?.name === 'Burning' && move.category === 'Physical' ? BURN_PHYSICAL_MULTIPLIER : 1
   const abilityMultiplier =
     effectsOf(dex, target).reduce((m, e) => m * (e.incomingDamageMultiplier?.(target, move) ?? 1), 1) *
-    effectsOf(dex, user).reduce((m, e) => m * (e.outgoingDamageMultiplier?.(user, target, move) ?? 1), 1)
+    effectsOf(dex, user).reduce((m, e) => m * (e.outgoingDamageMultiplier?.(user, target, move) ?? 1), 1) *
+    burnMultiplier
   const damage = computeDamage({
     level,
     power: move.power,
@@ -1025,8 +1032,28 @@ function abilityContext(
 }
 
 /**
- * End of turn, faster active first. For each: status damage (Bleeding 1/8,
- * Contained 1/16, min 1), then Contained counts down, then its end-of-turn
+ * End-of-turn status damage as a fraction of max HP: Bleeding 1/8, Contained
+ * and Burning 1/16, Irradiated 1/16 more each tick since entering (capped);
+ * 0 for statuses that deal none.
+ */
+function residualFraction(status: StatusName, c: Combatant): number {
+  switch (status) {
+    case 'Bleeding':
+      return BLEED_FRACTION
+    case 'Contained':
+      return CONTAINED_FRACTION
+    case 'Burning':
+      return BURN_FRACTION
+    case 'Irradiated':
+      return Math.min(RAD_MAX_STEPS, c.volatiles.radTicks + 1) * RAD_FRACTION_STEP
+    default:
+      return 0
+  }
+}
+
+/**
+ * End of turn, faster active first. For each: status damage (see
+ * residualFraction, min 1), then Contained counts down, then its end-of-turn
  * ability. Finally record which actives are "watched" next turn.
  */
 function endOfTurn(
@@ -1043,8 +1070,9 @@ function endOfTurn(
     // An earlier side's end-of-turn ability may have Neutralized this one.
     if (isNeutralized(c)) continue
     const status = c.status
-    if (status && (status.name === 'Bleeding' || status.name === 'Contained')) {
-      const fraction = status.name === 'Bleeding' ? BLEED_FRACTION : CONTAINED_FRACTION
+    const fraction = status ? residualFraction(status.name, c) : 0
+    if (status && fraction > 0) {
+      if (status.name === 'Irradiated') c.volatiles.radTicks++
       const amount = Math.min(c.hp, Math.max(1, Math.floor(c.stats.hp * fraction)))
       c.hp -= amount
       events.push({ type: 'residual', side, status: status.name, amount, hpAfter: c.hp })

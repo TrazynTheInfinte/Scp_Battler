@@ -4,6 +4,10 @@ import {
   AMNESIAC_MIN_TURNS,
   AMNESIA_RANDOM_MOVE_CHANCE,
   BLEED_FRACTION,
+  BURN_FRACTION,
+  BURN_PHYSICAL_MULTIPLIER,
+  RAD_FRACTION_STEP,
+  RAD_MAX_STEPS,
   CLASS_LIMIT,
   CONTAINED_FRACTION,
   CONTAINED_TURNS,
@@ -139,6 +143,15 @@ export function HowToPlayScreen({ onBack, onTutorial }: { onBack: () => void; on
         <li>
           <strong>Contained</strong>: can't switch out, and loses {fraction(CONTAINED_FRACTION)} of its max HP each
           turn, for {CONTAINED_TURNS} turns.
+        </li>
+        <li>
+          <strong>Burning</strong>: loses {fraction(BURN_FRACTION)} of its max HP each turn, and its Physical moves
+          deal {BURN_PHYSICAL_MULTIPLIER}x damage.
+        </li>
+        <li>
+          <strong>Irradiated</strong>: loses {fraction(RAD_FRACTION_STEP)} of its max HP at the end of its first turn,
+          then {fraction(RAD_FRACTION_STEP)} more each turn (up to {fraction(RAD_FRACTION_STEP * RAD_MAX_STEPS)}). Switching
+          out resets the count.
         </li>
         <li>An SCP can have only one status at a time. {IMMUNE}.</li>
       </Section>

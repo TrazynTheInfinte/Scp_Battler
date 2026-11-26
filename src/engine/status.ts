@@ -7,6 +7,12 @@ export const BLEED_FRACTION = 1 / 8
 export const CONTAINED_FRACTION = 1 / 16
 /** Contained lasts this many end-of-turn ticks, then wears off. */
 export const CONTAINED_TURNS = 4
+/** Burning: end-of-turn damage, and the damage multiplier on its Physical moves. */
+export const BURN_FRACTION = 1 / 16
+export const BURN_PHYSICAL_MULTIPLIER = 0.75
+/** Irradiated: end-of-turn damage grows by this fraction of max HP each tick, up to RAD_MAX_STEPS of it. */
+export const RAD_FRACTION_STEP = 1 / 16
+export const RAD_MAX_STEPS = 4
 /** Stunned: Speed multiplier and chance to lose the turn. */
 export const STUN_SPEED_MULTIPLIER = 0.5
 export const STUN_SKIP_CHANCE = 0.25

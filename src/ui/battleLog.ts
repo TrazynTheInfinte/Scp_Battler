@@ -1,6 +1,14 @@
 import { STRUGGLE, moveName, type BattleEvent, type BattleState, type Dex, type SideIndex } from '../engine'
 import { STAT_LABEL } from './text'
 
+/** What end-of-turn status damage is called in the log. */
+const RESIDUAL_CAUSE: Readonly<Record<string, string>> = {
+  Bleeding: 'BLEEDING',
+  Contained: 'CONTAINMENT',
+  Burning: 'its BURNS',
+  Irradiated: 'RADIATION',
+}
+
 /** The human player is always side 0; the AI is side 1. */
 export const PLAYER: SideIndex = 0
 export const HOSTILE: SideIndex = 1
@@ -79,7 +87,7 @@ export function formatEvents(
       }
       case 'residual':
         lines.push(
-          `${name(e.side)} is hurt by ${e.status === 'Bleeding' ? 'BLEEDING' : 'CONTAINMENT'}. ` +
+          `${name(e.side)} is hurt by ${RESIDUAL_CAUSE[e.status] ?? e.status.toUpperCase()}. ` +
             damageLine('', e.side, e.amount, maxHp(e.side)).trim(),
         )
         break
