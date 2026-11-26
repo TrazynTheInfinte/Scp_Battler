@@ -1418,6 +1418,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "Deals 1.3x damage to targets that have a status condition.",
     rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
   },
+  // wave 16
+  {
+    id: 'woundUp',
+    name: "Wound Up",
+    description: "The crank turns: the first time it survives a damaging hit after entering, Sp. Atk +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { spa: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'feedsOnSleepers',
+    name: "Feeds on Sleepers",
+    description: "Deals 1.3x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
+  {
+    id: 'spreadingBlaze',
+    name: "Spreading Blaze",
+    description: "Fire feeds fire: deals 1.3x damage to targets that have a status condition, and it can never Burn.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }, { kind: 'statusImmunity', statuses: ['Burning'] }],
+  },
+  {
+    id: 'seanceVoices',
+    name: "Séance Voices",
+    description: "The dead whisper at the opponent: at the end of each turn, it loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'silverSpoon',
+    name: "Silver Spoon",
+    description: "It never bends itself: opponents can't lower its stats.",
+    rules: [{ kind: 'blockStatDrops' }],
+  },
+  {
+    id: 'thousandWings',
+    name: "A Thousand Wings",
+    description: "An attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'livingRock',
+    name: "Living Rock",
+    description: "It hides in stone: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'fluttering',
+    name: "Fluttering",
+    description: "Speed +1 whenever it enters the field.",
+    rules: [{ kind: 'boostOnEntry', changes: { spe: 1 } }],
+  },
+  {
+    id: 'tickingClock',
+    name: "Ticking Clock",
+    description: "Every click counts down: at the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'stressShift',
+    name: "Stress Shift",
+    description: "Fear brings out the serpent: the first time she survives a damaging hit after entering, Defense +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'pullOfGravity',
+    name: "Pull of Gravity",
+    description: "When he enters the field, the opponent is weighed down: Speed −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { spe: -1 } }],
+  },
+  {
+    id: 'bugZapper',
+    name: "Bug Zapper",
+    description: "An attacker that hits it with a Physical move has a 30% chance to Burn.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Burning', chance: 30 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(

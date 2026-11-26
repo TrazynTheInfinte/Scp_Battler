@@ -7,7 +7,7 @@ export default {
   objectClass: 'Apollyon',
   wave: 8,
   types: ['Memetic', 'Antimemetic'],
-  stats: { template: 'fastSpecial' },
+  stats: { template: 'fastSpecial', tweaks: { spa: -20, spd: 20 } },
   moves: ['moral-panic', 'erasure', 'memory-hole', 'corrupt-file'],
   moveNames: { erasure: 'Rewritten Memory', 'memory-hole': 'Forbidden Dish', 'corrupt-file': 'Twisted Morals' },
   signatureMove: spec('moral-panic', 'Moral Panic', 'Memetic', 85, 100, [foe({ spd: -1 }, 30)]),

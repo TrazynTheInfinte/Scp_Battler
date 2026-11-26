@@ -7,7 +7,7 @@ export default {
   objectClass: 'Apollyon',
   wave: 8,
   types: ['Mechanical', 'Antimemetic'],
-  stats: { template: 'specialBruiser' },
+  stats: { template: 'specialBruiser', tweaks: { spa: -20, spd: 20 } },
   moves: ['termination', 'data-surge', 'corrupt-file', 'memory-hole'],
   moveNames: { 'data-surge': 'Rule Rewrite', 'corrupt-file': 'Narrative Audit', 'memory-hole': 'Book Chamber' },
   signatureMove: spec('termination', 'TERMINATION()', 'Mechanical', 90, 100, [inflict('Contained', 20)]),

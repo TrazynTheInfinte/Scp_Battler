@@ -16,6 +16,21 @@ export interface Update {
 
 export const UPDATES: readonly Update[] = [
   {
+    id: '2026-11-26-wave-16',
+    date: '2026-11-26',
+    title: 'Wave 16: new statuses and mechanics',
+    added: [
+      '12 new SCPs: 448, 452, 457, 460, 463, 469, 477, 478, 485, 486, 488 and 489.',
+      'Two new statuses: Burning (1/16 HP a turn, weaker Physical moves) and Irradiated (damage that grows each turn until it switches out).',
+      'New kinds of moves: Priority (goes first), Multi-hit (2–5 hits), Draining (heals from damage), Charge (a turn to charge, then a huge hit) and Traps (hurt every SCP that switches in).',
+      'Six new pieces of Equipment: Kevlar Vest, Psionic Dampener, Thermal Blanket, Lead-Lined Suit, Mine Detector and Tranquilizer Rounds.',
+    ],
+    changed: [
+      'SCP-6218, 7606, 7798, 9380 and 9743 each trade a move for a Charge move.',
+      'SCP-9412 and SCP-9747: Special Attack down, Special Defense up.',
+    ],
+  },
+  {
     id: '2026-11-26-wave-15',
     date: '2026-11-26',
     title: 'Wave 15',

@@ -133,7 +133,8 @@ export function strongEquipment(dex: Dex, rng: Rng, team: readonly string[], rat
   let best: (string | null)[] = team.map(() => null)
   let bestValue = 0
   for (let i = 0; i < EQUIPMENT_SAMPLES; i++) {
-    const set = randomEquipment(dex, rng, team)
+    // Leave out any piece that loses more than it wins; removing gear never breaks the budget.
+    const set = randomEquipment(dex, rng, team).map((id) => (id !== null && (rates.equipment[id] ?? 0.5) > 0.5 ? id : null))
     const v = value(set)
     if (v > bestValue) {
       best = set
