@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ROSTER } from '../data/roster'
 import { createCombatant, type BattleState } from '../engine'
 import type { Step } from './battleController'
-import { REDACT_OWN_GIFTS, abilityRevealed, abilityReveals, redactionFor, stageSummary } from './scpInfo'
+import { abilityRevealed, abilityReveals, redactionFor, stageSummary } from './scpInfo'
 
 describe('redaction', () => {
   it('never hides anything on a normal SCP', () => {
@@ -22,8 +22,8 @@ describe('redaction', () => {
     expect(redactionFor('gift-phoenix', { own: false, combatant: { ...c, reborn: true } })?.ability).toBe(false)
   })
 
-  it('applies to your own Gift SCPs only while REDACT_OWN_GIFTS is on', () => {
-    expect(redactionFor('gift-phoenix', { own: true }) !== null).toBe(REDACT_OWN_GIFTS)
+  it('never applies to your own Gift SCPs', () => {
+    expect(redactionFor('gift-phoenix', { own: true })).toBeNull()
   })
 })
 

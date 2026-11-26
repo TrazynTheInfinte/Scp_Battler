@@ -3,12 +3,6 @@ import { createCombatant, type Combatant, type SideIndex, type StageName, type S
 import type { Step } from './battleController'
 import { STAT_LABEL } from './text'
 
-/**
- * TEMPORARY, so the admin can try the redaction on their own Gift SCPs: while
- * true, a player's own Gift SCPs are redacted too. Set to false once confirmed.
- */
-export const REDACT_OWN_GIFTS = true
-
 /** What the details view hides on a Gift SCP; null when nothing is hidden. */
 export interface Redaction {
   stats: boolean
@@ -18,7 +12,7 @@ export interface Redaction {
 }
 
 /**
- * Gift SCPs are partly redacted for anyone viewing them: stats and the
+ * Other players' Gift SCPs are partly redacted (your own never are): stats and the
  * ability's description stay hidden, and each move stays hidden until the
  * Gift SCP has used it this battle (its PP went down). The ability is
  * revealed once it visibly triggers.
@@ -29,7 +23,7 @@ export function redactionFor(
 ): Redaction | null {
   const sp = ROSTER.species[speciesId]
   if (sp.gift === undefined) return null
-  if (opts.own && !REDACT_OWN_GIFTS) return null
+  if (opts.own) return null
   const c = opts.combatant
   const fresh = c ? createCombatant(ROSTER, speciesId, c.equipment).pp : null
   return {
