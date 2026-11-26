@@ -16,6 +16,12 @@ export interface Update {
 
 export const UPDATES: readonly Update[] = [
   {
+    id: '2026-11-26-wave-15',
+    date: '2026-11-26',
+    title: 'Wave 15',
+    added: ['12 new SCPs: 387, 390, 399, 403, 408, 409, 421, 422, 424, 428, 435 and 439.'],
+  },
+  {
     id: '2026-11-26-wave-14',
     date: '2026-11-26',
     title: 'Wave 14',

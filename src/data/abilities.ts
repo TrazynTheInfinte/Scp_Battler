@@ -1345,6 +1345,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "It rebuilds itself from its prey: heals 1/16 of its max HP at the end of each turn when hurt.",
     rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
   },
+  // wave 15
+  {
+    id: 'reinforce',
+    name: "Reinforce",
+    description: "It builds itself back stronger: the first time it survives a damaging hit after entering, Defense +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'ancientFrame',
+    name: "Ancient Frame",
+    description: "Heavy timbers soak up blows: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'drawsPower',
+    name: "Draws Power",
+    description: "It drains the energy around it: at the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'escalation',
+    name: "Escalation",
+    description: "Each strike burns hotter: Sp. Atk +1 whenever it enters the field.",
+    rules: [{ kind: 'boostOnEntry', changes: { spa: 1 } }],
+  },
+  {
+    id: 'hiveMimicry',
+    name: "Hive Mimicry",
+    description: "It looks like something else: takes 0.75x damage from Special moves.",
+    rules: [{ kind: 'damageTaken', category: 'Special', multiplier: 0.75 }],
+  },
+  {
+    id: 'crystalContagion',
+    name: "Crystal Contagion",
+    description: "An attacker that hits it with a Physical move has a 30% chance to be Contained.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Contained', chance: 30 }],
+  },
+  {
+    id: 'endlessShoal',
+    name: "Endless Shoal",
+    description: "It reabsorbs its shoal: heals 1/16 of its max HP at the end of each turn when hurt.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'stitchedTogether',
+    name: "Stitched Together",
+    description: "Its stitches hold: it can never Bleed.",
+    rules: [{ kind: 'statusImmunity', statuses: ['Bleeding'] }],
+  },
+  {
+    id: 'mimeSwarm',
+    name: "Mime Swarm",
+    description: "Blows pass through the swarm: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'manyHands',
+    name: "Many Hands",
+    description: "An attacker that damages it with a move loses 1/16 of its own max HP.",
+    rules: [{ kind: 'retaliate', fraction: 1 / 16 }],
+  },
+  {
+    id: 'madeDark',
+    name: "Made Dark",
+    description: "When it enters the field, the light goes out: the opponent's Accuracy −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }],
+  },
+  {
+    id: 'hiveOfBone',
+    name: "Hive of Bone",
+    description: "Deals 1.3x damage to targets that have a status condition.",
+    rules: [{ kind: 'damageDealtVsStatused', multiplier: 1.3 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(
