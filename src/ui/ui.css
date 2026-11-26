@@ -996,3 +996,20 @@ button.preview-card:disabled {
   color: var(--accent);
   border-color: var(--accent);
 }
+
+/* ---------- What's New popup ---------- */
+.update-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.update-list h3 {
+  margin: 0;
+}
+.update-list p {
+  margin: 0;
+}
+.update-list ul {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+}

@@ -162,7 +162,7 @@ export function DossierCard({
 
 /** "Type Chart" button that opens the attacker-vs-defender grid in a popup. */
 /** A dialog over the screen; Escape, ✕ or a click outside closes it. */
-function Overlay({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function Overlay({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()

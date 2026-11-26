@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { UPDATES, type Update } from '../../data/updates'
+import { Overlay } from '../components'
 import { dismissHowToPrompt, howToPromptShown } from '../howToPrompt'
+import { markUpdatesSeen, takeUnseenUpdates } from '../updateNotice'
 import { CALLSIGN_MAX } from '../../online/accountData'
 import {
   dismissAccountNotice,
@@ -25,6 +28,12 @@ export function TitleScreen({
   onCredits: () => void
 }) {
   const [prompt, setPrompt] = useState(howToPromptShown)
+  // Unseen Updates pop up once; "What's New" reopens the whole log.
+  const [shownUpdates, setShownUpdates] = useState(() => takeUnseenUpdates(UPDATES))
+  const closeUpdates = useCallback(() => {
+    markUpdatesSeen(UPDATES)
+    setShownUpdates([])
+  }, [])
   const canPlayOnline = account.status === 'signedIn' && account.callsign !== null
   return (
     <main className="screen">
@@ -75,13 +84,56 @@ export function TitleScreen({
           <button className="btn" onClick={onCredits}>
             Credits
           </button>
+          <button className="btn" onClick={() => setShownUpdates([...UPDATES])}>
+            What's New
+          </button>
         </div>
         <AccountPanel account={account} />
       </div>
+      {shownUpdates.length > 0 && (
+        <Overlay title="What's New" onClose={closeUpdates}>
+          <UpdateList updates={shownUpdates} />
+          <button className="btn btn-primary" onClick={closeUpdates}>
+            Got it
+          </button>
+        </Overlay>
+      )}
       <p className="muted small">
         Based on the SCP Foundation (scp-wiki.wikidot.com), CC BY-SA 3.0. Not affiliated with the SCP Wiki.
       </p>
     </main>
+  )
+}
+
+const SECTIONS = [
+  ['added', 'Added'],
+  ['changed', 'Changed'],
+  ['removed', 'Removed'],
+] as const
+
+/** Updates, newest first, each split into Added / Changed / Removed. */
+function UpdateList({ updates }: { updates: readonly Update[] }) {
+  return (
+    <div className="update-list">
+      {updates.map((u) => (
+        <section key={u.id}>
+          <h3>{u.title}</h3>
+          <p className="small muted">{u.date}</p>
+          {SECTIONS.map(([key, label]) =>
+            u[key]?.length ? (
+              <div key={key}>
+                <p className="eyebrow">{label.toUpperCase()}</p>
+                <ul className="small">
+                  {u[key]!.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null,
+          )}
+        </section>
+      ))}
+    </div>
   )
 }
 

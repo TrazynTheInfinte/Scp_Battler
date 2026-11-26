@@ -36,6 +36,10 @@ _Avoid_: Timeout, time limit, overtime
 Replacing your active SCP with a benched team member.
 _Avoid_: Swap, recall
 
+**Update**:
+A release players would notice (a wave, a new feature, a balance change), described as what it Added, Changed and Removed. Returning players see each new Update once when they open the game; a first visit shows none. Not every deploy is an Update.
+_Avoid_: Patch notes, changelog, version
+
 ## SCPs
 
 **SCP**:
