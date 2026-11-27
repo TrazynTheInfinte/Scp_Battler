@@ -1029,3 +1029,33 @@ button.preview-card:disabled {
   flex: 1;
   min-width: 0;
 }
+
+/* ---------- Voice Lines ---------- */
+.field-row.hostile {
+  position: relative;
+}
+.voice-bubble {
+  position: absolute;
+  left: 0;
+  right: 36%;
+  top: 0;
+  z-index: 5;
+  padding: 6px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-style: italic;
+  pointer-events: none;
+  animation: voice-in 0.2s ease-out;
+}
+@keyframes voice-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.log p.log-voice {
+  font-style: italic;
+  color: var(--accent);
+}

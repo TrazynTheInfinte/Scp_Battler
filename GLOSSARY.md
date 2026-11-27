@@ -40,6 +40,10 @@ _Avoid_: Swap, recall
 A release players would notice (a wave, a new feature, a balance change), described as what it Added, Changed and Removed. Returning players see each new Update once when they open the game; a first visit shows none. Not every deploy is an Update.
 _Avoid_: Patch notes, changelog, version
 
+**Voice Line**:
+Something a single-player opponent says at a key moment of a battle (its start, a knockout, a super-effective hit, the end), shown in a speech bubble and the battle log. Cosmetic only. Online opponents and the Tutorial never speak.
+_Avoid_: Taunt, quote, banter
+
 ## SCPs
 
 **SCP**:

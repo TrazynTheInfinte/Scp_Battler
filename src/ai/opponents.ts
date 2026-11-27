@@ -3,10 +3,10 @@
  * greedy AI in ./index; they differ in how they build teams, what they show,
  * and (for the Reality Bender) how their SCPs work.
  */
-import { legalChoices, switchTargets, type BattleState, type Choice, type Dex, type Rng, type SideIndex } from '../engine'
-import { randomEquipment, randomTeam } from './index'
+import { createCombatant, legalChoices, switchTargets, type BattleState, type Choice, type Dex, type Rng, type SideIndex } from '../engine'
+import { matchupScore, randomEquipment, randomTeam } from './index'
 
-export type OpponentKind = 'trainer' | 'scientist' | 'mtf' | 'o5' | 'realityBender'
+export type OpponentKind = 'trainer' | 'scientist' | 'mtf' | 'o5' | 'realityBender' | 'engineer'
 
 export interface OpponentInfo {
   kind: OpponentKind
@@ -25,6 +25,8 @@ export const OPPONENTS: readonly OpponentInfo[] = [
     label: 'Reality Bender',
     blurb: "Plays like a Mobile Task Force, but its SCPs' stats are flipped and its moves take their counter type.",
   },
+  // Deliberately vague: it builds a team to counter yours (see counterTeam).
+  { kind: 'engineer', label: 'The Engineer', blurb: 'Using the peak of ingenuity, no containment can hold back the Chaos Insurgency.' },
 ]
 
 export const DEFAULT_OPPONENT: OpponentKind = 'mtf'
@@ -69,6 +71,8 @@ export function makeOpponent(kind: OpponentKind, rng: Rng): Opponent {
       return { kind, name: 'Scientist', tag: 'Scientist' }
     case 'realityBender':
       return { kind, name: 'Reality Bender', tag: 'Reality Bender' }
+    case 'engineer':
+      return { kind, name: 'The Engineer', tag: 'The Engineer' }
   }
 }
 
@@ -142,4 +146,65 @@ export function strongEquipment(dex: Dex, rng: Rng, team: readonly string[], rat
     }
   }
   return best
+}
+
+// ---------------------------------------------------------------------------
+// The Engineer: a team built to counter yours
+// ---------------------------------------------------------------------------
+
+/** How many of the best answers to each of your SCPs it shortlists, and how many legal teams it tries from them. */
+export const COUNTER_SHORTLIST = 8
+export const COUNTER_SAMPLES = 3000
+/** How much a team's total win rate counts next to its matchups (it breaks near-ties). */
+const COUNTER_RATE_WEIGHT = 0.1
+
+/**
+ * A legal team picked to beat `theirs`: for each of their SCPs it counts how
+ * well this team's best answer handles it (see matchupScore), so every one of
+ * theirs has a counter, with the team's win rate as a tie-breaker. It
+ * shortlists the best answers to each of their SCPs, then tries many legal
+ * teams drawn from that shortlist.
+ */
+export function counterTeam(
+  dex: Dex,
+  rng: Rng,
+  pool: readonly string[],
+  rates: WinRates,
+  theirs: readonly string[],
+  theirEquipment: readonly (string | null)[] = [],
+): string[] {
+  const opponents = theirs.map((id, i) => createCombatant(dex, id, theirEquipment[i] ?? null))
+  const fresh = new Map(pool.map((id) => [id, createCombatant(dex, id)]))
+  const vs = new Map(pool.map((id) => [id, opponents.map((opp) => matchupScore(dex, fresh.get(id)!, opp))]))
+
+  // The best few answers to each of their SCPs, plus the cheapest strong SCPs so a legal team always fits the budget.
+  const shortlist = new Set<string>()
+  opponents.forEach((_, j) => {
+    for (const id of [...pool].sort((a, b) => vs.get(b)![j] - vs.get(a)![j]).slice(0, COUNTER_SHORTLIST)) shortlist.add(id)
+  })
+  for (const id of pool.filter((id) => dex.species[id].objectClass === 'Safe').sort((a, b) => (rates.scp[b] ?? 0.5) - (rates.scp[a] ?? 0.5)).slice(0, COUNTER_SHORTLIST)) {
+    shortlist.add(id)
+  }
+
+  const score = (team: readonly string[]) =>
+    opponents.reduce((sum, _, j) => sum + Math.max(...team.map((id) => vs.get(id)![j])), 0) +
+    COUNTER_RATE_WEIGHT * team.reduce((s, id) => s + (rates.scp[id] ?? 0.5), 0)
+
+  let best: string[] | null = null
+  let bestScore = -Infinity
+  const candidates = [...shortlist]
+  for (let i = 0; i < COUNTER_SAMPLES; i++) {
+    let team: string[]
+    try {
+      team = randomTeam(dex, rng, candidates)
+    } catch {
+      break // the shortlist can't make a legal team: fall back below
+    }
+    const s = score(team)
+    if (s > bestScore) {
+      best = team
+      bestScore = s
+    }
+  }
+  return best ?? strongTeam(dex, rng, pool, rates)
 }

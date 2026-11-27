@@ -15,11 +15,13 @@ import {
 import { padTeam } from '../engine/testing/teams'
 import { planText } from '../ui/battleDriver'
 import { playerTurn, startSession } from '../ui/battleController'
-import { randomTeam } from './index'
+import { createCombatant } from '../engine'
+import { matchupScore, randomTeam } from './index'
 import {
   MTF_NAMES,
   OPPONENTS,
   chooseRandomAction,
+  counterTeam,
   makeOpponent,
   strongEquipment,
   strongTeam,
@@ -32,11 +34,12 @@ const opponent = (kind: OpponentKind, seed = 1) => makeOpponent(kind, createRng(
 
 describe('opponent names', () => {
   it('gives each bot its name; MTFs and O5s vary', () => {
-    expect(OPPONENTS.map((o) => o.kind)).toEqual(['scientist', 'trainer', 'mtf', 'o5', 'realityBender'])
+    expect(OPPONENTS.map((o) => o.kind)).toEqual(['scientist', 'trainer', 'mtf', 'o5', 'realityBender', 'engineer'])
     const mtf = opponent('mtf')
     expect(MTF_NAMES.some(([d, n]) => mtf.name === `MTF ${d} '${n}'` && mtf.tag === n)).toBe(true)
     for (let seed = 1; seed <= 50; seed++) expect(opponent('o5', seed).name).toMatch(/^O5-(1[0-3]|[1-9])$/)
     expect(opponent('realityBender').name).toBe('Reality Bender')
+    expect(opponent('engineer').name).toBe('The Engineer')
   })
 
   it("names the opponent's SCPs in the battle log", () => {
@@ -155,5 +158,24 @@ describe('Reality Bender', () => {
     const rampage = ROSTER.moves['rampage']
     expect(combatantMove(ROSTER, foe, 'rampage').type).toBe(counterType(rampage.type))
     expect(combatantMove(ROSTER, normal.sides[1].team[0], 'rampage')).toBe(rampage)
+  })
+})
+
+describe('The Engineer', () => {
+  it('builds a legal team that answers yours better than random teams do', () => {
+    const rng = createRng(3)
+    const theirs = PLAYER_TEAM.map((id) => createCombatant(ROSTER, id))
+    // Its best answer to each of your SCPs, summed.
+    const coverage = (team: readonly string[]) =>
+      theirs.reduce((sum, opp) => sum + Math.max(...team.map((id) => matchupScore(ROSTER, createCombatant(ROSTER, id), opp))), 0)
+    const engineer = counterTeam(ROSTER, rng, ROSTER_ORDER, WIN_RATES, PLAYER_TEAM)
+    expect(validateTeam(ROSTER, engineer)).toEqual([])
+    const randoms = Array.from({ length: 20 }, () => coverage(randomTeam(ROSTER, rng, ROSTER_ORDER)))
+    expect(coverage(engineer)).toBeGreaterThan(Math.max(...randoms))
+  })
+
+  it('never brings a Gift SCP', () => {
+    const team = counterTeam(ROSTER, createRng(5), ROSTER_ORDER, WIN_RATES, PLAYER_TEAM)
+    expect(team.some((id) => ROSTER.species[id].gift !== undefined)).toBe(false)
   })
 })

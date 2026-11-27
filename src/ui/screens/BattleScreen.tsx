@@ -28,9 +28,14 @@ import {
 import { abilityReveals, abilityRevealed, redactionFor } from '../scpInfo'
 import { BATTLE_GUIDE } from '../screenGuides'
 import { framesFor, type Frame } from '../playback'
+import { lineFor, voiceAfter } from '../voice'
 import { TYPE_ABBR, describeMove, effectivenessTag, powerLabel } from '../text'
 
 const LONG_PRESS_MS = 450
+/** How long a Voice Line's speech bubble stays up. */
+const VOICE_MS = 3000
+const randomPick = (n: number) => Math.floor(Math.random() * n)
+
 /** Delay between battle messages during playback. */
 const FRAME_MS = 600
 
@@ -214,6 +219,14 @@ export function BattleScreen({
   const [playing, setPlaying] = useState(false)
   const [tick, setTick] = useState(0)
   const [hit, setHit] = useState<{ side: SideIndex; n: number } | null>(null)
+  // Voice Lines: the bubble on screen, the lines already said (shown in the log after
+  // the line they followed), the one waiting for playback to finish, and whether the
+  // "last SCP is low" remark has been made.
+  const [voice, setVoice] = useState<{ text: string; n: number } | null>(null)
+  const [voiceNotes, setVoiceNotes] = useState<{ after: number; text: string }[]>([])
+  const pendingVoice = useRef<string | null>(null)
+  const lowSaid = useRef(false)
+  const greeted = useRef(false)
   const queue = useRef<Frame[]>([])
   const final = useRef<Shown>(display)
 
@@ -256,6 +269,28 @@ export function BattleScreen({
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
   }, [display.log.length])
 
+  const speak = (text: string, after: number) => {
+    setVoice((v) => ({ text, n: (v?.n ?? 0) + 1 }))
+    setVoiceNotes((notes) => [...notes, { after, text }])
+  }
+  const flushVoice = () => {
+    if (pendingVoice.current === null) return
+    speak(pendingVoice.current, final.current.log.length)
+    pendingVoice.current = null
+  }
+  // The opening line, once.
+  useEffect(() => {
+    if (greeted.current || !driver.voice) return
+    greeted.current = true
+    speak(lineFor(driver.voice, 'start', randomPick), driver.initial.log.length)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per battle
+  }, [])
+  useEffect(() => {
+    if (!voice) return
+    const t = window.setTimeout(() => setVoice(null), VOICE_MS)
+    return () => window.clearTimeout(t)
+  }, [voice])
+
   // Play queued frames: one every FRAME_MS (instantly for frames with no message).
   useEffect(() => {
     if (!playing) return
@@ -263,6 +298,7 @@ export function BattleScreen({
     if (!frame) {
       setDisplay(final.current)
       setPlaying(false)
+      flushVoice()
       return
     }
     setDisplay((d) => ({ view: frame.view, log: [...d.log, ...frame.lines] }))
@@ -279,6 +315,11 @@ export function BattleScreen({
     const reveals = abilityReveals(steps)
     if (reveals.length > 0) setAbilityShown((shown) => new Set([...shown, ...reveals]))
     final.current = { view: view.state, log: view.log }
+    if (driver.voice) {
+      const said = voiceAfter(driver.voice, ROSTER, steps, lowSaid.current, randomPick)
+      if (said?.trigger === 'lastLow') lowSaid.current = true
+      if (said) pendingVoice.current = said.text
+    }
     queue.current = [...queue.current, ...framesFor(steps, ROSTER, driver.hostileTag)]
     setPlaying(true)
     setTick((n) => n + 1)
@@ -294,6 +335,7 @@ export function BattleScreen({
     queue.current = []
     setDisplay(final.current)
     setPlaying(false)
+    flushVoice()
   }
 
   const act = (choice: Choice) => {
@@ -361,6 +403,11 @@ export function BattleScreen({
 
       <section className={`field${playing ? ' skippable' : ''}`} onClick={skip}>
         <div className="field-row hostile">
+          {voice && (
+            <div key={voice.n} className="voice-bubble" role="status">
+              <strong>{driver.hostileTag ?? driver.opponent}:</strong> “{voice.text}”
+            </div>
+          )}
           <SideInfo
             state={state}
             side={HOSTILE}
@@ -390,8 +437,12 @@ export function BattleScreen({
       </section>
 
       <div className={`log${playing ? ' skippable' : ''}`} ref={logRef} aria-live="polite" onClick={skip}>
-        {display.log.slice(-40).map((line, i) => (
-          <p key={display.log.length - 40 + i}>&gt; {line}</p>
+        {withVoiceNotes(display.log, voiceNotes, driver.hostileTag ?? driver.opponent)
+          .slice(-40)
+          .map((entry) => (
+          <p key={entry.key} className={entry.voice ? 'log-voice' : undefined}>
+            {entry.voice ? entry.text : <>&gt; {entry.text}</>}
+          </p>
         ))}
       </div>
 
@@ -533,4 +584,23 @@ export function BattleScreen({
         })()}
     </main>
   )
+}
+
+/** The log with each Voice Line placed after the line it followed. */
+function withVoiceNotes(
+  log: readonly string[],
+  notes: readonly { after: number; text: string }[],
+  speaker: string,
+): { key: string; text: string; voice: boolean }[] {
+  const out: { key: string; text: string; voice: boolean }[] = []
+  const at = (n: number) =>
+    notes.forEach((note, j) => {
+      if (note.after === n) out.push({ key: `v${j}`, text: `${speaker}: “${note.text}”`, voice: true })
+    })
+  at(0)
+  log.forEach((text, i) => {
+    out.push({ key: `l${i}`, text, voice: false })
+    at(i + 1)
+  })
+  return out
 }

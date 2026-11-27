@@ -16,6 +16,15 @@ export interface Update {
 
 export const UPDATES: readonly Update[] = [
   {
+    id: '2026-11-26-engineer',
+    date: '2026-11-26',
+    title: 'The Personality Update',
+    added: [
+      'A new opponent: The Engineer. Using the peak of ingenuity, no containment can hold back the Chaos Insurgency.',
+      'Every single-player opponent now reacts to the battle with its own lines.',
+    ],
+  },
+  {
     id: '2026-11-26-wave-16',
     date: '2026-11-26',
     title: 'Wave 16: new statuses and mechanics',

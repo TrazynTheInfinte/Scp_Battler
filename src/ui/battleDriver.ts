@@ -1,3 +1,4 @@
+import type { OpponentKind } from '../ai/opponents'
 import { STRUGGLE, activeOf, combatantMove, isStruggling, moveName, type BattleState, type Choice } from '../engine'
 import { HOSTILE } from './battleLog'
 import { playerForfeit, playerReplace, playerTurn, type Advance, type Session, type Step } from './battleController'
@@ -14,6 +15,8 @@ export interface BattleDriver {
   readonly opponent: string
   /** Names the opponent in log lines (see formatEvents); absent: "Hostile". */
   readonly hostileTag?: string
+  /** Which bot is talking, for its Voice Lines (see src/ai/voiceLines.ts); absent: the opponent stays silent. */
+  readonly voice?: OpponentKind
   /** The Trainer's announced move for the turn being chosen, as text; null when there is none. */
   plan?(): string | null
   /** Receive each advance (to animate) and status change. Returns a function that stops listening. */
@@ -67,6 +70,7 @@ export function aiDriver(session: Session): BattleDriver {
     initial: { state: session.state, log: session.log },
     opponent: session.opponent?.name ?? 'The hostile site',
     hostileTag: session.opponent?.tag,
+    voice: session.opponent?.kind,
     plan: () => planText(current),
     listen(l) {
       listener = l

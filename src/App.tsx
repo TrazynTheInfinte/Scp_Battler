@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { chooseAction, chooseReplacement, randomEquipment, randomTeam } from './ai'
 import {
   DEFAULT_OPPONENT,
+  counterTeam,
   makeOpponent,
   strongEquipment,
   strongTeam,
@@ -58,14 +59,26 @@ interface Match {
   opponent?: Opponent
 }
 
-function newMatch(kind: OpponentKind = DEFAULT_OPPONENT): Match {
+function newMatch(
+  kind: OpponentKind = DEFAULT_OPPONENT,
+  playerTeam: readonly string[] = [],
+  playerEquipment: readonly (string | null)[] = [],
+): Match {
   const seed = newSeed()
   const rng = createRng(seed ^ 0xa1)
   const opponent = makeOpponent(kind, rng)
-  // The O5 brings the statistically strongest builds; everyone else a random legal team.
-  const aiTeam = kind === 'o5' ? strongTeam(ROSTER, rng, ROSTER_ORDER, WIN_RATES) : randomTeam(ROSTER, rng, ROSTER_ORDER)
+  // The O5 brings the statistically strongest builds, the Engineer a team built
+  // against the player's; everyone else a random legal team.
+  const aiTeam =
+    kind === 'o5'
+      ? strongTeam(ROSTER, rng, ROSTER_ORDER, WIN_RATES)
+      : kind === 'engineer' && playerTeam.length > 0
+        ? counterTeam(ROSTER, rng, ROSTER_ORDER, WIN_RATES, playerTeam, playerEquipment)
+        : randomTeam(ROSTER, rng, ROSTER_ORDER)
   const aiEquipment =
-    kind === 'o5' ? strongEquipment(ROSTER, rng, aiTeam, WIN_RATES) : randomEquipment(ROSTER, rng, aiTeam)
+    kind === 'o5' || kind === 'engineer'
+      ? strongEquipment(ROSTER, rng, aiTeam, WIN_RATES)
+      : randomEquipment(ROSTER, rng, aiTeam)
   return { aiTeam, aiEquipment, seed, opponent }
 }
 
@@ -94,10 +107,13 @@ function devStart(): {
   const screen = (q.get('screen') as Screen | null) ?? 'title'
   const team = q.get('team')?.split(',').filter(Boolean) ?? []
   const ai = q.get('ai')?.split(',').filter(Boolean)
-  const match = ai ? { aiTeam: ai, aiEquipment: [], seed: 1 } : team.length > 0 ? { ...newMatch(), seed: 1 } : null
+  // ?opp=engineer (any OpponentKind) names the opponent, so its Voice Lines play.
+  const opp = q.get('opp') as OpponentKind | null
+  const devOpponent = opp ? makeOpponent(opp, createRng(1)) : undefined
+  const match = ai ? { aiTeam: ai, aiEquipment: [], seed: 1, opponent: devOpponent } : team.length > 0 ? { ...newMatch(), seed: 1 } : null
   let session =
     (screen === 'battle' || screen === 'result') && match
-      ? startSession(ROSTER, team, match.aiTeam, 0, match.seed, [[], match.aiEquipment]).session
+      ? startSession(ROSTER, team, match.aiTeam, 0, match.seed, [[], match.aiEquipment], match.opponent).session
       : null
   // ?turns=N auto-plays N turns with the AI on both sides, to show a battle in progress.
   const devRng = createRng(7)
@@ -181,7 +197,7 @@ export default function App() {
           shelf={shelf}
           grants={grants}
           onBack={() => go('title')}
-          onBattle={(kind) => toPreview(newMatch(kind))}
+          onBattle={(kind) => toPreview(newMatch(kind, team, equipment))}
         />
       )
     case 'preview':
