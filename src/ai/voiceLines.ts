@@ -66,10 +66,4 @@ export const VOICE_LINES: Readonly<Record<OpponentKind, Readonly<Record<VoiceTri
   },
 }
 
-/**
- * The Engineer's reaction to each of your attacking moves (by move id): `weak`
- * when it's poorly effective against its SCP, `strong` when super effective.
- * Shared moves go by many names, so their lines say `{move}`, filled in with
- * what your SCP calls it.
- */
-export const ENGINEER_MOVE_LINES: Readonly<Record<string, { weak: string; strong: string }>> = {}
+export { ENGINEER_MOVE_LINES } from './engineerMoveLines'

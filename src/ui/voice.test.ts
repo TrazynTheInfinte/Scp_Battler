@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { OPPONENTS } from '../ai/opponents'
-import { VOICE_LINES, VOICE_TRIGGERS } from '../ai/voiceLines'
-import { ROSTER } from '../data/roster'
-import { createCombatant, type BattleEvent, type BattleState } from '../engine'
+import { ENGINEER_MOVE_LINES, VOICE_LINES, VOICE_TRIGGERS } from '../ai/voiceLines'
+import { MOVE_POOL } from '../data/moves'
+import { BALANCE_ORDER, ROSTER } from '../data/roster'
+import { createCombatant, moveName, type BattleEvent, type BattleState } from '../engine'
 import type { Step } from './battleController'
 import { voiceAfter } from './voice'
 
@@ -41,5 +42,44 @@ describe('Voice Lines', () => {
     const low = step([], state([20, 0]))
     expect(voiceAfter('o5', ROSTER, [low], false, first)?.trigger).toBe('lastLow')
     expect(voiceAfter('o5', ROSTER, [low], true, first)).toBeNull()
+  })
+})
+
+describe("The Engineer's move lines", () => {
+  // Every attacking move a player could use, except Mundane ones (always neutral, so never super or poorly effective).
+  const attacking = [...new Set(BALANCE_ORDER.flatMap((id) => ROSTER.species[id].moves))].filter((m) => {
+    const move = ROSTER.moves[m]
+    return move.category !== 'Status' && move.type !== 'Mundane' && !move.typeless
+  })
+
+  it('cover every attacking move, with nothing left over', () => {
+    expect(attacking.filter((m) => !ENGINEER_MOVE_LINES[m])).toEqual([])
+    expect(Object.keys(ENGINEER_MOVE_LINES).filter((m) => !attacking.includes(m))).toEqual([])
+  })
+
+  it("never say a shared move's own name: they use {move} instead", () => {
+    for (const m of MOVE_POOL) {
+      const lines = ENGINEER_MOVE_LINES[m.id]
+      if (!lines) continue
+      for (const text of [lines.weak, lines.strong]) {
+        expect(text).toContain('{move}')
+        expect(text).not.toContain(m.name)
+      }
+    }
+  })
+
+  it('react to your super- or poorly-effective attack with that move, named as your SCP names it', () => {
+    const s = state()
+    const e = (effectiveness: number): BattleEvent[] => [
+      { type: 'move', side: 0, moveId: 'blink' },
+      { type: 'damage', side: 1, amount: 5, hpAfter: 5, effectiveness, crit: false },
+    ]
+    const named = moveName(ROSTER, 'scp-173', ROSTER.moves['blink'])
+    const strong = voiceAfter('engineer', ROSTER, [{ before: s, after: s, events: e(2), lines: [] }], false, first)
+    expect(strong).toEqual({ trigger: 'move', text: ENGINEER_MOVE_LINES['blink'].strong.split('{move}').join(named) })
+    expect(voiceAfter('engineer', ROSTER, [{ before: s, after: s, events: e(0.5), lines: [] }], false, first)?.trigger).toBe('move')
+    expect(voiceAfter('engineer', ROSTER, [{ before: s, after: s, events: e(1), lines: [] }], false, first)).toBeNull()
+    // Other bots don't comment on your moves.
+    expect(voiceAfter('mtf', ROSTER, [{ before: s, after: s, events: e(2), lines: [] }], false, first)).toBeNull()
   })
 })
