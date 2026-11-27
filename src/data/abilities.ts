@@ -1491,6 +1491,79 @@ const ABILITY_LIST: AbilityData[] = [
     description: "An attacker that hits it with a Physical move has a 30% chance to Burn.",
     rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Burning', chance: 30 }],
   },
+  // wave 17
+  {
+    id: 'hotPlate',
+    name: "Hot Plate",
+    description: "An attacker that hits it with a Physical move has a 30% chance to Burn.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Burning', chance: 30 }],
+  },
+  {
+    id: 'reefSpread',
+    name: "Reef Spread",
+    description: "The coral creeps in: at the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'eyesOfTheSun',
+    name: "Eyes of the Sun",
+    description: "He doesn't need to see: his moves never miss, and he can never Burn.",
+    rules: [{ kind: 'neverMisses' }, { kind: 'statusImmunity', statuses: ['Burning'] }],
+  },
+  {
+    id: 'shortTermLuck',
+    name: "Short-Term Luck",
+    description: "Luck is on his side, for now: his damaging hits are critical 1 time in 6 (instead of 1 in 24).",
+    rules: [{ kind: 'critChance', oneIn: 6 }],
+  },
+  {
+    id: 'toughCrowd',
+    name: "Tough Crowd",
+    description: "Bad jokes make it angry: the first time it survives a damaging hit after entering, Attack +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { atk: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'nineLives',
+    name: "Nine Lives",
+    description: "The colony keeps coming back: the first time it survives a damaging hit after entering, Defense +1.",
+    rules: [{ kind: 'boostWhenHit', changes: { def: 1 }, maxPerEntry: 1 }],
+  },
+  {
+    id: 'reactiveArmor',
+    name: "Reactive Armor",
+    description: "Tank plating: takes 0.75x damage from Physical moves.",
+    rules: [{ kind: 'damageTaken', category: 'Physical', multiplier: 0.75 }],
+  },
+  {
+    id: 'grammieKnows',
+    name: "Grammie Knows",
+    description: "She saw it coming: when she enters the field, the opponent loses its stat boosts.",
+    rules: [{ kind: 'clearOpponentBoostsOnEntry' }],
+  },
+  {
+    id: 'wallToWall',
+    name: "Wall to Wall",
+    description: "An attacker that hits it with a Physical move has a 30% chance to start Bleeding.",
+    rules: [{ kind: 'afflictAttacker', category: 'Physical', status: 'Bleeding', chance: 30 }],
+  },
+  {
+    id: 'everywhereLegs',
+    name: "Legs Everywhere",
+    description: "Skittering at the edge of sight: when it enters the field, the opponent's Accuracy −1.",
+    rules: [{ kind: 'opponentStagesOnEntry', changes: { acc: -1 } }],
+  },
+  {
+    id: 'warriorsReturn',
+    name: "Warriors Return",
+    description: "The fallen rise again: heals 1/16 of its max HP at the end of each turn.",
+    rules: [{ kind: 'healEachTurn', fraction: 1 / 16 }],
+  },
+  {
+    id: 'inkSpreads',
+    name: "Ink Spreads",
+    description: "The stain keeps growing: at the end of each turn, the opponent loses 1/16 of its max HP.",
+    rules: [{ kind: 'drainOpponentEachTurn', fraction: 1 / 16 }],
+  },
 ]
 
 export const ABILITIES: Readonly<Record<string, AbilityData>> = Object.fromEntries(
